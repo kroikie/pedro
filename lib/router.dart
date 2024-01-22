@@ -2,12 +2,15 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-import 'package:flutter/foundation.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_ui_auth/firebase_ui_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:pedro/pedro_screens/game_screen.dart';
+import 'package:pedro/pedro_screens/games_screen.dart';
 import 'package:provider/provider.dart';
 
 import 'game_internals/score.dart';
-import 'main_menu/main_menu_screen.dart';
 import 'play_session/play_session_screen.dart';
 import 'settings/settings_screen.dart';
 import 'style/my_transition.dart';
@@ -20,12 +23,34 @@ final router = GoRouter(
   routes: [
     GoRoute(
       path: '/',
-      builder: (context, state) => const MainMenuScreen(key: Key('main menu')),
+      builder: (context, state) {
+        return StreamBuilder<User?>(
+          stream: FirebaseAuth.instance.authStateChanges(),
+          builder: (context, snapshots) {
+            if  (!snapshots.hasData) {
+              return const SignInScreen();
+            }
+
+            return const GamesScreen(key: Key('games screen'));
+          },
+        );
+      },
       routes: [
+        GoRoute(
+          path: 'games/:gid',
+          builder: (context, state) {
+            final gameId = state.pathParameters['gid'];
+            if (gameId != null) {
+              return GameScreen(key: const Key('game'), gameId: gameId);
+            } else {
+              return const GamesScreen(key: Key('games screen'));
+            }
+          },
+        ),
         GoRoute(
           path: 'play',
           pageBuilder: (context, state) => buildMyTransition<void>(
-            key: ValueKey('play'),
+            key: const ValueKey('play'),
             color: context.watch<Palette>().backgroundPlaySession,
             child: const PlaySessionScreen(
               key: Key('level selection'),

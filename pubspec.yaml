@@ -38,6 +38,14 @@ dependencies:
   provider: ^6.0.5
   shared_preferences: ^2.2.2
   cupertino_icons: ^1.0.2
+  firebase_core: ^2.24.2
+  cloud_firestore: ^4.14.0
+  firebase_ui_firestore: ^1.6.1
+  cloud_functions: ^4.6.0
+  firebase_auth: ^4.16.0
+  firebase_ui_auth: ^1.12.1
+  google_sign_in: ^6.2.1
+  firebase_ui_oauth_google: ^1.2.17
 
 dev_dependencies:
   flutter_lints: ^3.0.0
