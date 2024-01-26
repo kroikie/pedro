@@ -32,7 +32,10 @@ class GameScreen extends StatelessWidget {
             case 'lobby':
               return GameLobby(gameId: gameId, gameName: gameName, gameOwner: gameOwner);
             case 'play':
-              return GameRound(gameId: gameId, roundId: 'roundId');
+              {
+                final roundId = snapshot.data?.get('active-round');
+                return GameRound(gameId: gameId, gameName: gameName, roundId: roundId);
+              }
             case 'summary':
               return GameSummary(gameId: gameId);
             default:

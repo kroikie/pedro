@@ -46,6 +46,7 @@ dependencies:
   firebase_ui_auth: ^1.12.1
   google_sign_in: ^6.2.1
   firebase_ui_oauth_google: ^1.2.17
+  rxdart: ^0.27.7
 
 dev_dependencies:
   flutter_lints: ^3.0.0

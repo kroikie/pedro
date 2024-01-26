@@ -22,6 +22,19 @@ class PlayingCard {
     );
   }
 
+  factory PlayingCard.fromInt(int num) {
+    final suiteValue = num % 13 == 0 ? num / 13 : num / 13 + 1;
+    CardSuit suite = switch (suiteValue) {
+      1 => CardSuit.spades,
+      2 => CardSuit.clubs,
+      3 => CardSuit.hearts,
+      4 => CardSuit.diamonds,
+      _ => CardSuit.spades
+    };
+    final value = num % 13 != 0 ? num % 13 : 13;
+    return PlayingCard(suite, value);
+  }
+
   factory PlayingCard.random([Random? random]) {
     random ??= _random;
     return PlayingCard(

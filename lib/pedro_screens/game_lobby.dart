@@ -64,7 +64,12 @@ class GameLobby extends StatelessWidget {
                     }
                     if (acceptedCount >= 5) {
                       return IconButton(
-                        onPressed: () {},
+                        onPressed: () async {
+                          final startGameCall = FirebaseFunctions.instance.httpsCallable('startGame');
+                          await startGameCall.call({
+                            'gid': gameId
+                          });
+                        },
                         icon: const Icon(Icons.start),
                       );
                     }

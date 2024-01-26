@@ -3,6 +3,7 @@ import {auth} from 'firebase-functions/v1';
 import {initializeApp} from "firebase-admin/app";
 import {getFirestore} from "firebase-admin/firestore";
 import {getAuth} from "firebase-admin/auth";
+import {Deck} from "./deck";
 
 initializeApp();
 
@@ -69,17 +70,14 @@ exports.addPlayer = onCall({cors: true}, async (request) => {
     const gameDoc = await getFirestore().doc(`games/${gameId}`).get();
     const gamePlayers = Array.from(gameDoc.get('players'));
     const user = await getAuth().getUser(request.auth.uid);
-    console.log(`iaw: ${gamePlayers}`);
 
     if (user.uid !== gameDoc.get('owner')) {
         throw new HttpsError("failed-precondition", "Only owner can call this");
     }
     if (user.uid === playerId) {
-        console.log("owner can't add themself");
         throw new HttpsError("failed-precondition", "Owner cannot add themself");
     }
     if (gamePlayers.indexOf(playerId) !== -1) {
-        console.log('player already in the game');
         throw new HttpsError("failed-precondition", "Player is already in the game");
     }
 
@@ -160,7 +158,111 @@ exports.rsvp = onCall({cors: true}, async (request) => {
     }, {merge: true});
 });
 
+exports.startGame = onCall({cors: true}, async (request) => {
+    if (!request.auth) {
+        throw new HttpsError("failed-precondition", "User must be authenticated");
+    }
+    const gameId = request.data['gid'];
+    const gameDoc = await getFirestore().doc(`games/${gameId}`).get();
+    const gameOwner = gameDoc.get('owner');
+    const gamePlayers = await gameDoc.ref.collection('players').get();
+    const user = await getAuth().getUser(request.auth.uid);
 
+
+    if (gameDoc.get('status') !== 'lobby') {
+        throw new HttpsError("failed-precondition", "Game must be in the lobby before starting");
+    }
+    // confirm owner is making the request
+    if (user.uid !== gameDoc.get('owner')) {
+        throw new HttpsError("failed-precondition", "Only owner can start game");
+    }
+    // confirm game has at least 5 accepted players
+    let acceptedCount = 0;
+    for (const gamePlayerDoc of gamePlayers.docs) {
+        if (gamePlayerDoc.get('status') === 'accepted') {
+            acceptedCount++;
+        }
+    }
+    if (acceptedCount < 5 || acceptedCount > 7) {
+        throw new HttpsError("failed-precondition",
+            "Game must start with at least 6 - 8 accepting players");
+    }
+
+    // remove players without status of accepted and not owner
+    for (const gamePlayerDoc of gamePlayers.docs) {
+        if (gamePlayerDoc.id !== gameOwner && gamePlayerDoc.get('status') !== 'accepted') {
+            await gamePlayerDoc.ref.delete();
+            await getFirestore().doc(`users/${gamePlayerDoc.id}/games/${gameId}`).delete();
+        }
+    }
+
+    // randomly assign order and initial score to players
+    const acceptedPlayerIds = [];
+    const acceptedPlayers = await gameDoc.ref.collection('players').get();
+    let lowestTurn = 1;
+    let firstPlayerId = '';
+    const playerOrderMap = new Map<number, string>();
+    for (const acceptedPlayerDoc of acceptedPlayers.docs) {
+        // TODO: confirm that randomTurn is unique among accepted players
+        const randomTurn = Math.random();
+        playerOrderMap.set(randomTurn, acceptedPlayerDoc.id);
+        await acceptedPlayerDoc.ref.set({
+            turn: randomTurn,
+            score: 0,
+        }, {merge: true});
+        acceptedPlayerIds.push(acceptedPlayerDoc.id);
+        if (randomTurn < lowestTurn) {
+            firstPlayerId = acceptedPlayerDoc.id
+            lowestTurn = randomTurn;
+        }
+    }
+    await gameDoc.ref.update({
+        turn: firstPlayerId
+    });
+
+    // update game's players list
+    await gameDoc.ref.update({
+        players: acceptedPlayerIds,
+    });
+
+    // create round in game
+    const roundRef = await gameDoc.ref.collection('rounds').add({
+        stage: 'betting',
+    });
+
+    // add players to round
+    for (const acceptedPlayerDoc of acceptedPlayers.docs) {
+        await roundRef.collection('players').doc(acceptedPlayerDoc.id).set({
+            'nick-name': acceptedPlayerDoc.get('nick-name'),
+            'photo-url': acceptedPlayerDoc.get('photo-url'),
+        });
+    }
+
+    // deal cards to players
+    const deck = new Deck();
+    const bettingCardCount = cardCountForBetting(acceptedCount + 1);
+
+    const sortedPlayerTurns = Array.from(playerOrderMap.keys()).sort();
+    for (const playerTurn of sortedPlayerTurns) {
+        const playerId = playerOrderMap.get(playerTurn)
+        const cards = deck.draw(bettingCardCount);
+        await roundRef.collection('players').doc(playerId).update({
+            hand: cards
+        });
+    }
+
+    // set deck to round
+    await roundRef.update({
+        deck: deck.cards
+    });
+
+    // set game's turn to player with the smallest turn value and set status to play
+    await gameDoc.ref.update({
+        turn: firstPlayerId,
+        status: 'play',
+        'active-round': roundRef.id,
+    });
+});
 
 exports.bet = onCall({cors: true}, (request) => {
     if (!request.auth) {
