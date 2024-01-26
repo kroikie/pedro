@@ -66,15 +66,15 @@ exports.addPlayer = onCall({cors: true}, async (request) => {
     const gameId = request.data['gid'];
     const playerId = request.data['pid'];
     const playerDoc = await getFirestore().doc(`users/${playerId}`).get()
-    const owner = await getAuth().getUser(request.auth.uid);
     const gameDoc = await getFirestore().doc(`games/${gameId}`).get();
     const gamePlayers = Array.from(gameDoc.get('players'));
+    const user = await getAuth().getUser(request.auth.uid);
     console.log(`iaw: ${gamePlayers}`);
 
-    if (owner.uid !== gameDoc.get('owner')) {
+    if (user.uid !== gameDoc.get('owner')) {
         throw new HttpsError("failed-precondition", "Only owner can call this");
     }
-    if (owner.uid === playerId) {
+    if (user.uid === playerId) {
         console.log("owner can't add themself");
         throw new HttpsError("failed-precondition", "Owner cannot add themself");
     }
@@ -100,6 +100,67 @@ exports.addPlayer = onCall({cors: true}, async (request) => {
         'creation': gameDoc.get('creation'),
     });
 });
+
+exports.removePlayer = onCall({cors: true}, async (request) => {
+    if (!request.auth) {
+        throw new HttpsError("failed-precondition", "User must be authenticated");
+    }
+    const gameId = request.data['gid'];
+    const playerId = request.data['pid'];
+    const playerDoc = await getFirestore().doc(`users/${playerId}`).get()
+    const gameDoc = await getFirestore().doc(`games/${gameId}`).get();
+    const gamePlayers = Array.from(gameDoc.get('players'));
+    const user = await getAuth().getUser(request.auth.uid);
+
+    if (user.uid !== gameDoc.get('owner')) {
+        throw new HttpsError("failed-precondition", "Only owner can call this");
+    }
+    if (user.uid === playerId) {
+        console.log("owner can't remove themself");
+        throw new HttpsError("failed-precondition", "Owner cannot add themself");
+    }
+    if (gamePlayers.indexOf(playerId) === -1) {
+        console.log('player must already be in the game');
+        throw new HttpsError("failed-precondition", "Player must already be in the game");
+    }
+
+    // remove player from players array
+    gamePlayers.splice(gamePlayers.indexOf(playerId), 1);
+    await gameDoc.ref.update({
+        players: gamePlayers
+    });
+    // remove player from players collection in the game
+    await gameDoc.ref.collection('players').doc(playerId).delete();
+    // remove game from player's games collection
+    await playerDoc.ref.collection('games').doc(gameId).delete();
+});
+
+exports.rsvp = onCall({cors: true}, async (request) => {
+    if (!request.auth) {
+        throw new HttpsError("failed-precondition", "User must be authenticated");
+    }
+    const gameId = request.data['gid'];
+    const choice = request.data['choice'];
+    const gameDoc = await getFirestore().doc(`games/${gameId}`).get();
+    const gamePlayers = Array.from(gameDoc.get('players'));
+    const user = await getAuth().getUser(request.auth.uid);
+
+    if (gameDoc.get('status') !== 'lobby') {
+        throw new HttpsError("failed-precondition", "Game must be in the lobby status");
+    }
+    if (user.uid === gameDoc.get('owner')) {
+        throw new HttpsError("failed-precondition", "Owner is not invited");
+    }
+    if (gamePlayers.indexOf(user.uid) === -1) {
+        throw new HttpsError("failed-precondition", "Player must already be in the game");
+    }
+    // update player status in game
+    await getFirestore().doc(`games/${gameId}/players/${user.uid}`).set({
+        'status': choice,
+    }, {merge: true});
+});
+
+
 
 exports.bet = onCall({cors: true}, (request) => {
     if (!request.auth) {
