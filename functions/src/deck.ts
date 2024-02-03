@@ -9,7 +9,7 @@ export class Deck {
 
     constructor() {
         this._cards = [];
-        for (let i = 1; i <= 52; i++) {
+        for (let i = 0; i < 52; i++) {
             this._cards.push(i);
         }
         this.shuffleCards();

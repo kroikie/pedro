@@ -47,12 +47,9 @@ class GamesScreen extends StatelessWidget {
           query: gamesRef.orderBy('creation'),
           itemBuilder: (context, snapshot) {
             Map<String, dynamic> game = snapshot.data();
-            return GestureDetector(
+            return ListTile(
               onTap: () => GoRouter.of(context).push('/games/${snapshot.id}'),
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Center(child: Text(game['name'])),
-              ),
+              title: Center(child: Text(game['name'])),
             );
           }
       ),

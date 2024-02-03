@@ -9,7 +9,6 @@ class PlayingCard {
   static final _random = Random();
 
   final CardSuit suit;
-
   final int value;
 
   const PlayingCard(this.suit, this.value);
@@ -23,16 +22,29 @@ class PlayingCard {
   }
 
   factory PlayingCard.fromInt(int num) {
-    final suiteValue = num % 13 == 0 ? num / 13 : num / 13 + 1;
-    CardSuit suite = switch (suiteValue) {
-      1 => CardSuit.spades,
-      2 => CardSuit.clubs,
-      3 => CardSuit.hearts,
-      4 => CardSuit.diamonds,
-      _ => CardSuit.spades
-    };
-    final value = num % 13 != 0 ? num % 13 : 13;
+    CardSuit suite = _getCardSuit(num);
+    final value = _getCardValue(num);
     return PlayingCard(suite, value);
+  }
+
+  static CardSuit _getCardSuit(int num) {
+    if (num == 0) {
+      return CardSuit.hearts;
+    }
+    return switch(num ~/ 13) {
+      0 => CardSuit.hearts,
+      1 => CardSuit.clubs,
+      2 => CardSuit.diamonds,
+      3 => CardSuit.spades,
+      _ => CardSuit.hearts,
+    };
+  }
+
+  static int _getCardValue(int num) {
+    if (num == 0) {
+      return 2;
+    }
+    return (num % 13) + 2;
   }
 
   factory PlayingCard.random([Random? random]) {
@@ -59,5 +71,18 @@ class PlayingCard {
   @override
   String toString() {
     return '$suit$value';
+  }
+
+  String get label {
+    if (value <= 10) {
+      return value.toString();
+    }
+    return switch(value) {
+      11 => 'J',
+      12 => 'Q',
+      13 => 'K',
+      14 => 'A',
+      _ => ''
+    };
   }
 }

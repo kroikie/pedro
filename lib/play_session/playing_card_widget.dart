@@ -37,7 +37,7 @@ class PlayingCardWidget extends StatelessWidget {
           borderRadius: BorderRadius.circular(5),
         ),
         child: Center(
-          child: Text('${card.suit.asCharacter}\n${card.value}',
+          child: Text('${card.suit.asCharacter}\n${card.label}',
               textAlign: TextAlign.center),
         ),
       ),
