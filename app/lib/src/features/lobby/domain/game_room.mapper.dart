@@ -84,6 +84,9 @@ class GameRoomMapper extends ClassMapperBase<GameRoom> {
   static List<String> _$playerIds(GameRoom v) => v.playerIds;
   static const Field<GameRoom, List<String>> _f$playerIds =
       Field('playerIds', _$playerIds);
+  static List<String> _$invitedPlayerIds(GameRoom v) => v.invitedPlayerIds;
+  static const Field<GameRoom, List<String>> _f$invitedPlayerIds =
+      Field('invitedPlayerIds', _$invitedPlayerIds, opt: true, def: const []);
   static GameStatus _$status(GameRoom v) => v.status;
   static const Field<GameRoom, GameStatus> _f$status =
       Field('status', _$status, opt: true, def: GameStatus.waiting);
@@ -97,6 +100,7 @@ class GameRoomMapper extends ClassMapperBase<GameRoom> {
     #hostId: _f$hostId,
     #name: _f$name,
     #playerIds: _f$playerIds,
+    #invitedPlayerIds: _f$invitedPlayerIds,
     #status: _f$status,
     #createdAt: _f$createdAt,
   };
@@ -107,6 +111,7 @@ class GameRoomMapper extends ClassMapperBase<GameRoom> {
         hostId: data.dec(_f$hostId),
         name: data.dec(_f$name),
         playerIds: data.dec(_f$playerIds),
+        invitedPlayerIds: data.dec(_f$invitedPlayerIds),
         status: data.dec(_f$status),
         createdAt: data.dec(_f$createdAt));
   }
@@ -161,11 +166,14 @@ extension GameRoomValueCopy<$R, $Out> on ObjectCopyWith<$R, GameRoom, $Out> {
 abstract class GameRoomCopyWith<$R, $In extends GameRoom, $Out>
     implements ClassCopyWith<$R, $In, $Out> {
   ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>> get playerIds;
+  ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>>
+      get invitedPlayerIds;
   $R call(
       {String? id,
       String? hostId,
       String? name,
       List<String>? playerIds,
+      List<String>? invitedPlayerIds,
       GameStatus? status,
       DateTime? createdAt});
   GameRoomCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
@@ -184,11 +192,18 @@ class _GameRoomCopyWithImpl<$R, $Out>
       ListCopyWith($value.playerIds, (v, t) => ObjectCopyWith(v, $identity, t),
           (v) => call(playerIds: v));
   @override
+  ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>>
+      get invitedPlayerIds => ListCopyWith(
+          $value.invitedPlayerIds,
+          (v, t) => ObjectCopyWith(v, $identity, t),
+          (v) => call(invitedPlayerIds: v));
+  @override
   $R call(
           {String? id,
           String? hostId,
           String? name,
           List<String>? playerIds,
+          List<String>? invitedPlayerIds,
           GameStatus? status,
           DateTime? createdAt}) =>
       $apply(FieldCopyWithData({
@@ -196,6 +211,7 @@ class _GameRoomCopyWithImpl<$R, $Out>
         if (hostId != null) #hostId: hostId,
         if (name != null) #name: name,
         if (playerIds != null) #playerIds: playerIds,
+        if (invitedPlayerIds != null) #invitedPlayerIds: invitedPlayerIds,
         if (status != null) #status: status,
         if (createdAt != null) #createdAt: createdAt
       }));
@@ -205,6 +221,8 @@ class _GameRoomCopyWithImpl<$R, $Out>
       hostId: data.get(#hostId, or: $value.hostId),
       name: data.get(#name, or: $value.name),
       playerIds: data.get(#playerIds, or: $value.playerIds),
+      invitedPlayerIds:
+          data.get(#invitedPlayerIds, or: $value.invitedPlayerIds),
       status: data.get(#status, or: $value.status),
       createdAt: data.get(#createdAt, or: $value.createdAt));
 

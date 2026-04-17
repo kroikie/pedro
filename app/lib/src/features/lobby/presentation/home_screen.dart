@@ -55,63 +55,100 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Pedro Lobby'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.person),
-            onPressed: () => Navigator.pushNamed(context, '/profile'),
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Pedro Lobby'),
+          bottom: const TabBar(
+            tabs: [
+              Tab(text: 'My Games', icon: Icon(Icons.videogame_asset)),
+              Tab(text: 'Inbox', icon: Icon(Icons.mail)),
+            ],
           ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () => FirebaseAuth.instance.signOut(),
-          )
-        ],
-      ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: ElevatedButton.icon(
-              onPressed: _isCreating ? null : _createGame,
-              icon: _isCreating 
-                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                  : const Icon(Icons.add),
-              label: const Text('Create New Game'),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.person),
+              onPressed: () => Navigator.pushNamed(context, '/profile'),
             ),
-          ),
-          const Divider(),
-          Expanded(
-            child: StreamBuilder<List<GameRoom>>(
-              stream: _lobbyRepository.watchGames(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                final games = snapshot.data ?? [];
-                if (games.isEmpty) {
-                  return const Center(child: Text('No active games. Create one!'));
-                }
-                return ListView.builder(
-                  itemCount: games.length,
-                  itemBuilder: (context, index) {
-                    final game = games[index];
-                    return ListTile(
-                      title: Text(game.name),
-                      subtitle: Text('Players: ${game.playerIds.length}/4'),
-                      trailing: ElevatedButton(
-                        onPressed: () => _joinGame(game.id),
-                        child: const Text('Join'),
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
-          ),
-        ],
+            IconButton(
+              icon: const Icon(Icons.logout),
+              onPressed: () => FirebaseAuth.instance.signOut(),
+            )
+          ],
+        ),
+        body: TabBarView(
+          children: [
+            _buildMyGames(),
+            _buildInbox(),
+          ],
+        ),
+        floatingActionButton: FloatingActionButton.extended(
+          onPressed: _isCreating ? null : _createGame,
+          icon: _isCreating 
+              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+              : const Icon(Icons.add),
+          label: const Text('New Game'),
+        ),
       ),
+    );
+  }
+
+  Widget _buildMyGames() {
+    return StreamBuilder<List<GameRoom>>(
+      stream: _lobbyRepository.watchMyGames(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        final games = snapshot.data ?? [];
+        if (games.isEmpty) {
+          return const Center(child: Text('No active games.'));
+        }
+        return ListView.builder(
+          itemCount: games.length,
+          itemBuilder: (context, index) {
+            final game = games[index];
+            return ListTile(
+              title: Text(game.name),
+              subtitle: Text('Status: ${game.status.name} • Players: ${game.playerIds.length}'),
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => GameRoomScreen(gameId: game.id)),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildInbox() {
+    return StreamBuilder<List<GameRoom>>(
+      stream: _lobbyRepository.watchInvitations(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        final games = snapshot.data ?? [];
+        if (games.isEmpty) {
+          return const Center(child: Text('Your inbox is empty.'));
+        }
+        return ListView.builder(
+          itemCount: games.length,
+          itemBuilder: (context, index) {
+            final game = games[index];
+            return ListTile(
+              title: Text(game.name),
+              subtitle: const Text('You have been invited to join!'),
+              trailing: ElevatedButton(
+                onPressed: () => _joinGame(game.id),
+                child: const Text('Accept'),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }

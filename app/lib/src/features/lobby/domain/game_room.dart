@@ -16,6 +16,7 @@ class GameRoom with GameRoomMappable {
   final String hostId;
   final String name;
   final List<String> playerIds;
+  final List<String> invitedPlayerIds;
   final GameStatus status;
   final DateTime createdAt;
 
@@ -24,6 +25,7 @@ class GameRoom with GameRoomMappable {
     required this.hostId,
     required this.name,
     required this.playerIds,
+    this.invitedPlayerIds = const [],
     this.status = GameStatus.waiting,
     required this.createdAt,
   });

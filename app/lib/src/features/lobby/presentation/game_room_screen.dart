@@ -14,6 +14,13 @@ class GameRoomScreen extends StatelessWidget {
 
   final String gameId;
 
+  void _showInviteDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => InviteDialog(gameId: gameId),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final lobbyRepository = LobbyRepository();
@@ -48,7 +55,17 @@ class GameRoomScreen extends StatelessWidget {
         final isHost = room.hostId == currentUserId;
 
         return Scaffold(
-          appBar: AppBar(title: Text(room.name)),
+          appBar: AppBar(
+            title: Text(room.name),
+            actions: [
+              if (isHost)
+                IconButton(
+                  icon: const Icon(Icons.person_add),
+                  onPressed: () => _showInviteDialog(context),
+                  tooltip: 'Invite Player',
+                ),
+            ],
+          ),
           body: Column(
             children: [
               Expanded(
@@ -80,9 +97,12 @@ class GameRoomScreen extends StatelessWidget {
                         ),
                       ),
                       if (isHost)
-                        ElevatedButton(
-                          onPressed: room.playerIds.length >= 4 ? () => gameRepository.startGame(gameId) : null,
-                          child: const Text('Start Game'),
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 16.0),
+                          child: ElevatedButton(
+                            onPressed: room.playerIds.length >= 4 ? () => gameRepository.startGame(gameId) : null,
+                            child: const Text('Start Game'),
+                          ),
                         ),
                     ],
                   ),
@@ -93,6 +113,60 @@ class GameRoomScreen extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class InviteDialog extends StatelessWidget {
+  const InviteDialog({super.key, required this.gameId});
+  final String gameId;
+
+  @override
+  Widget build(BuildContext context) {
+    final playerRepo = PlayerRepository();
+    final lobbyRepo = LobbyRepository();
+    final currentUid = FirebaseAuth.instance.currentUser?.uid;
+
+    return AlertDialog(
+      title: const Text('Invite Player'),
+      content: SizedBox(
+        width: double.maxFinite,
+        height: 300,
+        child: StreamBuilder<List<Player>>(
+          stream: playerRepo.watchAllPlayers(),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+            final players = snapshot.data!.where((p) => p.id != currentUid).toList();
+            if (players.isEmpty) return const Center(child: Text('No other players found.'));
+
+            return ListView.builder(
+              itemCount: players.length,
+              itemBuilder: (context, index) {
+                final player = players[index];
+                return ListTile(
+                  leading: AvatarWidget(avatarUrl: player.avatarUrl, radius: 15),
+                  title: Text(player.displayName),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.add),
+                    onPressed: () async {
+                      await lobbyRepo.invitePlayer(gameId, player.id);
+                      if (context.mounted) {
+                        Navigator.of(context).pop();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Invited ${player.displayName}')),
+                        );
+                      }
+                    },
+                  ),
+                );
+              },
+            );
+          },
+        ),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Close')),
+      ],
     );
   }
 }

@@ -32,29 +32,32 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'dummy-api-key-web',
-    appId: '1:1234567890:web:1234567890abcdef',
-    messagingSenderId: '1234567890',
+    apiKey: 'AIzaSyBMplBWcdJUcfovZW1zqqusQiZ4g70zr7A',
+    appId: '1:260654198138:web:50089660e495fd32527ac3',
+    messagingSenderId: '260654198138',
     projectId: 'pedro-f65a6',
     authDomain: 'pedro-f65a6.firebaseapp.com',
-    storageBucket: 'pedro-f65a6.appspot.com',
+    storageBucket: 'pedro-f65a6.firebasestorage.app',
+    measurementId: 'G-5ZSCM5GY32',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'dummy-api-key-android',
-    appId: '1:1234567890:android:1234567890abcdef',
-    messagingSenderId: '1234567890',
+    apiKey: 'AIzaSyDBKOJLzRYpO1hJgCy8sSPdHNaIyeTRoCI',
+    appId: '1:260654198138:android:d7a8d380ab8b794d527ac3',
+    messagingSenderId: '260654198138',
     projectId: 'pedro-f65a6',
-    storageBucket: 'pedro-f65a6.appspot.com',
+    storageBucket: 'pedro-f65a6.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'dummy-api-key-ios',
-    appId: '1:1234567890:ios:1234567890abcdef',
-    messagingSenderId: '1234567890',
+    apiKey: 'AIzaSyDp6mhShMWc-lvwa-sw4Y_VBlitP18kvAo',
+    appId: '1:260654198138:ios:406f5d2a81fb69a9527ac3',
+    messagingSenderId: '260654198138',
     projectId: 'pedro-f65a6',
-    storageBucket: 'pedro-f65a6.appspot.com',
-    iosBundleId: 'com.ool.pedro',
+    storageBucket: 'pedro-f65a6.firebasestorage.app',
+    androidClientId: '260654198138-tcjr0mhikksjd517apgpsljdk8s87j94.apps.googleusercontent.com',
+    iosClientId: '260654198138-odhvbs1ftvbk4nphl9dfm4dda181rvar.apps.googleusercontent.com',
+    iosBundleId: 'com.ool.pedro.pedro',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(

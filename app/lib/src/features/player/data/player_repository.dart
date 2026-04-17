@@ -26,4 +26,8 @@ class PlayerRepository {
   Future<void> updatePlayer(Player player) async {
     await _playersRef().doc(player.id).set(player, SetOptions(merge: true));
   }
+
+  Stream<List<Player>> watchAllPlayers() {
+    return _playersRef().snapshots().map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
+  }
 }

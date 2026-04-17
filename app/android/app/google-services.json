@@ -1,0 +1,90 @@
+{
+  "project_info": {
+    "project_number": "260654198138",
+    "project_id": "pedro-f65a6",
+    "storage_bucket": "pedro-f65a6.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:260654198138:android:9868c58b809d9914527ac3",
+        "android_client_info": {
+          "package_name": "com.example.pedro"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "260654198138-tcjr0mhikksjd517apgpsljdk8s87j94.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.pedro",
+            "certificate_hash": "14263f27664a454934b55e1157c52ea110a254d5"
+          }
+        },
+        {
+          "client_id": "260654198138-u5jt4poqnr78d0sierk6e0r1pcikm8gf.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDBKOJLzRYpO1hJgCy8sSPdHNaIyeTRoCI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "260654198138-p5rjput5o7to7k356lnsfpiajudl5ufi.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "260654198138-5gtot21t4s1hfogqsdfc56fpdf6h0cvf.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.pedro"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:260654198138:android:d7a8d380ab8b794d527ac3",
+        "android_client_info": {
+          "package_name": "com.ool.pedro.pedro"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "260654198138-u5jt4poqnr78d0sierk6e0r1pcikm8gf.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDBKOJLzRYpO1hJgCy8sSPdHNaIyeTRoCI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "260654198138-p5rjput5o7to7k356lnsfpiajudl5ufi.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "260654198138-5gtot21t4s1hfogqsdfc56fpdf6h0cvf.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.pedro"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
