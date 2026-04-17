@@ -363,6 +363,9 @@ class RoundStateMapper extends ClassMapperBase<RoundState> {
   static List<Card> _$discardedCards(RoundState v) => v.discardedCards;
   static const Field<RoundState, List<Card>> _f$discardedCards =
       Field('discardedCards', _$discardedCards, opt: true, def: const []);
+  static int _$turnIndex(RoundState v) => v.turnIndex;
+  static const Field<RoundState, int> _f$turnIndex =
+      Field('turnIndex', _$turnIndex, opt: true, def: 0);
 
   @override
   final MappableFields<RoundState> fields = const {
@@ -373,6 +376,7 @@ class RoundStateMapper extends ClassMapperBase<RoundState> {
     #phase: _f$phase,
     #currentLift: _f$currentLift,
     #discardedCards: _f$discardedCards,
+    #turnIndex: _f$turnIndex,
   };
 
   static RoundState _instantiate(DecodingData data) {
@@ -383,7 +387,8 @@ class RoundStateMapper extends ClassMapperBase<RoundState> {
         trumpSuit: data.dec(_f$trumpSuit),
         phase: data.dec(_f$phase),
         currentLift: data.dec(_f$currentLift),
-        discardedCards: data.dec(_f$discardedCards));
+        discardedCards: data.dec(_f$discardedCards),
+        turnIndex: data.dec(_f$turnIndex));
   }
 
   @override
@@ -446,7 +451,8 @@ abstract class RoundStateCopyWith<$R, $In extends RoundState, $Out>
       Suit? trumpSuit,
       RoundPhase? phase,
       Lift? currentLift,
-      List<Card>? discardedCards});
+      List<Card>? discardedCards,
+      int? turnIndex});
   RoundStateCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
 }
 
@@ -473,7 +479,8 @@ class _RoundStateCopyWithImpl<$R, $Out>
           Object? trumpSuit = $none,
           RoundPhase? phase,
           Object? currentLift = $none,
-          List<Card>? discardedCards}) =>
+          List<Card>? discardedCards,
+          int? turnIndex}) =>
       $apply(FieldCopyWithData({
         if (dealerId != null) #dealerId: dealerId,
         if (bidWinnerId != $none) #bidWinnerId: bidWinnerId,
@@ -481,7 +488,8 @@ class _RoundStateCopyWithImpl<$R, $Out>
         if (trumpSuit != $none) #trumpSuit: trumpSuit,
         if (phase != null) #phase: phase,
         if (currentLift != $none) #currentLift: currentLift,
-        if (discardedCards != null) #discardedCards: discardedCards
+        if (discardedCards != null) #discardedCards: discardedCards,
+        if (turnIndex != null) #turnIndex: turnIndex
       }));
   @override
   RoundState $make(CopyWithData data) => RoundState(
@@ -491,7 +499,8 @@ class _RoundStateCopyWithImpl<$R, $Out>
       trumpSuit: data.get(#trumpSuit, or: $value.trumpSuit),
       phase: data.get(#phase, or: $value.phase),
       currentLift: data.get(#currentLift, or: $value.currentLift),
-      discardedCards: data.get(#discardedCards, or: $value.discardedCards));
+      discardedCards: data.get(#discardedCards, or: $value.discardedCards),
+      turnIndex: data.get(#turnIndex, or: $value.turnIndex));
 
   @override
   RoundStateCopyWith<$R2, RoundState, $Out2> $chain<$R2, $Out2>(

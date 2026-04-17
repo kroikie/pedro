@@ -52,6 +52,7 @@ class RoundState with RoundStateMappable {
   final RoundPhase phase;
   final Lift? currentLift;
   final List<Card> discardedCards;
+  final int turnIndex;
 
   const RoundState({
     required this.dealerId,
@@ -61,6 +62,7 @@ class RoundState with RoundStateMappable {
     this.phase = RoundPhase.wadger,
     this.currentLift,
     this.discardedCards = const [],
+    this.turnIndex = 0,
   });
 
   static const fromMap = RoundStateMapper.fromMap;

@@ -5,6 +5,8 @@ import '../domain/game_room.dart';
 import '../../player/data/player_repository.dart';
 import '../../player/domain/player.dart';
 import '../../../common_widgets/avatar_widget.dart';
+import '../../game/data/game_repository.dart';
+import '../../game/presentation/game_board_screen.dart';
 
 class GameRoomScreen extends StatelessWidget {
   const GameRoomScreen({super.key, required this.gameId});
@@ -15,6 +17,7 @@ class GameRoomScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final lobbyRepository = LobbyRepository();
     final playerRepository = PlayerRepository();
+    final gameRepository = GameRepository();
     final currentUserId = FirebaseAuth.instance.currentUser?.uid;
 
     return StreamBuilder<GameRoom?>(
@@ -27,6 +30,15 @@ class GameRoomScreen extends StatelessWidget {
         final room = snapshot.data;
         if (room == null) {
           return const Scaffold(body: Center(child: Text('Game not found')));
+        }
+
+        if (room.status == GameStatus.playing) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => GameBoardScreen(gameId: gameId)),
+            );
+          });
         }
 
         final isHost = room.hostId == currentUserId;
@@ -62,7 +74,7 @@ class GameRoomScreen extends StatelessWidget {
                 ),
                 if (isHost)
                   ElevatedButton(
-                    onPressed: room.playerIds.length >= 2 ? () {} : null,
+                    onPressed: room.playerIds.length >= 4 ? () => gameRepository.startGame(gameId) : null,
                     child: const Text('Start Game'),
                   ),
               ],
