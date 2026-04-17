@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart' hide EmailAuthProvider;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'firebase_options.dart';
+import 'package:firebase_ui_auth/firebase_ui_auth.dart' hide ProfileScreen;
+import 'package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart';
+
+import 'src/features/authentication/presentation/auth_screen.dart';
+import 'src/features/player/presentation/profile_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,12 +26,16 @@ void main() async {
       await FirebaseAuth.instance.useAuthEmulator(host, 9099);
       FirebaseFirestore.instance.useFirestoreEmulator(host, 8080);
       FirebaseFunctions.instance.useFunctionsEmulator(host, 5001);
-      // FirebaseStorage.instance.useStorageEmulator(host, 9199);
+      await FirebaseStorage.instance.useStorageEmulator(host, 9199);
       debugPrint('Connected to Firebase emulators.');
     } catch (e) {
       debugPrint('Failed to connect to emulators: $e');
     }
   }
+
+  FirebaseUIAuth.configureProviders([
+    GoogleProvider(clientId: 'dummy-client-id-for-emulator'),
+  ]);
 
   runApp(const MyApp());
 }
@@ -41,10 +51,54 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const Scaffold(
-        body: Center(
-          child: Text('Pedro App Initialized'),
-        ),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => const AuthGate(),
+        '/home': (context) => const HomeScreen(),
+        '/profile': (context) => const ProfileScreen(),
+      },
+    );
+  }
+}
+
+class AuthGate extends StatelessWidget {
+  const AuthGate({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const AuthScreen();
+        }
+        return const HomeScreen();
+      },
+    );
+  }
+}
+
+class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Home'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.person),
+            onPressed: () => Navigator.pushNamed(context, '/profile'),
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () => FirebaseAuth.instance.signOut(),
+          )
+        ],
+      ),
+      body: const Center(
+        child: Text('Placeholder Home Screen'),
       ),
     );
   }

@@ -34,7 +34,7 @@ This plan details the development of Pedro, a cross-platform multiplayer card ga
 - **Data Models (`lib/data/models/`)** using `dart_mappable`:
   - `Player`, `GameRoom`, `Round`, `Card`, `PlayerState`, `Deck`, `Lift`
 - **Data Repositories (`lib/data/repositories/`)**:
-  - `AuthRepository`: Manages player authentication state using the `authStateChanges` stream to reactively update the app state. Authentication will initially rely exclusively on Google Sign-In, with scope to add other providers later.
+  - `AuthRepository`: Manages player authentication state using the `authStateChanges` stream to reactively update the app state. Authentication will initially rely exclusively on Google Sign-In (no EmailAuthProvider), with scope to add other providers later.
   - `GameRepository`: Listens to Firestore collections to synchronize state and calls Cloud Functions for state mutations.
 
 ---
@@ -61,7 +61,7 @@ This plan details the development of Pedro, a cross-platform multiplayer card ga
   - **Inbox:** A view allowing the player to manage and accept incoming game invitations.
 - **Authentication & Profile Screens**:
   - Utilizing `flutterfire_ui` templates for Google Sign-In.
-  - **Player Profile:** A screen where players can define a custom player name and upload a separate profile picture if they prefer overriding their default Google account avatar.
+  - **Player Profile:** A screen where players can define a custom player name and upload a separate profile picture if they prefer overriding their default Google account avatar. Uses `firebase_ui_storage` to handle images from Cloud Storage.
 - **Lobby Interface (`lib/ui/lobby/`)**:
   - Game creation wizard and Game Room waiting area.
 - **Game Interface (`lib/ui/game/`)**:
