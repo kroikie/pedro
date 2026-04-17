@@ -2,6 +2,7 @@ const admin = require('firebase-admin');
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const { createDeck, shuffle } = require('./src/game/deck');
 const { evaluateLiftWinner } = require('./src/game/logic');
+const { narrateWelcome, narrateBid, narratePlay } = require('./src/game/narrator');
 
 admin.initializeApp();
 
@@ -13,6 +14,9 @@ exports.createGame = onCall(async (request) => {
   const gameRef = admin.firestore().collection('games').doc();
   const gameData = { hostId: uid, name: roomName, playerIds: [uid], status: 'waiting', createdAt: admin.firestore.FieldValue.serverTimestamp() };
   await gameRef.set(gameData);
+  
+  narrateWelcome(gameRef.id, roomName).catch(console.error);
+
   return { gameId: gameRef.id };
 });
 
@@ -101,6 +105,11 @@ exports.submitBid = onCall(async (request) => {
     newBidValue = 1; newBidWinnerId = round.dealerId; nextPhase = 'discarding'; nextTurnIndex = playerIds.indexOf(newBidWinnerId);
   }
   await gameRef.update({ 'currentRound.bidValue': newBidValue, 'currentRound.bidWinnerId': newBidWinnerId, 'currentRound.consecutivePasses': newConsecutivePasses, 'currentRound.phase': nextPhase, 'currentRound.turnIndex': nextTurnIndex });
+  
+  if (bid !== null && bid >= 7) {
+    narrateBid(gameId, uid, bid).catch(console.error);
+  }
+
   return { success: true };
 });
 
@@ -158,15 +167,24 @@ exports.playCard = onCall(async (request) => {
     currentLift.winnerId = winnerId;
     const winnerState = round.playerStates.find(p => p.uid === winnerId);
     let liftPoints = 0;
+    let isSpecial = false;
     for (const [pId, playedCard] of Object.entries(currentLift.plays)) {
       if (playedCard.suit === round.trumpSuit) {
-        if (playedCard.rank === 'five') liftPoints += 5;
-        if (playedCard.rank === 'nine') liftPoints += 9;
+        if (playedCard.rank === 'five') { liftPoints += 5; isSpecial = true; }
+        if (playedCard.rank === 'nine') { liftPoints += 9; isSpecial = true; }
         if (playedCard.rank === 'ten') liftPoints += 1;
-        if (playedCard.rank === 'jack') liftPoints += (pId === winnerId) ? 1 : 3;
+        if (playedCard.rank === 'jack') {
+          liftPoints += (pId === winnerId) ? 1 : 3;
+          isSpecial = true;
+        }
       }
     }
     winnerState.currentRoundPoints += liftPoints;
+    
+    if (isSpecial) {
+      narratePlay(gameId, uid, card, true).catch(console.error);
+    }
+
     if (round.playerStates.every(p => p.hand.length === 0)) nextPhase = 'finished';
     else {
       round.currentLift = { leadPlayerId: winnerId, plays: {}, winnerId: null };

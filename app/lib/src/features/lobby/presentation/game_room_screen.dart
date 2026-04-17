@@ -7,6 +7,7 @@ import '../../player/domain/player.dart';
 import '../../../common_widgets/avatar_widget.dart';
 import '../../game/data/game_repository.dart';
 import '../../game/presentation/game_board_screen.dart';
+import '../../chat/presentation/chat_overlay.dart';
 
 class GameRoomScreen extends StatelessWidget {
   const GameRoomScreen({super.key, required this.gameId});
@@ -45,40 +46,47 @@ class GameRoomScreen extends StatelessWidget {
 
         return Scaffold(
           appBar: AppBar(title: Text(room.name)),
-          body: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              children: [
-                Text('Status: ${room.status.name}', style: Theme.of(context).textTheme.titleLarge),
-                const SizedBox(height: 20),
-                Text('Players (${room.playerIds.length}/4)', style: Theme.of(context).textTheme.titleMedium),
-                const SizedBox(height: 10),
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: room.playerIds.length,
-                    itemBuilder: (context, index) {
-                      final uid = room.playerIds[index];
-                      return FutureBuilder<Player?>(
-                        future: playerRepository.getPlayer(uid),
-                        builder: (context, snapshot) {
-                          final player = snapshot.data;
-                          return ListTile(
-                            leading: AvatarWidget(avatarUrl: player?.avatarUrl, radius: 20),
-                            title: Text(player?.displayName ?? 'Loading...'),
-                            trailing: uid == room.hostId ? const Icon(Icons.star, color: Colors.amber) : null,
-                          );
-                        },
-                      );
-                    },
+          body: Column(
+            children: [
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: [
+                      Text('Status: ${room.status.name}', style: Theme.of(context).textTheme.titleLarge),
+                      const SizedBox(height: 20),
+                      Text('Players (${room.playerIds.length}/4)', style: Theme.of(context).textTheme.titleMedium),
+                      const SizedBox(height: 10),
+                      Expanded(
+                        child: ListView.builder(
+                          itemCount: room.playerIds.length,
+                          itemBuilder: (context, index) {
+                            final uid = room.playerIds[index];
+                            return FutureBuilder<Player?>(
+                              future: playerRepository.getPlayer(uid),
+                              builder: (context, snapshot) {
+                                final player = snapshot.data;
+                                return ListTile(
+                                  leading: AvatarWidget(avatarUrl: player?.avatarUrl, radius: 20),
+                                  title: Text(player?.displayName ?? 'Loading...'),
+                                  trailing: uid == room.hostId ? const Icon(Icons.star, color: Colors.amber) : null,
+                                );
+                              },
+                            );
+                          },
+                        ),
+                      ),
+                      if (isHost)
+                        ElevatedButton(
+                          onPressed: room.playerIds.length >= 4 ? () => gameRepository.startGame(gameId) : null,
+                          child: const Text('Start Game'),
+                        ),
+                    ],
                   ),
                 ),
-                if (isHost)
-                  ElevatedButton(
-                    onPressed: room.playerIds.length >= 4 ? () => gameRepository.startGame(gameId) : null,
-                    child: const Text('Start Game'),
-                  ),
-              ],
-            ),
+              ),
+              ChatOverlay(gameId: gameId),
+            ],
           ),
         );
       },
