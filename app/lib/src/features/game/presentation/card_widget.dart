@@ -44,7 +44,7 @@ class CardWidget extends StatelessWidget {
                 ],
               )
             : Center(
-                child: Icon(Icons.apps, color: Colors.white.withOpacity(0.5)),
+                child: Icon(Icons.apps, color: Colors.white.withValues(alpha: 0.5)),
               ),
       ),
     );

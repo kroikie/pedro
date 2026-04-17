@@ -24,6 +24,8 @@ dependencies:
   firebase_performance: ^0.11.3
   firebase_crashlytics: ^5.2.0
   google_sign_in: ^6.2.2
+  firebase_ui_auth: ^3.0.1
+  firebase_ui_oauth_google: ^2.0.1
 
 dev_dependencies:
   flutter_test:

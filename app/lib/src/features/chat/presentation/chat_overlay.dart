@@ -39,7 +39,7 @@ class _ChatOverlayState extends State<ChatOverlay> {
       duration: const Duration(milliseconds: 300),
       height: _isExpanded ? 400 : 60,
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.9),
+        color: Colors.white.withValues(alpha: 0.9),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
         boxShadow: const [
           BoxShadow(color: Colors.black26, blurRadius: 8, offset: Offset(0, -2)),
