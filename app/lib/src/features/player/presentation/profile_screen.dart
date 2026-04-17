@@ -95,7 +95,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       setState(() => _player = updatedPlayer);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Profile saved!')));
-        Navigator.pushReplacementNamed(context, '/home');
+        Navigator.of(context).popUntil((route) => route.isFirst);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

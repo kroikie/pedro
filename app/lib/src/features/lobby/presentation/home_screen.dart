@@ -73,9 +73,11 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             IconButton(
               icon: const Icon(Icons.logout),
-              onPressed: () => FirebaseAuth.instance.signOut(),
-            )
-          ],
+              onPressed: () {
+                FirebaseAuth.instance.signOut();
+                Navigator.of(context).popUntil((route) => route.isFirst);
+              },
+            )          ],
         ),
         body: TabBarView(
           children: [

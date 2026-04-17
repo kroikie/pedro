@@ -14,11 +14,8 @@ class AuthScreen extends StatelessWidget {
           GoogleProvider(clientId: 'dummy-client-id-for-emulator'),
         ],
         actions: [
-          AuthStateChangeAction<SignedIn>((context, state) {
-            Navigator.pushReplacementNamed(context, '/home');
-          }),
           AuthStateChangeAction<UserCreated>((context, state) {
-            Navigator.pushReplacementNamed(context, '/profile');
+            Navigator.pushNamed(context, '/profile');
           }),
         ],
       ),

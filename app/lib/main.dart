@@ -66,7 +66,6 @@ class MyApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/': (context) => const AuthGate(),
-        '/home': (context) => const HomeScreen(),
         '/profile': (context) => const ProfileScreen(),
       },
       navigatorObservers: [
