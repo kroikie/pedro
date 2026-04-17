@@ -11,6 +11,7 @@ import 'package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart';
 
 import 'src/features/authentication/presentation/auth_screen.dart';
 import 'src/features/player/presentation/profile_screen.dart';
+import 'src/features/lobby/presentation/home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -74,32 +75,6 @@ class AuthGate extends StatelessWidget {
         }
         return const HomeScreen();
       },
-    );
-  }
-}
-
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Home'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.person),
-            onPressed: () => Navigator.pushNamed(context, '/profile'),
-          ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () => FirebaseAuth.instance.signOut(),
-          )
-        ],
-      ),
-      body: const Center(
-        child: Text('Placeholder Home Screen'),
-      ),
     );
   }
 }
