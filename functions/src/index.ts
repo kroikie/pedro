@@ -1,4 +1,5 @@
 import * as admin from 'firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { createDeck, shuffle, Suit, Card } from './game/deck';
 import { evaluateLiftWinner } from './game/logic';
@@ -16,9 +17,9 @@ export const createGame = onCall<CreateGameData>(async (request) => {
   if (!roomName) throw new HttpsError('invalid-argument', 'Room name is required.');
   const uid = request.auth.uid;
   const gameRef = admin.firestore().collection('games').doc();
-  const gameData = { hostId: uid, name: roomName, playerIds: [uid], status: 'waiting', createdAt: admin.firestore.FieldValue.serverTimestamp() };
+  const gameData = { hostId: uid, name: roomName, playerIds: [uid], status: 'waiting', createdAt: FieldValue.serverTimestamp() };
   await gameRef.set(gameData);
-  
+
   narrateWelcome(gameRef.id, roomName).catch(console.error);
 
   return { gameId: gameRef.id };
@@ -59,18 +60,18 @@ export const startGame = onCall<StartGameData>(async (request) => {
   if (gameData.hostId !== uid) throw new HttpsError('permission-denied', 'Only the host can start.');
   const playerIds: string[] = gameData.playerIds;
   if (playerIds.length < 4) throw new HttpsError('failed-precondition', 'Need at least 4 players.');
-  
+
   let cardsPerPlayer = 0;
   if (playerIds.length === 4) cardsPerPlayer = 9;
   else if (playerIds.length === 5) cardsPerPlayer = 6;
   else if (playerIds.length === 6) cardsPerPlayer = 4;
   else if (playerIds.length === 7) cardsPerPlayer = 3;
   else if (playerIds.length === 8) cardsPerPlayer = 2;
-  
+
   const deck = shuffle(createDeck());
   const playerHands: Record<string, Card[]> = {};
   for (const pid of playerIds) playerHands[pid] = deck.splice(0, cardsPerPlayer);
-  
+
   const sessionData = {
     status: 'playing',
     currentRound: {
@@ -105,11 +106,11 @@ export const submitBid = onCall<SubmitBidData>(async (request) => {
   if (round.phase !== 'wadger') throw new HttpsError('failed-precondition', 'Not in wadger phase.');
   const playerIds: string[] = gameData.playerIds;
   if (uid !== playerIds[round.turnIndex]) throw new HttpsError('failed-precondition', 'Not your turn.');
-  
+
   let newBidValue: number = round.bidValue;
   let newBidWinnerId: string | null = round.bidWinnerId;
   let newConsecutivePasses: number = round.consecutivePasses || 0;
-  
+
   if (bid === null) newConsecutivePasses++;
   else {
     if (bid <= round.bidValue) throw new HttpsError('invalid-argument', 'Bid must be higher.');
@@ -127,7 +128,7 @@ export const submitBid = onCall<SubmitBidData>(async (request) => {
     newBidValue = 1; newBidWinnerId = round.dealerId; nextPhase = 'discarding'; nextTurnIndex = playerIds.indexOf(newBidWinnerId!);
   }
   await gameRef.update({ 'currentRound.bidValue': newBidValue, 'currentRound.bidWinnerId': newBidWinnerId, 'currentRound.consecutivePasses': newConsecutivePasses, 'currentRound.phase': nextPhase, 'currentRound.turnIndex': nextTurnIndex });
-  
+
   if (bid !== null && bid >= 7) {
     narrateBid(gameId, uid, bid).catch(console.error);
   }
@@ -151,7 +152,7 @@ export const setTrumpSuit = onCall<SetTrumpSuitData>(async (request) => {
   const round = gameData.currentRound;
   if (round.phase !== 'discarding') throw new HttpsError('failed-precondition', 'Not in discarding phase.');
   if (uid !== round.bidWinnerId) throw new HttpsError('permission-denied', 'Only bid winner.');
-  
+
   const playerIds: string[] = gameData.playerIds;
   const playerStates: any[] = round.playerStates;
   const discardedCards: Card[] = [];
@@ -213,7 +214,7 @@ export const playCard = onCall<PlayCardData>(async (request) => {
       }
     }
     winnerState.currentRoundPoints += liftPoints;
-    
+
     if (isSpecial) {
       narratePlay(gameId, uid, card, true).catch(console.error);
     }

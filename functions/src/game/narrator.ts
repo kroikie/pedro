@@ -4,7 +4,10 @@ import * as admin from 'firebase-admin';
 import { Card } from './deck';
 
 const ai = genkit({
-  plugins: [googleAI()],
+  plugins: [googleAI({
+    apiKey: 'AIzaSyDn6HLlxBpHf1qu8ndYqlz5pMwGNjaf-GM'
+  }
+  )],
 });
 
 async function postCommentary(gameId: string, text: string) {
@@ -27,7 +30,7 @@ export const narrateWelcome = async (gameId: string, roomName: string) => {
   Provide a short, 1-sentence witty welcome message for the players joining this room.`;
 
   const response = await ai.generate({
-    model: googleAI.model('gemini-1.5-flash'),
+    model: googleAI.model('gemini-3.1-flash-lite-preview'),
     prompt: prompt,
   });
 

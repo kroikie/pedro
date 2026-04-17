@@ -24,6 +24,9 @@ class GameRoomScreen extends StatelessWidget {
     return StreamBuilder<GameRoom?>(
       stream: lobbyRepository.watchGame(gameId),
       builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Scaffold(body: Center(child: Text('Error: ${snapshot.error}')));
+        }
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(body: Center(child: CircularProgressIndicator()));
         }
