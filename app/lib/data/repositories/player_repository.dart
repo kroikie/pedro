@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../domain/player.dart';
+import '../models/player.dart';
 
 class PlayerRepository {
   PlayerRepository({FirebaseFirestore? firestore})

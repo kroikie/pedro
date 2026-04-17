@@ -24,7 +24,7 @@ In the game play phase, players attempt to gain as many points as possible. The 
 - Winning a lift with the 5 of the trump suit (5 points)
 - Winning a lift with the 9 of the trump suit (9 points)
 - Winning a lift with the Jack of the trump suit (1 point if played by you, 3 points if played by an opponent)
-- Winning combined lists with the most cards of value (1 point)
+- Winning combined lifts with the most cards of value (1 point)
   - Cards of value are as follows:
     - 10 (10 points)
     - Jack (1 point)

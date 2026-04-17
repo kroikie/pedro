@@ -86,6 +86,9 @@ class PlayerGameStateMapper extends ClassMapperBase<PlayerGameState> {
   static int _$totalScore(PlayerGameState v) => v.totalScore;
   static const Field<PlayerGameState, int> _f$totalScore =
       Field('totalScore', _$totalScore, opt: true, def: 0);
+  static List<String> _$earnedPoints(PlayerGameState v) => v.earnedPoints;
+  static const Field<PlayerGameState, List<String>> _f$earnedPoints =
+      Field('earnedPoints', _$earnedPoints, opt: true, def: const []);
 
   @override
   final MappableFields<PlayerGameState> fields = const {
@@ -93,6 +96,7 @@ class PlayerGameStateMapper extends ClassMapperBase<PlayerGameState> {
     #hand: _f$hand,
     #currentRoundPoints: _f$currentRoundPoints,
     #totalScore: _f$totalScore,
+    #earnedPoints: _f$earnedPoints,
   };
 
   static PlayerGameState _instantiate(DecodingData data) {
@@ -100,7 +104,8 @@ class PlayerGameStateMapper extends ClassMapperBase<PlayerGameState> {
         uid: data.dec(_f$uid),
         hand: data.dec(_f$hand),
         currentRoundPoints: data.dec(_f$currentRoundPoints),
-        totalScore: data.dec(_f$totalScore));
+        totalScore: data.dec(_f$totalScore),
+        earnedPoints: data.dec(_f$earnedPoints));
   }
 
   @override
@@ -157,11 +162,13 @@ extension PlayerGameStateValueCopy<$R, $Out>
 abstract class PlayerGameStateCopyWith<$R, $In extends PlayerGameState, $Out>
     implements ClassCopyWith<$R, $In, $Out> {
   ListCopyWith<$R, Card, CardCopyWith<$R, Card, Card>> get hand;
+  ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>> get earnedPoints;
   $R call(
       {String? uid,
       List<Card>? hand,
       int? currentRoundPoints,
-      int? totalScore});
+      int? totalScore,
+      List<String>? earnedPoints});
   PlayerGameStateCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(
       Then<$Out2, $R2> t);
 }
@@ -178,16 +185,24 @@ class _PlayerGameStateCopyWithImpl<$R, $Out>
   ListCopyWith<$R, Card, CardCopyWith<$R, Card, Card>> get hand => ListCopyWith(
       $value.hand, (v, t) => v.copyWith.$chain(t), (v) => call(hand: v));
   @override
+  ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>>
+      get earnedPoints => ListCopyWith(
+          $value.earnedPoints,
+          (v, t) => ObjectCopyWith(v, $identity, t),
+          (v) => call(earnedPoints: v));
+  @override
   $R call(
           {String? uid,
           List<Card>? hand,
           int? currentRoundPoints,
-          int? totalScore}) =>
+          int? totalScore,
+          List<String>? earnedPoints}) =>
       $apply(FieldCopyWithData({
         if (uid != null) #uid: uid,
         if (hand != null) #hand: hand,
         if (currentRoundPoints != null) #currentRoundPoints: currentRoundPoints,
-        if (totalScore != null) #totalScore: totalScore
+        if (totalScore != null) #totalScore: totalScore,
+        if (earnedPoints != null) #earnedPoints: earnedPoints
       }));
   @override
   PlayerGameState $make(CopyWithData data) => PlayerGameState(
@@ -195,7 +210,8 @@ class _PlayerGameStateCopyWithImpl<$R, $Out>
       hand: data.get(#hand, or: $value.hand),
       currentRoundPoints:
           data.get(#currentRoundPoints, or: $value.currentRoundPoints),
-      totalScore: data.get(#totalScore, or: $value.totalScore));
+      totalScore: data.get(#totalScore, or: $value.totalScore),
+      earnedPoints: data.get(#earnedPoints, or: $value.earnedPoints));
 
   @override
   PlayerGameStateCopyWith<$R2, PlayerGameState, $Out2> $chain<$R2, $Out2>(
@@ -363,6 +379,9 @@ class RoundStateMapper extends ClassMapperBase<RoundState> {
   static List<Card> _$discardedCards(RoundState v) => v.discardedCards;
   static const Field<RoundState, List<Card>> _f$discardedCards =
       Field('discardedCards', _$discardedCards, opt: true, def: const []);
+  static List<Card> _$playedCards(RoundState v) => v.playedCards;
+  static const Field<RoundState, List<Card>> _f$playedCards =
+      Field('playedCards', _$playedCards, opt: true, def: const []);
   static int _$turnIndex(RoundState v) => v.turnIndex;
   static const Field<RoundState, int> _f$turnIndex =
       Field('turnIndex', _$turnIndex, opt: true, def: 0);
@@ -376,6 +395,7 @@ class RoundStateMapper extends ClassMapperBase<RoundState> {
     #phase: _f$phase,
     #currentLift: _f$currentLift,
     #discardedCards: _f$discardedCards,
+    #playedCards: _f$playedCards,
     #turnIndex: _f$turnIndex,
   };
 
@@ -388,6 +408,7 @@ class RoundStateMapper extends ClassMapperBase<RoundState> {
         phase: data.dec(_f$phase),
         currentLift: data.dec(_f$currentLift),
         discardedCards: data.dec(_f$discardedCards),
+        playedCards: data.dec(_f$playedCards),
         turnIndex: data.dec(_f$turnIndex));
   }
 
@@ -444,6 +465,7 @@ abstract class RoundStateCopyWith<$R, $In extends RoundState, $Out>
     implements ClassCopyWith<$R, $In, $Out> {
   LiftCopyWith<$R, Lift, Lift>? get currentLift;
   ListCopyWith<$R, Card, CardCopyWith<$R, Card, Card>> get discardedCards;
+  ListCopyWith<$R, Card, CardCopyWith<$R, Card, Card>> get playedCards;
   $R call(
       {String? dealerId,
       String? bidWinnerId,
@@ -452,6 +474,7 @@ abstract class RoundStateCopyWith<$R, $In extends RoundState, $Out>
       RoundPhase? phase,
       Lift? currentLift,
       List<Card>? discardedCards,
+      List<Card>? playedCards,
       int? turnIndex});
   RoundStateCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
 }
@@ -472,6 +495,10 @@ class _RoundStateCopyWithImpl<$R, $Out>
       ListCopyWith($value.discardedCards, (v, t) => v.copyWith.$chain(t),
           (v) => call(discardedCards: v));
   @override
+  ListCopyWith<$R, Card, CardCopyWith<$R, Card, Card>> get playedCards =>
+      ListCopyWith($value.playedCards, (v, t) => v.copyWith.$chain(t),
+          (v) => call(playedCards: v));
+  @override
   $R call(
           {String? dealerId,
           Object? bidWinnerId = $none,
@@ -480,6 +507,7 @@ class _RoundStateCopyWithImpl<$R, $Out>
           RoundPhase? phase,
           Object? currentLift = $none,
           List<Card>? discardedCards,
+          List<Card>? playedCards,
           int? turnIndex}) =>
       $apply(FieldCopyWithData({
         if (dealerId != null) #dealerId: dealerId,
@@ -489,6 +517,7 @@ class _RoundStateCopyWithImpl<$R, $Out>
         if (phase != null) #phase: phase,
         if (currentLift != $none) #currentLift: currentLift,
         if (discardedCards != null) #discardedCards: discardedCards,
+        if (playedCards != null) #playedCards: playedCards,
         if (turnIndex != null) #turnIndex: turnIndex
       }));
   @override
@@ -500,6 +529,7 @@ class _RoundStateCopyWithImpl<$R, $Out>
       phase: data.get(#phase, or: $value.phase),
       currentLift: data.get(#currentLift, or: $value.currentLift),
       discardedCards: data.get(#discardedCards, or: $value.discardedCards),
+      playedCards: data.get(#playedCards, or: $value.playedCards),
       turnIndex: data.get(#turnIndex, or: $value.turnIndex));
 
   @override
@@ -526,6 +556,9 @@ class GameSessionMapper extends ClassMapperBase<GameSession> {
 
   static String _$gameId(GameSession v) => v.gameId;
   static const Field<GameSession, String> _f$gameId = Field('gameId', _$gameId);
+  static int _$targetScore(GameSession v) => v.targetScore;
+  static const Field<GameSession, int> _f$targetScore =
+      Field('targetScore', _$targetScore, opt: true, def: 35);
   static List<PlayerGameState> _$playerStates(GameSession v) => v.playerStates;
   static const Field<GameSession, List<PlayerGameState>> _f$playerStates =
       Field('playerStates', _$playerStates);
@@ -536,6 +569,7 @@ class GameSessionMapper extends ClassMapperBase<GameSession> {
   @override
   final MappableFields<GameSession> fields = const {
     #gameId: _f$gameId,
+    #targetScore: _f$targetScore,
     #playerStates: _f$playerStates,
     #currentRound: _f$currentRound,
   };
@@ -543,6 +577,7 @@ class GameSessionMapper extends ClassMapperBase<GameSession> {
   static GameSession _instantiate(DecodingData data) {
     return GameSession(
         gameId: data.dec(_f$gameId),
+        targetScore: data.dec(_f$targetScore),
         playerStates: data.dec(_f$playerStates),
         currentRound: data.dec(_f$currentRound));
   }
@@ -604,6 +639,7 @@ abstract class GameSessionCopyWith<$R, $In extends GameSession, $Out>
   RoundStateCopyWith<$R, RoundState, RoundState> get currentRound;
   $R call(
       {String? gameId,
+      int? targetScore,
       List<PlayerGameState>? playerStates,
       RoundState? currentRound});
   GameSessionCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
@@ -628,16 +664,19 @@ class _GameSessionCopyWithImpl<$R, $Out>
   @override
   $R call(
           {String? gameId,
+          int? targetScore,
           List<PlayerGameState>? playerStates,
           RoundState? currentRound}) =>
       $apply(FieldCopyWithData({
         if (gameId != null) #gameId: gameId,
+        if (targetScore != null) #targetScore: targetScore,
         if (playerStates != null) #playerStates: playerStates,
         if (currentRound != null) #currentRound: currentRound
       }));
   @override
   GameSession $make(CopyWithData data) => GameSession(
       gameId: data.get(#gameId, or: $value.gameId),
+      targetScore: data.get(#targetScore, or: $value.targetScore),
       playerStates: data.get(#playerStates, or: $value.playerStates),
       currentRound: data.get(#currentRound, or: $value.currentRound));
 

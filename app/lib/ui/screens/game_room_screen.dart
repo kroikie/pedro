@@ -1,23 +1,23 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import '../data/lobby_repository.dart';
-import '../domain/game_room.dart';
-import '../../player/data/player_repository.dart';
-import '../../player/domain/player.dart';
-import '../../../common_widgets/avatar_widget.dart';
-import '../../game/data/game_repository.dart';
-import '../../game/presentation/game_board_screen.dart';
-import '../../chat/presentation/chat_overlay.dart';
+import '../../data/repositories/lobby_repository.dart';
+import '../../data/models/game_room.dart';
+import '../../data/repositories/player_repository.dart';
+import '../../data/models/player.dart';
+import '../widgets/avatar_widget.dart';
+import '../../data/repositories/game_repository.dart';
+import 'game_board_screen.dart';
+import '../widgets/chat_overlay.dart';
 
 class GameRoomScreen extends StatelessWidget {
   const GameRoomScreen({super.key, required this.gameId});
 
   final String gameId;
 
-  void _showInviteDialog(BuildContext context) {
+  void _showInviteDialog(BuildContext context, GameRoom room) {
     showDialog(
       context: context,
-      builder: (context) => InviteDialog(gameId: gameId),
+      builder: (context) => InviteDialog(room: room),
     );
   }
 
@@ -53,6 +53,7 @@ class GameRoomScreen extends StatelessWidget {
         }
 
         final isHost = room.hostId == currentUserId;
+        final allParticipants = [...room.playerIds, ...room.invitedPlayerIds];
 
         return Scaffold(
           appBar: AppBar(
@@ -61,7 +62,7 @@ class GameRoomScreen extends StatelessWidget {
               if (isHost)
                 IconButton(
                   icon: const Icon(Icons.person_add),
-                  onPressed: () => _showInviteDialog(context),
+                  onPressed: () => _showInviteDialog(context, room),
                   tooltip: 'Invite Player',
                 ),
             ],
@@ -75,21 +76,27 @@ class GameRoomScreen extends StatelessWidget {
                     children: [
                       Text('Status: ${room.status.name}', style: Theme.of(context).textTheme.titleLarge),
                       const SizedBox(height: 20),
-                      Text('Players (${room.playerIds.length}/4)', style: Theme.of(context).textTheme.titleMedium),
+                      Text('Players (${room.playerIds.length}/4 joined)', style: Theme.of(context).textTheme.titleMedium),
                       const SizedBox(height: 10),
                       Expanded(
                         child: ListView.builder(
-                          itemCount: room.playerIds.length,
+                          itemCount: allParticipants.length,
                           itemBuilder: (context, index) {
-                            final uid = room.playerIds[index];
+                            final uid = allParticipants[index];
+                            final isInvitedOnly = index >= room.playerIds.length;
+                            
                             return FutureBuilder<Player?>(
                               future: playerRepository.getPlayer(uid),
                               builder: (context, snapshot) {
                                 final player = snapshot.data;
-                                return ListTile(
-                                  leading: AvatarWidget(avatarUrl: player?.avatarUrl, radius: 20),
-                                  title: Text(player?.displayName ?? 'Loading...'),
-                                  trailing: uid == room.hostId ? const Icon(Icons.star, color: Colors.amber) : null,
+                                return Opacity(
+                                  opacity: isInvitedOnly ? 0.6 : 1.0,
+                                  child: ListTile(
+                                    leading: AvatarWidget(avatarUrl: player?.avatarUrl, radius: 20),
+                                    title: Text(player?.displayName ?? 'Loading...'),
+                                    subtitle: isInvitedOnly ? const Text('Invitation Pending...', style: TextStyle(fontStyle: FontStyle.italic)) : null,
+                                    trailing: uid == room.hostId ? const Icon(Icons.star, color: Colors.amber) : (isInvitedOnly ? const Icon(Icons.hourglass_empty, size: 16) : null),
+                                  ),
                                 );
                               },
                             );
@@ -118,8 +125,8 @@ class GameRoomScreen extends StatelessWidget {
 }
 
 class InviteDialog extends StatelessWidget {
-  const InviteDialog({super.key, required this.gameId});
-  final String gameId;
+  const InviteDialog({super.key, required this.room});
+  final GameRoom room;
 
   @override
   Widget build(BuildContext context) {
@@ -143,21 +150,28 @@ class InviteDialog extends StatelessWidget {
               itemCount: players.length,
               itemBuilder: (context, index) {
                 final player = players[index];
+                final isJoined = room.playerIds.contains(player.id);
+                final isInvited = room.invitedPlayerIds.contains(player.id);
+                final canInvite = !isJoined && !isInvited;
+
                 return ListTile(
                   leading: AvatarWidget(avatarUrl: player.avatarUrl, radius: 15),
                   title: Text(player.displayName),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.add),
-                    onPressed: () async {
-                      await lobbyRepo.invitePlayer(gameId, player.id);
-                      if (context.mounted) {
-                        Navigator.of(context).pop();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Invited ${player.displayName}')),
-                        );
-                      }
-                    },
-                  ),
+                  subtitle: isJoined ? const Text('In Game') : (isInvited ? const Text('Already Invited') : null),
+                  trailing: canInvite 
+                    ? IconButton(
+                        icon: const Icon(Icons.add),
+                        onPressed: () async {
+                          await lobbyRepo.invitePlayer(room.id, player.id);
+                          if (context.mounted) {
+                            Navigator.of(context).pop();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Invited ${player.displayName}')),
+                            );
+                          }
+                        },
+                      )
+                    : const Icon(Icons.check, color: Colors.green),
                 );
               },
             );

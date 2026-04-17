@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
-import '../domain/game_session.dart';
-import '../domain/card.dart';
+import '../models/game_session.dart';
+import '../models/card.dart';
 
 class GameRepository {
   GameRepository({
@@ -17,10 +17,6 @@ class GameRepository {
     return _firestore.collection('games').doc(gameId).snapshots().map((doc) {
       if (!doc.exists) return null;
       final data = doc.data()!;
-      
-      // Handle the complex nested structure for GameSession
-      // Note: In a real app, we'd ensure the Firestore data structure matches GameSession exactly.
-      // For now, we assume currentRound contains the playerStates and other fields.
       
       return GameSession.fromMap({
         'gameId': doc.id,

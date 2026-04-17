@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../domain/chat_message.dart';
+import '../models/chat_message.dart';
 
 class ChatRepository {
   ChatRepository({FirebaseFirestore? firestore})

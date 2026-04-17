@@ -11,9 +11,9 @@ import 'firebase_options.dart';
 import 'package:firebase_ui_auth/firebase_ui_auth.dart' hide ProfileScreen;
 import 'package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart';
 
-import 'src/features/authentication/presentation/auth_screen.dart';
-import 'src/features/player/presentation/profile_screen.dart';
-import 'src/features/lobby/presentation/home_screen.dart';
+import 'ui/screens/auth_screen.dart';
+import 'ui/screens/profile_screen.dart';
+import 'ui/screens/home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

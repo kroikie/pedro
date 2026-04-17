@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
-import '../data/player_repository.dart';
-import '../domain/player.dart';
-import '../../../common_widgets/avatar_widget.dart';
+import '../../data/repositories/player_repository.dart';
+import '../../data/models/player.dart';
+import '../widgets/avatar_widget.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});

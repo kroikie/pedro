@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../domain/game_room.dart';
+import '../models/game_room.dart';
 
 class LobbyRepository {
   LobbyRepository({
@@ -59,9 +59,10 @@ class LobbyRepository {
     });
   }
 
-  Future<String> createGame(String roomName) async {
+  Future<String> createGame(String roomName, {int targetScore = 35}) async {
     final result = await _functions.httpsCallable('createGame').call({
       'roomName': roomName,
+      'targetScore': targetScore,
     });
     return result.data['gameId'];
   }

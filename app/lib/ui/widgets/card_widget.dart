@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart' hide Card;
-import '../domain/card.dart' as pedro;
+import '../../data/models/card.dart' as pedro;
 
 class CardWidget extends StatelessWidget {
   const CardWidget({

@@ -81,6 +81,9 @@ class GameRoomMapper extends ClassMapperBase<GameRoom> {
   static const Field<GameRoom, String> _f$hostId = Field('hostId', _$hostId);
   static String _$name(GameRoom v) => v.name;
   static const Field<GameRoom, String> _f$name = Field('name', _$name);
+  static int _$targetScore(GameRoom v) => v.targetScore;
+  static const Field<GameRoom, int> _f$targetScore =
+      Field('targetScore', _$targetScore, opt: true, def: 35);
   static List<String> _$playerIds(GameRoom v) => v.playerIds;
   static const Field<GameRoom, List<String>> _f$playerIds =
       Field('playerIds', _$playerIds);
@@ -99,6 +102,7 @@ class GameRoomMapper extends ClassMapperBase<GameRoom> {
     #id: _f$id,
     #hostId: _f$hostId,
     #name: _f$name,
+    #targetScore: _f$targetScore,
     #playerIds: _f$playerIds,
     #invitedPlayerIds: _f$invitedPlayerIds,
     #status: _f$status,
@@ -110,6 +114,7 @@ class GameRoomMapper extends ClassMapperBase<GameRoom> {
         id: data.dec(_f$id),
         hostId: data.dec(_f$hostId),
         name: data.dec(_f$name),
+        targetScore: data.dec(_f$targetScore),
         playerIds: data.dec(_f$playerIds),
         invitedPlayerIds: data.dec(_f$invitedPlayerIds),
         status: data.dec(_f$status),
@@ -172,6 +177,7 @@ abstract class GameRoomCopyWith<$R, $In extends GameRoom, $Out>
       {String? id,
       String? hostId,
       String? name,
+      int? targetScore,
       List<String>? playerIds,
       List<String>? invitedPlayerIds,
       GameStatus? status,
@@ -202,6 +208,7 @@ class _GameRoomCopyWithImpl<$R, $Out>
           {String? id,
           String? hostId,
           String? name,
+          int? targetScore,
           List<String>? playerIds,
           List<String>? invitedPlayerIds,
           GameStatus? status,
@@ -210,6 +217,7 @@ class _GameRoomCopyWithImpl<$R, $Out>
         if (id != null) #id: id,
         if (hostId != null) #hostId: hostId,
         if (name != null) #name: name,
+        if (targetScore != null) #targetScore: targetScore,
         if (playerIds != null) #playerIds: playerIds,
         if (invitedPlayerIds != null) #invitedPlayerIds: invitedPlayerIds,
         if (status != null) #status: status,
@@ -220,6 +228,7 @@ class _GameRoomCopyWithImpl<$R, $Out>
       id: data.get(#id, or: $value.id),
       hostId: data.get(#hostId, or: $value.hostId),
       name: data.get(#name, or: $value.name),
+      targetScore: data.get(#targetScore, or: $value.targetScore),
       playerIds: data.get(#playerIds, or: $value.playerIds),
       invitedPlayerIds:
           data.get(#invitedPlayerIds, or: $value.invitedPlayerIds),

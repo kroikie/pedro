@@ -17,12 +17,14 @@ class PlayerGameState with PlayerGameStateMappable {
   final List<Card> hand;
   final int currentRoundPoints;
   final int totalScore;
+  final List<String> earnedPoints;
 
   const PlayerGameState({
     required this.uid,
     required this.hand,
     this.currentRoundPoints = 0,
     this.totalScore = 0,
+    this.earnedPoints = const [],
   });
 
   static const fromMap = PlayerGameStateMapper.fromMap;
@@ -52,6 +54,7 @@ class RoundState with RoundStateMappable {
   final RoundPhase phase;
   final Lift? currentLift;
   final List<Card> discardedCards;
+  final List<Card> playedCards;
   final int turnIndex;
 
   const RoundState({
@@ -62,6 +65,7 @@ class RoundState with RoundStateMappable {
     this.phase = RoundPhase.wadger,
     this.currentLift,
     this.discardedCards = const [],
+    this.playedCards = const [],
     this.turnIndex = 0,
   });
 
@@ -71,11 +75,13 @@ class RoundState with RoundStateMappable {
 @MappableClass()
 class GameSession with GameSessionMappable {
   final String gameId;
+  final int targetScore;
   final List<PlayerGameState> playerStates;
   final RoundState currentRound;
 
   const GameSession({
     required this.gameId,
+    this.targetScore = 35,
     required this.playerStates,
     required this.currentRound,
   });

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pedro/src/features/lobby/domain/game_room.dart';
+import 'package:pedro/data/models/game_room.dart';
 
 void main() {
   group('GameRoom Model Serialization', () {
@@ -20,8 +20,6 @@ void main() {
       expect(map['name'], 'sneeky_five');
       expect(map['playerIds'], ['user456']);
       expect(map['status'], 'waiting');
-      // Mappable handles DateTime as ISO string or timestamp depending on config
-      // Default is usually ISO string or .toInternalFormat()
       
       final deserializedRoom = GameRoom.fromMap(map);
       expect(deserializedRoom.id, room.id);
@@ -29,7 +27,6 @@ void main() {
       expect(deserializedRoom.name, room.name);
       expect(deserializedRoom.playerIds, room.playerIds);
       expect(deserializedRoom.status, room.status);
-      // Compare dates loosely if needed, or check milliseconds
       expect(deserializedRoom.createdAt.millisecondsSinceEpoch, room.createdAt.millisecondsSinceEpoch);
     });
   });
