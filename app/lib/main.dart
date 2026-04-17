@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart' hide Card;
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart' hide EmailAuthProvider;
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -8,8 +8,6 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'firebase_options.dart';
-import 'package:firebase_ui_auth/firebase_ui_auth.dart' hide ProfileScreen;
-import 'package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart';
 
 import 'src/features/authentication/presentation/auth_screen.dart';
 import 'src/features/player/presentation/profile_screen.dart';
@@ -22,11 +20,13 @@ void main() async {
   );
 
   // Initialize Crashlytics and Analytics
-  FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
-  PlatformDispatcher.instance.onError = (error, stack) {
-    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-    return true;
-  };
+  if (!kIsWeb) {
+    FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+    PlatformDispatcher.instance.onError = (error, stack) {
+      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+      return true;
+    };
+  }
 
   // Connect to the local emulator suite
   const bool useEmulator = true;
@@ -42,10 +42,6 @@ void main() async {
       debugPrint('Failed to connect to emulators: $e');
     }
   }
-
-  FirebaseUIAuth.configureProviders([
-    GoogleProvider(clientId: 'dummy-client-id-for-emulator'),
-  ]);
 
   runApp(const MyApp());
 }
@@ -82,6 +78,9 @@ class AuthGate extends StatelessWidget {
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        }
         if (!snapshot.hasData) {
           return const AuthScreen();
         }

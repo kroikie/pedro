@@ -3,9 +3,7 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
-  app_links
   cloud_firestore
-  desktop_webview_auth
   file_selector_windows
   firebase_app_check
   firebase_auth

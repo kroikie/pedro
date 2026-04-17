@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:firebase_ui_storage/firebase_ui_storage.dart';
 
 class AvatarWidget extends StatelessWidget {
   const AvatarWidget({
@@ -25,34 +24,50 @@ class AvatarWidget extends StatelessWidget {
     final isFirebaseStorage = avatarUrl!.startsWith('gs://') || 
                              avatarUrl!.contains('firebasestorage.googleapis.com');
 
+    if (isFirebaseStorage) {
+      return FutureBuilder<String>(
+        future: FirebaseStorage.instance.refFromURL(avatarUrl!).getDownloadURL(),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            return _buildImage(snapshot.data!);
+          }
+          if (snapshot.hasError) {
+            return _errorIcon();
+          }
+          return SizedBox(
+            width: radius * 2,
+            height: radius * 2,
+            child: const CircularProgressIndicator(),
+          );
+        },
+      );
+    }
+
+    return _buildImage(avatarUrl!);
+  }
+
+  Widget _buildImage(String url) {
     return SizedBox(
       width: radius * 2,
       height: radius * 2,
       child: ClipOval(
-        child: isFirebaseStorage
-            ? StorageImage(
-              ref: _getRefFromUrl(avatarUrl!),
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, [stackTrace]) => _errorIcon(),
-            )            : Image.network(
-                avatarUrl!,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => _errorIcon(),
-              ),
+        child: Image.network(
+          url,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) => _errorIcon(),
+        ),
       ),
     );
   }
 
-  Reference _getRefFromUrl(String url) {
-    if (url.startsWith('gs://')) {
-      return FirebaseStorage.instance.refFromURL(url);
-    }
-    return FirebaseStorage.instance.refFromURL(url);
-  }
-
   Widget _errorIcon() {
     return Container(
-      color: Colors.grey[300],
+      width: radius * 2,
+      height: radius * 2,
+      decoration: const BoxDecoration(
+        color: Colors.grey,
+        shape: BoxShape.circle,
+      ),
       child: Icon(Icons.error, size: radius),
     );
   }
