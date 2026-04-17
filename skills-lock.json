@@ -1,0 +1,80 @@
+{
+  "version": 1,
+  "skills": {
+    "developing-genkit-js": {
+      "source": "firebase/agent-skills",
+      "sourceType": "github",
+      "computedHash": "2fa9adb27f7cfc4635decebea65222cd56e36b5de34781f7862be888504c04f4"
+    },
+    "firebase-ai-logic": {
+      "source": "firebase/agent-skills",
+      "sourceType": "github",
+      "computedHash": "3b3d8994f2ac2e747a1f203488844a7e17b8a25c38e636b221903ae90e3b7c32"
+    },
+    "firebase-auth-basics": {
+      "source": "firebase/agent-skills",
+      "sourceType": "github",
+      "computedHash": "ff79d278c0968f297d60f37532c32fd3b8bd9aad9c64b9f354585c701e80112a"
+    },
+    "firebase-basics": {
+      "source": "firebase/agent-skills",
+      "sourceType": "github",
+      "computedHash": "c22edefdc07886432f1361b0412f82ccd53f82d107005acd6dae326f1e106ea7"
+    },
+    "firebase-firestore-enterprise-native-mode": {
+      "source": "firebase/agent-skills",
+      "sourceType": "github",
+      "computedHash": "528bd602aa93a4409842a4e6f9888b8438521953253b0a629aeaf10603823bf9"
+    },
+    "firebase-hosting-basics": {
+      "source": "firebase/agent-skills",
+      "sourceType": "github",
+      "computedHash": "fb86fd4035e8e6379931faeb443557ac6f2e43fde04b397433f287e69b6532a9"
+    },
+    "firestore-security-rules-auditor": {
+      "source": "firebase/agent-skills",
+      "sourceType": "github",
+      "computedHash": "8b797ed45d9d171b3a88f4980d72fc4accd1257206c555f4935599f9b9fd7d28"
+    },
+    "flutter-animating-apps": {
+      "source": "flutter/skills",
+      "sourceType": "github",
+      "computedHash": "85c3483e4b5da7abefc7de8ad8fb4211b6680a2ba03e727aa000ad139e0b9565"
+    },
+    "flutter-architecting-apps": {
+      "source": "flutter/skills",
+      "sourceType": "github",
+      "computedHash": "eb8640b807ea631973fa259880abf07d0cb0f26d327da9970e56fbfc95650ada"
+    },
+    "flutter-building-layouts": {
+      "source": "flutter/skills",
+      "sourceType": "github",
+      "computedHash": "2fc5b3828e53902e4e61d79d2bbd5557409e27e9713ea0aa4efb307a6c9cda43"
+    },
+    "flutter-handling-http-and-json": {
+      "source": "flutter/skills",
+      "sourceType": "github",
+      "computedHash": "1bb171225adb651761324fa9289013681ebe83a1a897f812ec2ee658826cff57"
+    },
+    "flutter-implementing-navigation-and-routing": {
+      "source": "flutter/skills",
+      "sourceType": "github",
+      "computedHash": "1ac3fdf915c37ddf8acd943c316e3119dc1436f159b3d8d7f5a4c70eaa1583bd"
+    },
+    "flutter-managing-state": {
+      "source": "flutter/skills",
+      "sourceType": "github",
+      "computedHash": "4ae2c7b298e4da58029e4318efa4d009ff517021296c93b6bcc1c051a5a10085"
+    },
+    "flutter-testing-apps": {
+      "source": "flutter/skills",
+      "sourceType": "github",
+      "computedHash": "a27066ec569ff16a1af847c8a13ef7411375d01ab9f768708822c4d993ab52ac"
+    },
+    "flutter-theming-apps": {
+      "source": "flutter/skills",
+      "sourceType": "github",
+      "computedHash": "06d864f1951a562f98b00b04f12ae492e3b0e7ddfbef7254f87358c57375a21a"
+    }
+  }
+}
