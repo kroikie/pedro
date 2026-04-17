@@ -1,6 +1,7 @@
 import { genkit } from 'genkit';
 import { googleAI } from '@genkit-ai/google-genai';
 import * as admin from 'firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import { Card } from './deck';
 
 const ai = genkit({
@@ -18,7 +19,7 @@ async function postCommentary(gameId: string, text: string) {
       senderId: 'ai_narrator',
       senderName: 'AI Narrator',
       text: text,
-      timestamp: admin.firestore.FieldValue.serverTimestamp(),
+      timestamp: FieldValue.serverTimestamp(),
       isAi: true,
     });
 }
