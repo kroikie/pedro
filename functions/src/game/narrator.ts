@@ -1,12 +1,13 @@
-const { genkit } = require('genkit');
-const { googleAI } = require('@genkit-ai/google-genai');
-const admin = require('firebase-admin');
+import { genkit } from 'genkit';
+import { googleAI } from '@genkit-ai/google-genai';
+import * as admin from 'firebase-admin';
+import { Card } from './deck';
 
 const ai = genkit({
   plugins: [googleAI()],
 });
 
-async function postCommentary(gameId, text) {
+async function postCommentary(gameId: string, text: string) {
   await admin.firestore()
     .collection('games')
     .doc(gameId)
@@ -20,7 +21,7 @@ async function postCommentary(gameId, text) {
     });
 }
 
-exports.narrateWelcome = async (gameId, roomName) => {
+export const narrateWelcome = async (gameId: string, roomName: string) => {
   const prompt = `You are a witty card game narrator for Pedro. 
   A new game room named "${roomName}" has just been created. 
   Provide a short, 1-sentence witty welcome message for the players joining this room.`;
@@ -33,7 +34,7 @@ exports.narrateWelcome = async (gameId, roomName) => {
   await postCommentary(gameId, response.text.trim());
 };
 
-exports.narrateBid = async (gameId, playerId, bid) => {
+export const narrateBid = async (gameId: string, playerId: string, bid: number) => {
   const prompt = `You are a witty card game narrator for a game called Pedro. 
   A player just bid ${bid} points. Provide a short, 1-sentence reaction or commentary about this bid. 
   Keep it lighthearted and competitive.`;
@@ -46,7 +47,7 @@ exports.narrateBid = async (gameId, playerId, bid) => {
   await postCommentary(gameId, response.text.trim());
 };
 
-exports.narratePlay = async (gameId, playerId, card, isSpecial) => {
+export const narratePlay = async (gameId: string, playerId: string, card: Card, isSpecial: boolean) => {
   if (!isSpecial) return;
 
   const prompt = `You are a witty card game narrator for Pedro. 

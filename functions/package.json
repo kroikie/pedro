@@ -1,9 +1,13 @@
 {
   "name": "functions",
   "description": "Cloud Functions for Firebase",
+  "main": "lib/index.js",
   "scripts": {
-    "serve": "firebase emulators:start --only functions",
-    "shell": "firebase functions:shell",
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "test": "npm run build && node lib/test_logic.js",
+    "serve": "npm run build && firebase emulators:start --only functions",
+    "shell": "npm run build && firebase functions:shell",
     "start": "npm run shell",
     "deploy": "firebase deploy --only functions",
     "logs": "firebase functions:log"
@@ -11,7 +15,6 @@
   "engines": {
     "node": "18"
   },
-  "main": "index.js",
   "dependencies": {
     "@genkit-ai/firebase": "^1.32.0",
     "@genkit-ai/google-genai": "^1.32.0",
@@ -20,7 +23,10 @@
     "genkit": "^1.32.0"
   },
   "devDependencies": {
-    "firebase-functions-test": "^3.1.0"
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.6.0",
+    "firebase-functions-test": "^3.4.1",
+    "typescript": "^6.0.3"
   },
   "private": true
 }

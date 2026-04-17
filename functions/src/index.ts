@@ -1,12 +1,16 @@
-const admin = require('firebase-admin');
-const { onCall, HttpsError } = require("firebase-functions/v2/https");
-const { createDeck, shuffle } = require('./src/game/deck');
-const { evaluateLiftWinner } = require('./src/game/logic');
-const { narrateWelcome, narrateBid, narratePlay } = require('./src/game/narrator');
+import * as admin from 'firebase-admin';
+import { onCall, HttpsError } from "firebase-functions/v2/https";
+import { createDeck, shuffle, Suit, Card } from './game/deck';
+import { evaluateLiftWinner } from './game/logic';
+import { narrateWelcome, narrateBid, narratePlay } from './game/narrator';
 
 admin.initializeApp();
 
-exports.createGame = onCall(async (request) => {
+interface CreateGameData {
+  roomName: string;
+}
+
+export const createGame = onCall<CreateGameData>(async (request) => {
   if (!request.auth) throw new HttpsError('unauthenticated', 'User must be logged in.');
   const { roomName } = request.data;
   if (!roomName) throw new HttpsError('invalid-argument', 'Room name is required.');
@@ -20,7 +24,11 @@ exports.createGame = onCall(async (request) => {
   return { gameId: gameRef.id };
 });
 
-exports.joinGame = onCall(async (request) => {
+interface JoinGameData {
+  gameId: string;
+}
+
+export const joinGame = onCall<JoinGameData>(async (request) => {
   if (!request.auth) throw new HttpsError('unauthenticated', 'User must be logged in.');
   const { gameId } = request.data;
   if (!gameId) throw new HttpsError('invalid-argument', 'Game ID is required.');
@@ -28,7 +36,7 @@ exports.joinGame = onCall(async (request) => {
   const gameRef = admin.firestore().collection('games').doc(gameId);
   const gameDoc = await gameRef.get();
   if (!gameDoc.exists) throw new HttpsError('not-found', 'Game not found.');
-  const gameData = gameDoc.data();
+  const gameData = gameDoc.data()!;
   if (gameData.status !== 'waiting') throw new HttpsError('failed-precondition', 'Game has already started.');
   if (gameData.playerIds.length >= 8) throw new HttpsError('failed-precondition', 'Game room is full.');
   if (gameData.playerIds.includes(uid)) return { success: true };
@@ -36,26 +44,33 @@ exports.joinGame = onCall(async (request) => {
   return { success: true };
 });
 
-exports.startGame = onCall(async (request) => {
+interface StartGameData {
+  gameId: string;
+}
+
+export const startGame = onCall<StartGameData>(async (request) => {
   if (!request.auth) throw new HttpsError('unauthenticated', 'User must be logged in.');
   const { gameId } = request.data;
   const uid = request.auth.uid;
   const gameRef = admin.firestore().collection('games').doc(gameId);
   const gameDoc = await gameRef.get();
   if (!gameDoc.exists) throw new HttpsError('not-found', 'Game not found.');
-  const gameData = gameDoc.data();
+  const gameData = gameDoc.data()!;
   if (gameData.hostId !== uid) throw new HttpsError('permission-denied', 'Only the host can start.');
-  const playerIds = gameData.playerIds;
+  const playerIds: string[] = gameData.playerIds;
   if (playerIds.length < 4) throw new HttpsError('failed-precondition', 'Need at least 4 players.');
+  
   let cardsPerPlayer = 0;
   if (playerIds.length === 4) cardsPerPlayer = 9;
   else if (playerIds.length === 5) cardsPerPlayer = 6;
   else if (playerIds.length === 6) cardsPerPlayer = 4;
   else if (playerIds.length === 7) cardsPerPlayer = 3;
   else if (playerIds.length === 8) cardsPerPlayer = 2;
+  
   const deck = shuffle(createDeck());
-  const playerHands = {};
+  const playerHands: Record<string, Card[]> = {};
   for (const pid of playerIds) playerHands[pid] = deck.splice(0, cardsPerPlayer);
+  
   const sessionData = {
     status: 'playing',
     currentRound: {
@@ -73,21 +88,28 @@ exports.startGame = onCall(async (request) => {
   return { success: true };
 });
 
-exports.submitBid = onCall(async (request) => {
+interface SubmitBidData {
+  gameId: string;
+  bid: number | null;
+}
+
+export const submitBid = onCall<SubmitBidData>(async (request) => {
   if (!request.auth) throw new HttpsError('unauthenticated', 'User must be logged in.');
   const { gameId, bid } = request.data;
   const uid = request.auth.uid;
   const gameRef = admin.firestore().collection('games').doc(gameId);
   const gameDoc = await gameRef.get();
   if (!gameDoc.exists) throw new HttpsError('not-found', 'Game not found.');
-  const gameData = gameDoc.data();
+  const gameData = gameDoc.data()!;
   const round = gameData.currentRound;
   if (round.phase !== 'wadger') throw new HttpsError('failed-precondition', 'Not in wadger phase.');
-  const playerIds = gameData.playerIds;
+  const playerIds: string[] = gameData.playerIds;
   if (uid !== playerIds[round.turnIndex]) throw new HttpsError('failed-precondition', 'Not your turn.');
-  let newBidValue = round.bidValue;
-  let newBidWinnerId = round.bidWinnerId;
-  let newConsecutivePasses = round.consecutivePasses || 0;
+  
+  let newBidValue: number = round.bidValue;
+  let newBidWinnerId: string | null = round.bidWinnerId;
+  let newConsecutivePasses: number = round.consecutivePasses || 0;
+  
   if (bid === null) newConsecutivePasses++;
   else {
     if (bid <= round.bidValue) throw new HttpsError('invalid-argument', 'Bid must be higher.');
@@ -102,7 +124,7 @@ exports.submitBid = onCall(async (request) => {
     nextPhase = 'discarding';
     nextTurnIndex = playerIds.indexOf(newBidWinnerId);
   } else if (newConsecutivePasses === numPlayers) {
-    newBidValue = 1; newBidWinnerId = round.dealerId; nextPhase = 'discarding'; nextTurnIndex = playerIds.indexOf(newBidWinnerId);
+    newBidValue = 1; newBidWinnerId = round.dealerId; nextPhase = 'discarding'; nextTurnIndex = playerIds.indexOf(newBidWinnerId!);
   }
   await gameRef.update({ 'currentRound.bidValue': newBidValue, 'currentRound.bidWinnerId': newBidWinnerId, 'currentRound.consecutivePasses': newConsecutivePasses, 'currentRound.phase': nextPhase, 'currentRound.turnIndex': nextTurnIndex });
   
@@ -113,23 +135,29 @@ exports.submitBid = onCall(async (request) => {
   return { success: true };
 });
 
-exports.setTrumpSuit = onCall(async (request) => {
+interface SetTrumpSuitData {
+  gameId: string;
+  suit: Suit;
+}
+
+export const setTrumpSuit = onCall<SetTrumpSuitData>(async (request) => {
   if (!request.auth) throw new HttpsError('unauthenticated', 'User must be logged in.');
   const { gameId, suit } = request.data;
   const uid = request.auth.uid;
   const gameRef = admin.firestore().collection('games').doc(gameId);
   const gameDoc = await gameRef.get();
   if (!gameDoc.exists) throw new HttpsError('not-found', 'Game not found.');
-  const gameData = gameDoc.data();
+  const gameData = gameDoc.data()!;
   const round = gameData.currentRound;
   if (round.phase !== 'discarding') throw new HttpsError('failed-precondition', 'Not in discarding phase.');
   if (uid !== round.bidWinnerId) throw new HttpsError('permission-denied', 'Only bid winner.');
-  const playerIds = gameData.playerIds;
-  const playerStates = round.playerStates;
-  const discardedCards = [];
+  
+  const playerIds: string[] = gameData.playerIds;
+  const playerStates: any[] = round.playerStates;
+  const discardedCards: Card[] = [];
   for (const ps of playerStates) {
-    const keep = ps.hand.filter(c => c.suit === suit);
-    const discard = ps.hand.filter(c => c.suit !== suit);
+    const keep = ps.hand.filter((c: Card) => c.suit === suit);
+    const discard = ps.hand.filter((c: Card) => c.suit !== suit);
     ps.hand = keep; discardedCards.push(...discard);
   }
   const newDeck = [...round.deck, ...shuffle(discardedCards)];
@@ -142,19 +170,24 @@ exports.setTrumpSuit = onCall(async (request) => {
   return { success: true };
 });
 
-exports.playCard = onCall(async (request) => {
+interface PlayCardData {
+  gameId: string;
+  card: Card;
+}
+
+export const playCard = onCall<PlayCardData>(async (request) => {
   if (!request.auth) throw new HttpsError('unauthenticated', 'User must be logged in.');
   const { gameId, card } = request.data;
   const uid = request.auth.uid;
   const gameRef = admin.firestore().collection('games').doc(gameId);
   const gameDoc = await gameRef.get();
   if (!gameDoc.exists) throw new HttpsError('not-found', 'Game not found.');
-  const gameData = gameDoc.data();
+  const gameData = gameDoc.data()!;
   const round = gameData.currentRound;
   if (round.phase !== 'playing') throw new HttpsError('failed-precondition', 'Not in playing phase.');
   if (uid !== gameData.playerIds[round.turnIndex]) throw new HttpsError('failed-precondition', 'Not your turn.');
-  const playerState = round.playerStates.find(p => p.uid === uid);
-  const cardIndex = playerState.hand.findIndex(c => c.suit === card.suit && c.rank === card.rank);
+  const playerState = round.playerStates.find((p: any) => p.uid === uid);
+  const cardIndex = playerState.hand.findIndex((c: Card) => c.suit === card.suit && c.rank === card.rank);
   if (cardIndex === -1) throw new HttpsError('invalid-argument', 'Card not in hand.');
   playerState.hand.splice(cardIndex, 1);
   const currentLift = round.currentLift;
@@ -165,10 +198,10 @@ exports.playCard = onCall(async (request) => {
     const leadSuit = currentLift.plays[currentLift.leadPlayerId].suit;
     const winnerId = evaluateLiftWinner(currentLift.plays, leadSuit, round.trumpSuit);
     currentLift.winnerId = winnerId;
-    const winnerState = round.playerStates.find(p => p.uid === winnerId);
+    const winnerState = round.playerStates.find((p: any) => p.uid === winnerId);
     let liftPoints = 0;
     let isSpecial = false;
-    for (const [pId, playedCard] of Object.entries(currentLift.plays)) {
+    for (const [pId, playedCard] of Object.entries<Card>(currentLift.plays)) {
       if (playedCard.suit === round.trumpSuit) {
         if (playedCard.rank === 'five') { liftPoints += 5; isSpecial = true; }
         if (playedCard.rank === 'nine') { liftPoints += 9; isSpecial = true; }
@@ -185,10 +218,10 @@ exports.playCard = onCall(async (request) => {
       narratePlay(gameId, uid, card, true).catch(console.error);
     }
 
-    if (round.playerStates.every(p => p.hand.length === 0)) nextPhase = 'finished';
+    if (round.playerStates.every((p: any) => p.hand.length === 0)) nextPhase = 'finished';
     else {
       round.currentLift = { leadPlayerId: winnerId, plays: {}, winnerId: null };
-      nextTurnIndex = gameData.playerIds.indexOf(winnerId);
+      nextTurnIndex = gameData.playerIds.indexOf(winnerId!);
     }
   }
   await gameRef.update({ 'currentRound.playerStates': round.playerStates, 'currentRound.currentLift': round.currentLift, 'currentRound.turnIndex': nextTurnIndex, 'currentRound.phase': nextPhase });

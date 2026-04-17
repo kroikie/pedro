@@ -1,5 +1,6 @@
-const { createDeck, shuffle } = require('./src/game/deck');
-const { evaluateLiftWinner } = require('./src/game/logic');
+import { createDeck, shuffle } from './game/deck';
+import { evaluateLiftWinner } from './game/logic';
+import { Card, Suit } from './game/deck';
 
 function testDeck() {
   console.log('Testing Deck Creation...');
@@ -16,7 +17,7 @@ function testDeck() {
 
 function testLogic() {
   console.log('Testing Lift Evaluation...');
-  const plays = {
+  const plays: Record<string, Card> = {
     'p1': { suit: 'hearts', rank: 'ace' },
     'p2': { suit: 'hearts', rank: 'five' },
     'p3': { suit: 'spades', rank: 'two' },
@@ -42,7 +43,7 @@ try {
   testDeck();
   testLogic();
   console.log('ALL SERVER LOGIC TESTS PASSED');
-} catch (e) {
+} catch (e: any) {
   console.error('TEST FAILED:', e.message);
   process.exit(1);
 }
