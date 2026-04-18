@@ -1,0 +1,10 @@
+*-debug.log
+.idea/
+.vscode/
+node_modules/
+build/
+.dart_tool/
+.packages
+.pub/
+.flutter-plugins
+.flutter-plugins-dependencies

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../data/repositories/chat_repository.dart';
+import '../../data/repositories/player_repository.dart';
 import '../../data/models/chat_message.dart';
+import '../../data/models/player.dart';
 
 class ChatOverlay extends StatefulWidget {
   const ChatOverlay({super.key, required this.gameId});
@@ -13,9 +15,29 @@ class ChatOverlay extends StatefulWidget {
 
 class _ChatOverlayState extends State<ChatOverlay> {
   final _chatRepo = ChatRepository();
+  final _playerRepo = PlayerRepository();
   final _messageController = TextEditingController();
   final _scrollController = ScrollController();
   bool _isExpanded = false;
+  String? _cachedScreenName;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPlayerName();
+  }
+
+  Future<void> _loadPlayerName() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final player = await _playerRepo.getPlayer(user.uid);
+      if (mounted) {
+        setState(() {
+          _cachedScreenName = player?.screenName ?? user.displayName ?? 'Anonymous';
+        });
+      }
+    }
+  }
 
   Future<void> _sendMessage() async {
     final text = _messageController.text.trim();
@@ -24,10 +46,16 @@ class _ChatOverlayState extends State<ChatOverlay> {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
+    // Use cached name if available, otherwise fallback and trigger reload
+    final senderName = _cachedScreenName ?? user.displayName ?? 'Anonymous';
+    if (_cachedScreenName == null) {
+      _loadPlayerName();
+    }
+
     await _chatRepo.sendMessage(
       gameId: widget.gameId,
       senderId: user.uid,
-      senderName: user.displayName ?? 'Anonymous',
+      senderName: senderName,
       text: text,
     );
     _messageController.clear();

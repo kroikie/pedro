@@ -22,9 +22,9 @@ class PlayerMapper extends ClassMapperBase<Player> {
 
   static String _$id(Player v) => v.id;
   static const Field<Player, String> _f$id = Field('id', _$id);
-  static String _$displayName(Player v) => v.displayName;
-  static const Field<Player, String> _f$displayName =
-      Field('displayName', _$displayName);
+  static String _$screenName(Player v) => v.screenName;
+  static const Field<Player, String> _f$screenName =
+      Field('screenName', _$screenName);
   static String? _$avatarUrl(Player v) => v.avatarUrl;
   static const Field<Player, String> _f$avatarUrl =
       Field('avatarUrl', _$avatarUrl, opt: true);
@@ -32,14 +32,14 @@ class PlayerMapper extends ClassMapperBase<Player> {
   @override
   final MappableFields<Player> fields = const {
     #id: _f$id,
-    #displayName: _f$displayName,
+    #screenName: _f$screenName,
     #avatarUrl: _f$avatarUrl,
   };
 
   static Player _instantiate(DecodingData data) {
     return Player(
         id: data.dec(_f$id),
-        displayName: data.dec(_f$displayName),
+        screenName: data.dec(_f$screenName),
         avatarUrl: data.dec(_f$avatarUrl));
   }
 
@@ -89,7 +89,7 @@ extension PlayerValueCopy<$R, $Out> on ObjectCopyWith<$R, Player, $Out> {
 
 abstract class PlayerCopyWith<$R, $In extends Player, $Out>
     implements ClassCopyWith<$R, $In, $Out> {
-  $R call({String? id, String? displayName, String? avatarUrl});
+  $R call({String? id, String? screenName, String? avatarUrl});
   PlayerCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
 }
 
@@ -100,16 +100,16 @@ class _PlayerCopyWithImpl<$R, $Out> extends ClassCopyWithBase<$R, Player, $Out>
   @override
   late final ClassMapperBase<Player> $mapper = PlayerMapper.ensureInitialized();
   @override
-  $R call({String? id, String? displayName, Object? avatarUrl = $none}) =>
+  $R call({String? id, String? screenName, Object? avatarUrl = $none}) =>
       $apply(FieldCopyWithData({
         if (id != null) #id: id,
-        if (displayName != null) #displayName: displayName,
+        if (screenName != null) #screenName: screenName,
         if (avatarUrl != $none) #avatarUrl: avatarUrl
       }));
   @override
   Player $make(CopyWithData data) => Player(
       id: data.get(#id, or: $value.id),
-      displayName: data.get(#displayName, or: $value.displayName),
+      screenName: data.get(#screenName, or: $value.screenName),
       avatarUrl: data.get(#avatarUrl, or: $value.avatarUrl));
 
   @override

@@ -5,12 +5,12 @@ part 'player.mapper.dart';
 @MappableClass()
 class Player with PlayerMappable {
   final String id;
-  final String displayName;
+  final String screenName;
   final String? avatarUrl;
 
   const Player({
     required this.id,
-    required this.displayName,
+    required this.screenName,
     this.avatarUrl,
   });
 

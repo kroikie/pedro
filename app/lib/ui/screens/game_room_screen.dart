@@ -9,10 +9,21 @@ import '../../data/repositories/game_repository.dart';
 import 'game_board_screen.dart';
 import '../widgets/chat_overlay.dart';
 
-class GameRoomScreen extends StatelessWidget {
+class GameRoomScreen extends StatefulWidget {
   const GameRoomScreen({super.key, required this.gameId});
 
   final String gameId;
+
+  @override
+  State<GameRoomScreen> createState() => _GameRoomScreenState();
+}
+
+class _GameRoomScreenState extends State<GameRoomScreen> {
+  final _lobbyRepository = LobbyRepository();
+  final _playerRepository = PlayerRepository();
+  final _gameRepository = GameRepository();
+  final _currentUserId = FirebaseAuth.instance.currentUser?.uid;
+  final Map<String, Player?> _playerCache = {};
 
   void _showInviteDialog(BuildContext context, GameRoom room) {
     showDialog(
@@ -21,15 +32,21 @@ class GameRoomScreen extends StatelessWidget {
     );
   }
 
+  Future<Player?> _getPlayer(String uid) async {
+    if (_playerCache.containsKey(uid)) {
+      return _playerCache[uid];
+    }
+    final player = await _playerRepository.getPlayer(uid);
+    if (mounted) {
+      setState(() => _playerCache[uid] = player);
+    }
+    return player;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final lobbyRepository = LobbyRepository();
-    final playerRepository = PlayerRepository();
-    final gameRepository = GameRepository();
-    final currentUserId = FirebaseAuth.instance.currentUser?.uid;
-
     return StreamBuilder<GameRoom?>(
-      stream: lobbyRepository.watchGame(gameId),
+      stream: _lobbyRepository.watchGame(widget.gameId),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return Scaffold(body: Center(child: Text('Error: ${snapshot.error}')));
@@ -47,12 +64,12 @@ class GameRoomScreen extends StatelessWidget {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => GameBoardScreen(gameId: gameId)),
+              MaterialPageRoute(builder: (context) => GameBoardScreen(gameId: widget.gameId)),
             );
           });
         }
 
-        final isHost = room.hostId == currentUserId;
+        final isHost = room.hostId == _currentUserId;
         final allParticipants = [...room.playerIds, ...room.invitedPlayerIds];
 
         return Scaffold(
@@ -86,14 +103,14 @@ class GameRoomScreen extends StatelessWidget {
                             final isInvitedOnly = index >= room.playerIds.length;
                             
                             return FutureBuilder<Player?>(
-                              future: playerRepository.getPlayer(uid),
+                              future: _getPlayer(uid),
                               builder: (context, snapshot) {
                                 final player = snapshot.data;
                                 return Opacity(
                                   opacity: isInvitedOnly ? 0.6 : 1.0,
                                   child: ListTile(
                                     leading: AvatarWidget(avatarUrl: player?.avatarUrl, radius: 20),
-                                    title: Text(player?.displayName ?? 'Loading...'),
+                                    title: Text(player?.screenName ?? 'Loading...'),
                                     subtitle: isInvitedOnly ? const Text('Invitation Pending...', style: TextStyle(fontStyle: FontStyle.italic)) : null,
                                     trailing: uid == room.hostId ? const Icon(Icons.star, color: Colors.amber) : (isInvitedOnly ? const Icon(Icons.hourglass_empty, size: 16) : null),
                                   ),
@@ -107,7 +124,7 @@ class GameRoomScreen extends StatelessWidget {
                         Padding(
                           padding: const EdgeInsets.only(bottom: 16.0),
                           child: ElevatedButton(
-                            onPressed: room.playerIds.length >= 4 ? () => gameRepository.startGame(gameId) : null,
+                            onPressed: room.playerIds.length >= 4 ? () => _gameRepository.startGame(widget.gameId) : null,
                             child: const Text('Start Game'),
                           ),
                         ),
@@ -115,7 +132,7 @@ class GameRoomScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              ChatOverlay(gameId: gameId),
+              ChatOverlay(gameId: widget.gameId),
             ],
           ),
         );
@@ -156,7 +173,7 @@ class InviteDialog extends StatelessWidget {
 
                 return ListTile(
                   leading: AvatarWidget(avatarUrl: player.avatarUrl, radius: 15),
-                  title: Text(player.displayName),
+                  title: Text(player.screenName),
                   subtitle: isJoined ? const Text('In Game') : (isInvited ? const Text('Already Invited') : null),
                   trailing: canInvite 
                     ? IconButton(
@@ -166,7 +183,7 @@ class InviteDialog extends StatelessWidget {
                           if (context.mounted) {
                             Navigator.of(context).pop();
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Invited ${player.displayName}')),
+                              SnackBar(content: Text('Invited ${player.screenName}')),
                             );
                           }
                         },

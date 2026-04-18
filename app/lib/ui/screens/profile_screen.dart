@@ -28,14 +28,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _loadProfile() async {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) return;
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
     
     setState(() => _isLoading = true);
     try {
-      _player = await _repository.getPlayer(uid);
-      if (_player != null) {
-        _nameController.text = _player!.displayName;
+      _player = await _repository.getPlayer(user.uid);
+      final screenName = _player?.screenName;
+      if (screenName != null && screenName.isNotEmpty) {
+        _nameController.text = screenName;
+      } else {
+        // Default to Firebase Auth display name if Firestore is missing or empty
+        final authDisplayName = user.displayName;
+        _nameController.text = (authDisplayName != null && authDisplayName.isNotEmpty) 
+            ? authDisplayName 
+            : 'Anonymous';
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -63,7 +70,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final url = await ref.getDownloadURL();
       final updatedPlayer = Player(
         id: uid,
-        displayName: _nameController.text.isNotEmpty ? _nameController.text : 'Anonymous',
+        screenName: _nameController.text.isNotEmpty ? _nameController.text : 'Anonymous',
         avatarUrl: url,
       );
       
@@ -84,11 +91,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
 
+    final screenName = _nameController.text.trim();
+    if (screenName.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Screen name cannot be empty')),
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
     try {
       final updatedPlayer = Player(
         id: uid,
-        displayName: _nameController.text.trim(),
+        screenName: screenName,
         avatarUrl: _player?.avatarUrl,
       );
       await _repository.updatePlayer(updatedPlayer);
@@ -124,7 +139,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const SizedBox(height: 32),
                 TextField(
                   controller: _nameController,
-                  decoration: const InputDecoration(labelText: 'Display Name'),
+                  decoration: const InputDecoration(labelText: 'Screen Name'),
                 ),
                 const SizedBox(height: 32),
                 ElevatedButton(

@@ -9,7 +9,15 @@ class PlayerRepository {
 
   CollectionReference<Player> _playersRef() {
     return _firestore.collection('users').withConverter<Player>(
-      fromFirestore: (snapshot, _) => Player.fromMap({'id': snapshot.id, ...snapshot.data()!}),
+      fromFirestore: (snapshot, _) {
+        final data = snapshot.data()!;
+        final map = {
+          ...data,
+          'id': snapshot.id,
+          'screenName': data['screenName'] ?? data['displayName'] ?? 'Anonymous',
+        };
+        return Player.fromMap(map);
+      },
       toFirestore: (player, _) {
         final map = player.toMap();
         map.remove('id');

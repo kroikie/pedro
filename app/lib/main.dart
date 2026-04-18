@@ -11,6 +11,9 @@ import 'firebase_options.dart';
 import 'package:firebase_ui_auth/firebase_ui_auth.dart' hide ProfileScreen;
 import 'package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart';
 
+import 'data/repositories/player_repository.dart';
+import 'data/models/player.dart';
+
 import 'ui/screens/auth_screen.dart';
 import 'ui/screens/profile_screen.dart';
 import 'ui/screens/home_screen.dart';
@@ -75,8 +78,16 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class AuthGate extends StatelessWidget {
+class AuthGate extends StatefulWidget {
   const AuthGate({super.key});
+
+  @override
+  State<AuthGate> createState() => _AuthGateState();
+}
+
+class _AuthGateState extends State<AuthGate> {
+  Future<Player?>? _playerFuture;
+  String? _lastUid;
 
   @override
   Widget build(BuildContext context) {
@@ -86,11 +97,44 @@ class AuthGate extends StatelessWidget {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(body: Center(child: CircularProgressIndicator()));
         }
-        if (!snapshot.hasData) {
+        
+        final user = snapshot.data;
+        if (user == null) {
+          _lastUid = null;
+          _playerFuture = null;
           return const AuthScreen();
         }
-        return const HomeScreen();
+        
+        if (user.uid != _lastUid) {
+          _lastUid = user.uid;
+          _playerFuture = _initializePlayer(user);
+        }
+        
+        return FutureBuilder<Player?>(
+          future: _playerFuture,
+          builder: (context, playerSnap) {
+            if (playerSnap.connectionState == ConnectionState.waiting) {
+              return const Scaffold(body: Center(child: CircularProgressIndicator()));
+            }
+            return const HomeScreen();
+          },
+        );
       },
     );
+  }
+
+  Future<Player?> _initializePlayer(User user) async {
+    final repo = PlayerRepository();
+    final player = await repo.getPlayer(user.uid);
+    if (player == null) {
+      final newPlayer = Player(
+        id: user.uid,
+        screenName: user.displayName ?? 'Anonymous',
+        avatarUrl: user.photoURL,
+      );
+      await repo.updatePlayer(newPlayer);
+      return newPlayer;
+    }
+    return player;
   }
 }

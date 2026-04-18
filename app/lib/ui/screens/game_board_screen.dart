@@ -119,7 +119,7 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
             const SizedBox(height: 4),
             FutureBuilder<Player?>(
               future: _playerRepo.getPlayer(entry.key),
-              builder: (context, snap) => Text(snap.data?.displayName ?? '...', style: const TextStyle(fontSize: 10)),
+              builder: (context, snap) => Text(snap.data?.screenName ?? '...', style: const TextStyle(fontSize: 10)),
             ),
           ],
         );
@@ -176,7 +176,7 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                     children: [
                       AvatarWidget(avatarUrl: player?.avatarUrl, radius: 20),
                       Text(
-                        player?.displayName ?? '...', 
+                        player?.screenName ?? '...', 
                         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
                         overflow: TextOverflow.ellipsis,
                       ),
