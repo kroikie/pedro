@@ -79,4 +79,11 @@ class LobbyRepository {
       'targetPlayerId': targetPlayerId,
     });
   }
+
+  Future<void> uninvitePlayer(String gameId, String targetPlayerId) async {
+    await _functions.httpsCallable('uninvitePlayer').call({
+      'gameId': gameId,
+      'targetPlayerId': targetPlayerId,
+    });
+  }
 }

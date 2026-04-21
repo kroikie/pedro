@@ -37,10 +37,22 @@ export const narrateWelcome = async (gameId: string, roomName: string) => {
   await postCommentary(gameId, response.text.trim());
 };
 
-export const narrateBid = async (gameId: string, playerId: string, bid: number) => {
-  const prompt = `You are a witty card game narrator for a game called Pedro. 
-  A player just bid ${bid} points. Provide a short, 1-sentence reaction or commentary about this bid. 
-  Keep it lighthearted and competitive.`;
+export const narrateBid = async (gameId: string, playerName: string, bid: number | null, previousBid: number) => {
+  let context = '';
+  if (bid === null) {
+    context = `${playerName} decided to pass. They're playing it cool (or they have a terrible hand). The current high bid remains at ${previousBid}.`;
+  } else if (bid === 20) {
+    context = `${playerName} just went ALL IN with a bid of 20! Bold move, let's see if they can back it up!`;
+  } else if (bid > previousBid + 5) {
+    context = `${playerName} just jumped the bid from ${previousBid} all the way to ${bid}! They must be feeling very confident!`;
+  } else {
+    context = `${playerName} raised the bid to ${bid}. A solid, calculated move.`;
+  }
+
+  const prompt = `You are a witty, slightly sarcastic card game narrator for a game called Pedro. 
+  Event: ${context}
+  Provide a short, 1-sentence witty reaction or commentary about this bidding action. 
+  Keep it lighthearted, competitive, and brief.`;
 
   const response = await ai.generate({
     model: googleAI.model('gemini-3-flash-preview'),

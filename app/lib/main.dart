@@ -42,13 +42,14 @@ void main() async {
       FirebaseFirestore.instance.useFirestoreEmulator(host, 8080);
       FirebaseFunctions.instance.useFunctionsEmulator(host, 5001);
       await FirebaseStorage.instance.useStorageEmulator(host, 9199);
-      debugPrint('Connected to Firebase emulators.');
+      debugPrint('Connected to Firebase emulators successfully.');
     } catch (e) {
       debugPrint('Failed to connect to emulators: $e');
     }
   }
 
   FirebaseUIAuth.configureProviders([
+    EmailAuthProvider(),
     GoogleProvider(clientId: 'dummy-client-id-for-emulator'),
   ]);
 
@@ -116,6 +117,9 @@ class _AuthGateState extends State<AuthGate> {
             if (playerSnap.connectionState == ConnectionState.waiting) {
               return const Scaffold(body: Center(child: CircularProgressIndicator()));
             }
+            if (playerSnap.hasError) {
+               return Scaffold(body: Center(child: Text('Error initializing profile: ${playerSnap.error}')));
+            }
             return const HomeScreen();
           },
         );
@@ -125,16 +129,21 @@ class _AuthGateState extends State<AuthGate> {
 
   Future<Player?> _initializePlayer(User user) async {
     final repo = PlayerRepository();
-    final player = await repo.getPlayer(user.uid);
-    if (player == null) {
-      final newPlayer = Player(
-        id: user.uid,
-        screenName: user.displayName ?? 'Anonymous',
-        avatarUrl: user.photoURL,
-      );
-      await repo.updatePlayer(newPlayer);
-      return newPlayer;
+    try {
+      final player = await repo.getPlayer(user.uid).timeout(const Duration(seconds: 5));
+      if (player == null) {
+        final newPlayer = Player(
+          id: user.uid,
+          screenName: user.displayName ?? 'Anonymous',
+          avatarUrl: user.photoURL,
+        );
+        await repo.updatePlayer(newPlayer);
+        return newPlayer;
+      }
+      return player;
+    } catch (e) {
+      debugPrint('Error in _initializePlayer: $e');
+      rethrow;
     }
-    return player;
   }
 }

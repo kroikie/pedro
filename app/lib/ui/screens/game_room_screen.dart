@@ -112,7 +112,22 @@ class _GameRoomScreenState extends State<GameRoomScreen> {
                                     leading: AvatarWidget(avatarUrl: player?.avatarUrl, radius: 20),
                                     title: Text(player?.screenName ?? 'Loading...'),
                                     subtitle: isInvitedOnly ? const Text('Invitation Pending...', style: TextStyle(fontStyle: FontStyle.italic)) : null,
-                                    trailing: uid == room.hostId ? const Icon(Icons.star, color: Colors.amber) : (isInvitedOnly ? const Icon(Icons.hourglass_empty, size: 16) : null),
+                                    trailing: uid == room.hostId 
+                                      ? const Icon(Icons.star, color: Colors.amber) 
+                                      : (isInvitedOnly 
+                                          ? Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                if (isHost)
+                                                  IconButton(
+                                                    icon: const Icon(Icons.person_remove, color: Colors.red, size: 20),
+                                                    onPressed: () => _lobbyRepository.uninvitePlayer(widget.gameId, uid),
+                                                    tooltip: 'Remove Invitation',
+                                                  ),
+                                                const Icon(Icons.hourglass_empty, size: 16),
+                                              ],
+                                            )
+                                          : null),
                                   ),
                                 );
                               },
@@ -188,7 +203,20 @@ class InviteDialog extends StatelessWidget {
                           }
                         },
                       )
-                    : const Icon(Icons.check, color: Colors.green),
+                    : (isInvited 
+                        ? IconButton(
+                            icon: const Icon(Icons.person_remove, color: Colors.red),
+                            onPressed: () async {
+                              await lobbyRepo.uninvitePlayer(room.id, player.id);
+                              if (context.mounted) {
+                                Navigator.of(context).pop();
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Removed invitation for ${player.screenName}')),
+                                );
+                              }
+                            },
+                          )
+                        : const Icon(Icons.check, color: Colors.green)),
                 );
               },
             );

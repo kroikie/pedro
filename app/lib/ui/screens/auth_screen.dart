@@ -11,11 +11,24 @@ class AuthScreen extends StatelessWidget {
       appBar: AppBar(title: const Text('Login')),
       body: SignInScreen(
         providers: [
+          EmailAuthProvider(),
           GoogleProvider(clientId: 'dummy-client-id-for-emulator'),
         ],
         actions: [
           AuthStateChangeAction<UserCreated>((context, state) {
             Navigator.pushNamed(context, '/profile');
+          }),
+          AuthStateChangeAction<SignedIn>((context, state) {
+            if (!state.user!.emailVerified && !state.user!.isAnonymous) {
+              // Navigator.pushNamed(context, '/verify-email');
+            }
+          }),
+          ForgotPasswordAction((context, email) {
+            Navigator.pushNamed(
+              context,
+              '/forgot-password',
+              arguments: {'email': email},
+            );
           }),
         ],
       ),

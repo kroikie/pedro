@@ -58,6 +58,30 @@ export const invitePlayer = onCall<InvitePlayerData>(async (request) => {
   return { success: true };
 });
 
+interface UninvitePlayerData {
+  gameId: string;
+  targetPlayerId: string;
+}
+
+export const uninvitePlayer = onCall<UninvitePlayerData>(async (request) => {
+  if (!request.auth) throw new HttpsError('unauthenticated', 'User must be logged in.');
+  const { gameId, targetPlayerId } = request.data;
+  const uid = request.auth.uid;
+
+  const gameRef = admin.firestore().collection('games').doc(gameId);
+  const gameDoc = await gameRef.get();
+  if (!gameDoc.exists) throw new HttpsError('not-found', 'Game not found.');
+
+  const gameData = gameDoc.data()!;
+  if (gameData.hostId !== uid) throw new HttpsError('permission-denied', 'Only the host can uninvite players.');
+
+  await gameRef.update({
+    invitedPlayerIds: FieldValue.arrayRemove(targetPlayerId)
+  });
+
+  return { success: true };
+});
+
 interface JoinGameData {
   gameId: string;
 }
@@ -204,8 +228,15 @@ export const submitBid = onCall<SubmitBidData>(async (request) => {
     'currentRound.playerStates': playerStates
   });
 
-  if (bid !== null && bid >= 7) {
-    narrateBid(gameId, uid, bid).catch(console.error);
+  // Fetch player name for narration
+  const userDoc = await admin.firestore().collection('users').doc(uid).get();
+  const userData = userDoc.data();
+  const playerName = userData?.screenName || userData?.displayName || "A player";
+
+  // Narrate bids and some passes (to avoid too much spam, maybe narrate all bids and some significant passes)
+  const shouldNarrate = bid !== null || (newConsecutivePasses === 1 || nextPhase !== 'wadger');
+  if (shouldNarrate) {
+    narrateBid(gameId, playerName, bid, round.bidValue).catch(console.error);
   }
 
   return { success: true };
