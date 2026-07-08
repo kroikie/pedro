@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Pedro Inbox - Game Invitations</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Be_Vietnam_Pro:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-primary-container": "#006145",
+                    "outline": "#747776",
+                    "surface-container": "#e6e9e7",
+                    "secondary-fixed": "#ffca53",
+                    "error": "#b31b25",
+                    "primary-fixed": "#8cfece",
+                    "tertiary": "#006762",
+                    "on-tertiary-container": "#005854",
+                    "surface-bright": "#f5f7f5",
+                    "surface-tint": "#00694b",
+                    "secondary-dim": "#674b00",
+                    "on-primary": "#c7ffe3",
+                    "on-surface-variant": "#595c5b",
+                    "on-primary-fixed-variant": "#006d4e",
+                    "tertiary-container": "#73f1e7",
+                    "on-secondary-fixed": "#453100",
+                    "surface-container-low": "#eff1ef",
+                    "tertiary-fixed-dim": "#63e2d9",
+                    "outline-variant": "#abaeac",
+                    "surface-dim": "#d1d5d3",
+                    "primary-container": "#8cfece",
+                    "on-error-container": "#570008",
+                    "surface-container-highest": "#d9dedb",
+                    "on-tertiary-fixed-variant": "#00635e",
+                    "on-secondary-fixed-variant": "#684c00",
+                    "on-tertiary-fixed": "#004440",
+                    "on-tertiary": "#befff9",
+                    "secondary": "#765600",
+                    "tertiary-dim": "#005a55",
+                    "surface-variant": "#d9dedb",
+                    "on-error": "#ffefee",
+                    "surface-container-lowest": "#ffffff",
+                    "background": "#f5f7f5",
+                    "error-container": "#fb5151",
+                    "on-primary-fixed": "#004d36",
+                    "surface-container-high": "#e0e3e1",
+                    "on-background": "#2c2f2e",
+                    "tertiary-fixed": "#73f1e7",
+                    "primary-fixed-dim": "#7eefc0",
+                    "primary-dim": "#005b41",
+                    "inverse-on-surface": "#9b9d9c",
+                    "secondary-container": "#ffca53",
+                    "primary": "#00694b",
+                    "surface": "#f5f7f5",
+                    "on-secondary-container": "#5c4300",
+                    "inverse-primary": "#8cfece",
+                    "on-secondary": "#fff1db",
+                    "on-surface": "#2c2f2e",
+                    "error-dim": "#9f0519",
+                    "secondary-fixed-dim": "#f8ba00",
+                    "inverse-surface": "#0b0f0e"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Plus Jakarta Sans"],
+                    "body": ["Be Vietnam Pro"],
+                    "label": ["Plus Jakarta Sans"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Be Vietnam Pro', sans-serif; background-color: #f5f7f5; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .glass-card { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(20px); }
+        .editorial-shadow { box-shadow: 0px 20px 40px rgba(118, 86, 0, 0.04); }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="text-on-background min-h-screen pb-24">
+<!-- TopAppBar -->
+<header class="w-full top-0 sticky z-50 bg-[#f5f7f5] dark:bg-[#1a1c1a] flex justify-between items-center px-6 h-16 w-full">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full overflow-hidden bg-primary-container flex items-center justify-center">
+<img alt="Player avatar" class="w-full h-full object-cover" data-alt="close-up portrait of a friendly man with short dark hair and a warm smile in a minimalist illustrative style" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCOjkf9y1MwOSD1mS4c92oBMLEartmU58vfqZVInJCMxh15dU9Y4AP-sy8thIPeejzae9R4EkTXaxGb6ae8hlCNYFmkcBtQt9nRYrB1bfiYhWpgvaxUzYCoo2fRMYOxKAaw9NR52-TSHlsyAQ_rYY8IoeiPA_4qYSAJR5_cs3JUgDP7bONVv48VsW3iYOAR4GMxSYXYar0NWz8Nb0LixeHIGPASs_3DjfRZ9cO39KBsQ521dzIiYJTtr6khIygkVHImFZ-D_K8tAGc"/>
+</div>
+<h1 class="text-2xl font-bold text-[#00694b] dark:text-[#3EB489] font-['Plus_Jakarta_Sans'] tracking-tight">Pedro</h1>
+</div>
+<button class="hover:bg-[#00694b]/5 transition-colors p-2 rounded-full flex items-center justify-center scale-95 active:scale-90 duration-200">
+<span class="material-symbols-outlined text-[#00694b] dark:text-[#3EB489]">settings</span>
+</button>
+</header>
+<main class="px-6 py-4 max-w-2xl mx-auto">
+<!-- Inbox Headline -->
+<div class="mb-8">
+<h2 class="text-display-sm font-headline font-extrabold text-4xl tracking-tight text-on-background mb-1">Inbox</h2>
+<p class="text-on-surface-variant font-body text-sm">You have 3 new game invitations waiting.</p>
+</div>
+<!-- Invitation List -->
+<div class="space-y-6">
+<!-- Invitation Card 1: The Asymmetric Hero Card -->
+<div class="glass-card rounded-lg p-6 editorial-shadow relative overflow-hidden group">
+<div class="absolute top-0 right-0 w-32 h-32 bg-secondary-fixed/10 rounded-full -mr-16 -mt-16 transition-transform group-hover:scale-110 duration-500"></div>
+<div class="flex items-start gap-4 mb-6">
+<div class="relative">
+<img alt="Marco" class="w-14 h-14 rounded-full bg-surface-container border-4 border-white" data-alt="illustrated avatar of a stylish young man with glasses and a green hoodie on a soft mint background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDin2Lxx_z79ET5Yi9Ei0OcP1-AfuArH2o2XN9YdtAwsQ4ax6RMLi8XO-4p0teXEY4muodOCv_aJkk42kqR-SgupsS1MGtgewB86G8qGcBs1vjTwy1HIQLNaiKjzO6zssdRHgLDEqKKTZcRv0zbqPzqkoENdB1iYVHrKwes4O0ZjsGkdlZlasN3JhvyGznqle9sxokFCLWQ1iWMOMnQrqcSGKphi6aDjZ2zbFs1glL4uzpfdRyZrY6IQMVfFbvAc8wN3DMrxvb62Zg"/>
+<div class="absolute -bottom-1 -right-1 bg-secondary-fixed w-6 h-6 rounded-full flex items-center justify-center border-2 border-white">
+<span class="material-symbols-outlined text-[14px] font-bold text-on-secondary-fixed">bolt</span>
+</div>
+</div>
+<div class="flex-1">
+<span class="text-xs font-bold uppercase tracking-widest text-primary mb-1 block">New Invite</span>
+<h3 class="text-xl font-headline font-bold text-on-surface leading-tight">Friday Night Pedro</h3>
+<p class="text-sm text-on-surface-variant">Invited by <span class="font-semibold text-on-surface">Marco Rossi</span></p>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4 mb-8">
+<div class="bg-surface-container-low p-4 rounded-xl">
+<p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-tighter mb-1">Target Score</p>
+<p class="text-2xl font-headline font-extrabold text-secondary">500 pts</p>
+</div>
+<div class="bg-surface-container-low p-4 rounded-xl">
+<p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-tighter mb-1">Players Joined</p>
+<div class="flex items-center gap-2">
+<p class="text-2xl font-headline font-extrabold text-on-surface">3/4</p>
+<div class="flex -space-x-2">
+<div class="w-6 h-6 rounded-full border-2 border-surface-container-low bg-slate-300 overflow-hidden"><img alt="Player 1" data-alt="minimalist user avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDqvuy4e7BDVKE1s8gHjorparcY4E45LVmyRCeUOyw8JCEZGskgymOAsMsSYsBqQ_i2Z2qUJlgIoHTYhjfkZylPOxtK8tNZyEQMWwgIy1maG0HMeP0JqiI3neHZD_SutPTPEVCj8311p0j9Ubp93Qonub_lpSN0tQM2Myop3aLfHZTEGu9My0earqclpLry-W-QZzAXMU1o2O_UQ5Oz_jjPpzhaz_3m5uZhWMNIRhvwxfZ0MARGhOfNJ4Z-8YQA-y_FEreaSGqRf0M"/></div>
+<div class="w-6 h-6 rounded-full border-2 border-surface-container-low bg-slate-400 overflow-hidden"><img alt="Player 2" data-alt="minimalist user avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBicqvb-a_nq69NgBUreh0iTc5ieKcP_PRsRSuwtGqOGQ6ALdsZ-XjG2eWEWWepTwqb6gabMOVgK_CsTXihQbPFPMteAZ_OoYu4lL6SdMDMmV4iGqRe45_b37nkHmQIGoPcoDcXECn-LXk_uY_FdxSYezEKryRMNdoY2pfiVL7g0zoHMKlygMzGkWU4wpNy1EkEdd2dXXp6-znRe79EXEA7dpZQyFRYLzmZiXsxgexUZV3nYlugqu7UTNSL2_5brSyud4o91Tzmk2c"/></div>
+</div>
+</div>
+</div>
+</div>
+<div class="flex gap-3">
+<button class="flex-1 bg-gradient-to-br from-primary to-primary-dim text-white font-bold py-4 rounded-xl scale-100 active:scale-95 transition-all editorial-shadow">
+                        Accept
+                    </button>
+<button class="px-6 bg-surface-container-high text-on-surface-variant font-semibold py-4 rounded-xl scale-100 active:scale-95 transition-all">
+                        Decline
+                    </button>
+</div>
+</div>
+<!-- Invitation Card 2: Stacked Design -->
+<div class="bg-surface-container-lowest rounded-lg p-5 editorial-shadow border border-outline-variant/10">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-3">
+<img alt="Elena" class="w-12 h-12 rounded-full bg-tertiary-container" data-alt="avatar of a woman with long red hair and a cheerful expression on a soft cream background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDrrnE2dSbk8ThVw91KIVZ4PKX9cPKRtFTR8pxkDewTCxfKADV-TP6ag3ssyPr5JzABYleGjITElm4b4PRG7CNOhgrhnLtvYUfM5XJ8X9xMLTYx2-vwsr7KUiONs4zQxsSAWJoR7RrYFb1arRcjOt-JAnLHL5brLQM074a7T7KdinMxKuhkhuMdnBMhWHWqjIq4z-14Ha0xM6zNGwmuM-BQLLwtmpc38F6i7Q6JsJHANQDOQDll3Z8LRWZHbUvL-pQHHAWrjF2-YOo"/>
+<div>
+<h3 class="font-headline font-bold text-on-surface">Weekend Classic</h3>
+<p class="text-xs text-on-surface-variant">Elena Vance sent an invite</p>
+</div>
+</div>
+<div class="text-right">
+<span class="text-[10px] font-bold bg-secondary-container text-on-secondary-container px-2 py-1 rounded-full uppercase tracking-wider">Quick Game</span>
+</div>
+</div>
+<div class="flex items-center justify-between py-3 border-y border-outline-variant/5 mb-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-sm">flag</span>
+<span class="text-sm font-medium text-on-surface-variant">250 Target</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-sm">groups</span>
+<span class="text-sm font-medium text-on-surface-variant">2 Players needed</span>
+</div>
+</div>
+<div class="flex gap-2">
+<button class="flex-1 bg-primary text-white font-bold py-3 rounded-full hover:bg-primary-dim transition-colors scale-100 active:scale-95">Accept</button>
+<button class="flex-1 bg-surface-container text-on-surface-variant font-bold py-3 rounded-full hover:bg-surface-container-high transition-colors scale-100 active:scale-95">Decline</button>
+</div>
+</div>
+<!-- Invitation Card 3: Casual Card -->
+<div class="bg-surface-container-low rounded-lg p-5 border-l-4 border-secondary">
+<div class="flex items-start gap-4">
+<img alt="Toby" class="w-12 h-12 rounded-xl object-cover bg-white p-1" data-alt="avatar of a man with a beanie and beard looking cool and friendly" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAPgWZB4_4mR2BRoIDPRSkhpVdQtu1mO19VSEbKDwbqAuMqIdlVhtyP7VyAwVW5T1VJoAssPWLdvO-SFXvv-FMsSMzIyTZx6OSuwLvFoKjLVzWIGWZ4y7pSmVL0SXVLgPCoAeDiCw-01P4C22FY8HVBSOJ2PRXbnF27BgHP-S5_haESuYJ0XZLugDr4Caf47CnSUDsg9uri7sdq3td1F-vG2_pgKyNN7LcWFnB7KQERfB95UwZv0RIIJwHdR7EJtqLNJhMwedILiRE"/>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<h3 class="font-headline font-bold text-on-surface">Toby's Quick Pedro</h3>
+<span class="text-[10px] text-on-surface-variant font-medium">2h ago</span>
+</div>
+<p class="text-sm text-on-surface-variant mb-4">"Ready for a rematch from Tuesday?"</p>
+<div class="flex items-center gap-4 mb-4">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-xs text-secondary" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="text-xs font-bold text-on-surface">300 Score</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-xs text-secondary" style="font-variation-settings: 'FILL' 1;">person</span>
+<span class="text-xs font-bold text-on-surface">1/4 Joined</span>
+</div>
+</div>
+<div class="flex gap-3">
+<button class="text-primary font-bold text-sm bg-white px-6 py-2 rounded-full shadow-sm hover:shadow-md transition-shadow">Accept</button>
+<button class="text-on-surface-variant font-bold text-sm px-4 py-2 hover:bg-black/5 rounded-full">Decline</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Empty State Hint (Subtle) -->
+<div class="mt-12 text-center opacity-40">
+<span class="material-symbols-outlined text-4xl mb-2">mail_outline</span>
+<p class="text-xs font-medium">No older invitations to show</p>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-2 bg-[#f5f7f5]/80 dark:bg-[#1a1c1a]/80 backdrop-blur-xl rounded-t-[2rem] h-20 shadow-[0px_-4px_24px_rgba(0,0,0,0.04)]">
+<a class="flex flex-col items-center justify-center text-[#2c2f2e] opacity-60 hover:opacity-100 scale-95 active:scale-110 transition-transform duration-300 ease-out" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="font-['Be_Vietnam_Pro'] text-[11px] font-semibold">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-[#ffca53] text-[#765600] rounded-full px-4 py-1 scale-95 active:scale-110 transition-transform duration-300 ease-out" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">mail</span>
+<span class="font-['Be_Vietnam_Pro'] text-[11px] font-semibold">Inbox</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#2c2f2e] opacity-60 hover:opacity-100 scale-95 active:scale-110 transition-transform duration-300 ease-out" href="#">
+<span class="material-symbols-outlined">leaderboard</span>
+<span class="font-['Be_Vietnam_Pro'] text-[11px] font-semibold">Rankings</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#2c2f2e] opacity-60 hover:opacity-100 scale-95 active:scale-110 transition-transform duration-300 ease-out" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="font-['Be_Vietnam_Pro'] text-[11px] font-semibold">Profile</span>
+</a>
+</nav>
+</body></html>

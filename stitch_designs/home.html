@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Pedro - Social Card Play</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;family=Be_Vietnam_Pro:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary-container": "#006145",
+                        "outline": "#747776",
+                        "surface-container": "#e6e9e7",
+                        "secondary-fixed": "#ffca53",
+                        "error": "#b31b25",
+                        "primary-fixed": "#8cfece",
+                        "tertiary": "#006762",
+                        "on-tertiary-container": "#005854",
+                        "surface-bright": "#f5f7f5",
+                        "surface-tint": "#00694b",
+                        "secondary-dim": "#674b00",
+                        "on-primary": "#c7ffe3",
+                        "on-surface-variant": "#595c5b",
+                        "on-primary-fixed-variant": "#006d4e",
+                        "tertiary-container": "#73f1e7",
+                        "on-secondary-fixed": "#453100",
+                        "surface-container-low": "#eff1ef",
+                        "tertiary-fixed-dim": "#63e2d9",
+                        "outline-variant": "#abaeac",
+                        "surface-container-highest": "#d9dedb",
+                        "on-tertiary-fixed-variant": "#00635e",
+                        "on-secondary-fixed-variant": "#684c00",
+                        "on-tertiary-fixed": "#004440",
+                        "on-tertiary": "#befff9",
+                        "secondary": "#765600",
+                        "tertiary-dim": "#005a55",
+                        "surface-variant": "#d9dedb",
+                        "on-error": "#ffefee",
+                        "surface-container-lowest": "#ffffff",
+                        "background": "#f5f7f5",
+                        "error-container": "#fb5151",
+                        "on-primary-fixed": "#004d36",
+                        "surface-container-high": "#e0e3e1",
+                        "on-background": "#2c2f2e",
+                        "tertiary-fixed": "#73f1e7",
+                        "primary-fixed-dim": "#7eefc0",
+                        "primary-dim": "#005b41",
+                        "inverse-on-surface": "#9b9d9c",
+                        "secondary-container": "#ffca53",
+                        "primary": "#00694b",
+                        "surface": "#f5f7f5",
+                        "on-secondary-container": "#5c4300",
+                        "inverse-primary": "#8cfece",
+                        "on-secondary": "#fff1db",
+                        "on-surface": "#2c2f2e",
+                        "error-dim": "#9f0519",
+                        "secondary-fixed-dim": "#f8ba00",
+                        "inverse-surface": "#0b0f0e"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Plus Jakarta Sans"],
+                        "body": ["Be Vietnam Pro"],
+                        "label": ["Plus Jakarta Sans"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background font-body text-on-background selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopAppBar -->
+<header class="w-full top-0 sticky z-50 bg-[#f5f7f5] dark:bg-[#1a1c1a] flex justify-between items-center px-6 h-16 w-full">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full overflow-hidden bg-surface-container-high">
+<img alt="Player avatar" class="w-full h-full object-cover" data-alt="Stylized modern character avatar with friendly expression, mint green background, minimalist 3D render style" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDN7Fa6CRK91HWb9ZUls8GPSGzujeTy0guB_XPqqRfUOjKEVbc1gXnq8D-YdLIXrFs7WZD7i8RTlLUgp_yUsJtISE1zgiPcSZEqkeYef1_7bfBQ0AsVr_h4BULpd65pkZrbpvt2aFOQL3caa4y7s81VuTMN2V-Vat7Cug_wiP9bkLZ5u7gMxeDa43X7GJCysBNhGFVv0MKaTVxNQ-x_vBT6E0-QRB0muAnN8H-M_cmjE4ycwOccb16-W8Cqu5eamqNBsbmsSq2U6DU"/>
+</div>
+<span class="text-2xl font-bold text-[#00694b] dark:text-[#3EB489] font-['Plus_Jakarta_Sans'] tracking-tight">Pedro</span>
+</div>
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-[#00694b]/5 transition-colors text-[#00694b] active:scale-90 duration-200">
+<span class="material-symbols-outlined">settings</span>
+</button>
+</header>
+<main class="px-6 pt-4 pb-28 max-w-2xl mx-auto space-y-8">
+<!-- Welcome Hero -->
+<section class="relative overflow-hidden rounded-lg bg-primary h-48 flex items-end p-6 group">
+<div class="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-primary-fixed via-transparent to-transparent"></div>
+<img alt="Card table" class="absolute inset-0 w-full h-full object-cover mix-blend-overlay" data-alt="Top down view of a luxury card table with gold accents and dark green felt, warm cinematic lighting from the side" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA6YPVcQbxfrlryv7Kl__PtgXVLqJf9P62DmVo8ufAHSZhaUrGzKI4zqfeJbKK7Zu-b13hlFeuDRGaA_Ca5QdNZIOlOE76ynrvaBXeBaXnve2NBNe2vUROwZRH7wQHzObct_ve5Em3NolHeTJehTfjm0EyOPi1woit2SewCAhLstvJLk4VSD_oljyj8KSQ8tGhkYzwaI8s55OFYKW9A6VAAjSYS8MGNH-ufVq-OAE_KO4artEfTez4oAYt1Lh16HC4hnQ6q0hQ8x7M"/>
+<div class="relative z-10">
+<h1 class="text-on-primary font-headline text-3xl font-extrabold tracking-tight">Good afternoon, Pedro.</h1>
+<p class="text-on-primary/80 font-medium mt-1">Ready for the next hand?</p>
+</div>
+</section>
+<!-- Invitations Preview (Marigold Section) -->
+<section class="space-y-4">
+<div class="flex items-end justify-between">
+<h2 class="font-headline text-xl font-bold tracking-tight px-1">Game Invitations</h2>
+<span class="bg-secondary text-on-secondary px-3 py-1 rounded-full text-xs font-bold">2 NEW</span>
+</div>
+<div class="grid grid-cols-1 gap-4">
+<!-- Invite Card 1 -->
+<div class="bg-surface-container-lowest rounded-lg p-5 flex items-center gap-4 shadow-[0px_4px_12px_rgba(118,86,0,0.06)] border border-outline-variant/10">
+<div class="relative">
+<img alt="Sarah" class="w-12 h-12 rounded-full bg-secondary-container" data-alt="Female character avatar with glasses and joyful expression, warm amber background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBQtUAbfsQdnMV5kSGhKo8nHUNq6nF_3kII8OS3QgZwvbAzBpUykW6MdjQADGzqRHlCJzEj3YmPsyedsmQSPGxDlzBARbbnSkKJEgSME9j8le0q-ZRfnl3iJWc7_xGzMFJm1I_An3_KGI232wna6miBpCeiQg4w7A_uelfQThRTV4alyTfmEJgfWY_1WTePteM0anqVtz4ri5ZLFPU5s_l7aFxfNtAbppZrrRX5s6jTnqH3VxuDIhKcPmuAlt5P1yoescHNV4HaY84"/>
+<div class="absolute -bottom-1 -right-1 w-5 h-5 bg-secondary rounded-full flex items-center justify-center border-2 border-surface-container-lowest">
+<span class="material-symbols-outlined text-[12px] text-white" style="font-variation-settings: 'FILL' 1;">mail</span>
+</div>
+</div>
+<div class="flex-1">
+<h3 class="font-bold text-on-surface">Sarah J. <span class="font-normal text-on-surface-variant">invited you</span></h3>
+<p class="text-sm text-on-surface-variant font-medium">Tournament Final • $10 Buy-in</p>
+</div>
+<div class="flex gap-2">
+<button class="h-10 px-4 rounded-full bg-secondary-fixed text-on-secondary-fixed font-bold text-sm hover:opacity-90 active:scale-95 transition-all">Accept</button>
+</div>
+</div>
+<!-- Invite Card 2 -->
+<div class="bg-surface-container-low/50 rounded-lg p-5 flex items-center gap-4 opacity-80">
+<div class="w-12 h-12 rounded-full bg-tertiary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-on-tertiary-container">group</span>
+</div>
+<div class="flex-1">
+<h3 class="font-bold text-on-surface">The Veranda Club</h3>
+<p class="text-sm text-on-surface-variant">Weekly Social Game</p>
+</div>
+<button class="h-10 px-4 rounded-full bg-surface-container-highest text-on-surface font-bold text-sm active:scale-95 transition-all">View</button>
+</div>
+</div>
+</section>
+<!-- Games Section (Recent 3) -->
+<section class="space-y-4">
+<div class="flex items-center justify-between px-1">
+<h2 class="font-headline text-xl font-bold tracking-tight">Recent Games</h2>
+<a class="text-primary font-bold text-sm flex items-center gap-1 hover:underline" href="#">
+                    All Games <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</a>
+</div>
+<div class="space-y-4">
+<!-- Game 1: Active -->
+<div class="group relative overflow-hidden bg-surface-container-lowest rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
+<div class="flex justify-between items-start mb-6">
+<div>
+<div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary-container text-on-primary-container text-[10px] font-bold tracking-widest uppercase mb-2">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+                                Active Now
+                            </div>
+<h3 class="font-headline text-2xl font-extrabold text-on-surface">Midnight Run</h3>
+</div>
+<div class="text-right">
+<p class="text-xs font-bold text-on-surface-variant uppercase tracking-tighter">Current Score</p>
+<p class="text-2xl font-black text-primary">42 <span class="text-sm font-normal text-on-surface-variant">/ 52</span></p>
+</div>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex -space-x-2">
+<img alt="P1" class="w-8 h-8 rounded-full border-2 border-surface-container-lowest bg-surface-container" data-alt="User avatar small" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA47JyU4NXGOnm0mSoskRczgk7aarAoHlcK4xQH_yX4Ls4e7TLVkV19fC1dEGi3XXvIMyLuvCQo5582QQMJGoz4_qrXfDUSP8POFoLmB2uN6nOtRp2hKznuyQ8LsIHzWqrQ9nARNBzdsvWS1iihbzO0gUg89S29KDFJuc9hr4nuWxwZtaus59yJygIcgbGRucUZV4PrZ9QOLMuAwHFgqfmO5hVcAc-HnnFDZhpBB2xflg_l4AJmumRyo4UURl5i79_c9tK832WrfYk"/>
+<img alt="P2" class="w-8 h-8 rounded-full border-2 border-surface-container-lowest bg-surface-container" data-alt="User avatar small" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDPKVev3sj7nNyk-y3ClJNl8ZVUn8o0_d0pWI44JCoqn6asmxVGO8amFUKGJJygvFEKo1RcoPYXQKYwlIF3iXqAcgQLcJwY0UJN8XYZcPY8zzUnUDyC0maZobZrEX2KHePO3Nbdqez1qkuneRi1hLuKKgZre8nx_NOC0HpbM8wXHYnXqF7z_U4snVmA4FXiCidICBtLS4e7pwaz53WoDz-vsmHygi7lJ9HrIBMH43PJc3f3GVSh0LM_evF0a_Vqqdghm30o9evE5fM"/>
+<div class="w-8 h-8 rounded-full border-2 border-surface-container-lowest bg-surface-container-high flex items-center justify-center text-[10px] font-bold">+1</div>
+</div>
+<button class="bg-primary text-on-primary px-6 py-2 rounded-xl font-bold text-sm group-hover:scale-105 transition-transform">Jump In</button>
+</div>
+</div>
+<!-- Game 2: Completed -->
+<div class="bg-surface-container-low rounded-lg p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+<div class="flex items-center gap-4">
+<div class="w-14 h-14 rounded-2xl bg-surface-container-highest flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant text-3xl">workspace_premium</span>
+</div>
+<div>
+<p class="text-xs font-bold text-outline uppercase tracking-wider">Yesterday</p>
+<h3 class="font-headline text-lg font-bold text-on-surface">Summer Veranda</h3>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="text-center">
+<p class="text-[10px] font-bold text-outline uppercase">Status</p>
+<p class="text-sm font-bold text-on-surface">Completed</p>
+</div>
+<div class="text-center">
+<p class="text-[10px] font-bold text-outline uppercase">Rank</p>
+<p class="text-sm font-bold text-secondary">2nd Place</p>
+</div>
+<button class="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container-lowest text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">analytics</span>
+</button>
+</div>
+</div>
+<!-- Game 3: Completed -->
+<div class="bg-surface-container-low rounded-lg p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+<div class="flex items-center gap-4">
+<div class="w-14 h-14 rounded-2xl bg-surface-container-highest flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant text-3xl">history</span>
+</div>
+<div>
+<p class="text-xs font-bold text-outline uppercase tracking-wider">Aug 12</p>
+<h3 class="font-headline text-lg font-bold text-on-surface">Quick Pedro 4P</h3>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="text-center">
+<p class="text-[10px] font-bold text-outline uppercase">Status</p>
+<p class="text-sm font-bold text-on-surface">Completed</p>
+</div>
+<div class="text-center">
+<p class="text-[10px] font-bold text-outline uppercase">Rank</p>
+<p class="text-sm font-bold text-on-surface-variant">4th Place</p>
+</div>
+<button class="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container-lowest text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">analytics</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Stats Bento-ish Preview -->
+<section class="grid grid-cols-2 gap-4">
+<div class="bg-tertiary-container/30 p-6 rounded-lg space-y-2">
+<span class="material-symbols-outlined text-tertiary" style="font-variation-settings: 'FILL' 1;">stars</span>
+<p class="text-xs font-bold text-tertiary/70 uppercase">Win Rate</p>
+<p class="text-3xl font-black text-tertiary tracking-tighter">68%</p>
+</div>
+<div class="bg-secondary-container/20 p-6 rounded-lg space-y-2">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">military_tech</span>
+<p class="text-xs font-bold text-secondary/70 uppercase">Points</p>
+<p class="text-3xl font-black text-secondary tracking-tighter">1,240</p>
+</div>
+</section>
+</main>
+<!-- FAB for New Game -->
+<button class="fixed bottom-24 right-6 w-14 h-14 bg-primary text-on-primary rounded-2xl shadow-xl flex items-center justify-center z-50 active:scale-90 transition-transform">
+<span class="material-symbols-outlined text-2xl">add</span>
+</button>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-2 bg-[#f5f7f5]/80 dark:bg-[#1a1c1a]/80 backdrop-blur-xl rounded-t-[2rem] h-20 shadow-[0px_-4px_24px_rgba(0,0,0,0.04)]">
+<!-- Home (Active) -->
+<a class="flex flex-col items-center justify-center bg-[#ffca53] text-[#765600] rounded-full px-4 py-1 scale-95 active:scale-110 transition-transform duration-300 ease-out" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="font-['Be_Vietnam_Pro'] text-[11px] font-semibold">Home</span>
+</a>
+<!-- Inbox -->
+<a class="flex flex-col items-center justify-center text-[#2c2f2e] opacity-60 hover:opacity-100 transition-transform duration-300 ease-out active:scale-110" href="#">
+<span class="material-symbols-outlined">mail</span>
+<span class="font-['Be_Vietnam_Pro'] text-[11px] font-semibold">Inbox</span>
+</a>
+<!-- Rankings -->
+<a class="flex flex-col items-center justify-center text-[#2c2f2e] opacity-60 hover:opacity-100 transition-transform duration-300 ease-out active:scale-110" href="#">
+<span class="material-symbols-outlined">leaderboard</span>
+<span class="font-['Be_Vietnam_Pro'] text-[11px] font-semibold">Rankings</span>
+</a>
+<!-- Profile -->
+<a class="flex flex-col items-center justify-center text-[#2c2f2e] opacity-60 hover:opacity-100 transition-transform duration-300 ease-out active:scale-110" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="font-['Be_Vietnam_Pro'] text-[11px] font-semibold">Profile</span>
+</a>
+</nav>
+</body></html>

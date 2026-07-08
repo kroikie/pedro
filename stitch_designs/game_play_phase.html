@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Veranda Play - Pedro Board</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;family=Be+Vietnam+Pro:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary": "#00694b",
+                    "secondary": "#ffca53",
+                    "surface": "#f5f7f5",
+                    "surface-bright": "#ffffff",
+                    "on-surface": "#2c332f",
+                    "on-surface-variant": "#5a635e",
+                    "outline-variant": "#dbe3de",
+                    "accent-gold": "#ffca53",
+                    "table-green": "#2d8a6b"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.5rem",
+                    "lg": "0.75rem",
+                    "xl": "1rem",
+                    "2xl": "1.5rem",
+                    "3xl": "2rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Plus Jakarta Sans"],
+                    "body": ["Be Vietnam Pro"],
+                    "label": ["Be Vietnam Pro"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #f5f7f5;
+            color: #2c332f;
+            font-family: 'Be Vietnam Pro', sans-serif;
+        }
+        .card-shadow {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        .table-glow {
+            box-shadow: inset 0 0 80px rgba(0,0,0,0.2), 0 20px 40px rgba(0,0,0,0.1);
+        }
+        .active-selection {
+            box-shadow: 0 0 0 3px #ffca53, 0 10px 20px rgba(255, 202, 83, 0.3);
+        }
+    </style>
+</head>
+<body class="overflow-hidden h-screen bg-surface">
+<!-- TopAppBar (Shared Component) -->
+<header class="fixed top-0 w-full z-50 bg-[#f5f7f5] flex justify-between items-center px-6 py-4 font-['Plus_Jakarta_Sans'] tracking-tight">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/20">
+<img alt="Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCyO7997H6C3Y201fDozPz_i_k4k_n-i-3D96i5C_1v8A7l0-1h-P7L8sH-3C6c-yY_I8s=s128-c"/>
+</div>
+<h1 class="text-xl font-bold text-[#00694b]">Veranda Play</h1>
+</div>
+<div class="flex items-center gap-4">
+<div class="bg-white px-3 py-1.5 rounded-full flex items-center gap-2 border border-outline-variant shadow-sm">
+<span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Bid</span>
+<span class="text-primary font-headline font-bold">14</span>
+</div>
+<button class="text-[#00694b] transition-transform active:scale-95 duration-200">
+<span class="material-symbols-outlined text-2xl" data-icon="settings_heart">settings_heart</span>
+</button>
+</div>
+</header>
+<!-- Main Game Canvas -->
+<main class="relative h-full w-full pt-20 pb-28 overflow-hidden flex flex-col items-center justify-center">
+<!-- Trump Indicator -->
+<div class="absolute top-24 left-8 z-10 flex flex-col items-start bg-white/60 backdrop-blur-md p-3 rounded-2xl border border-white">
+<span class="text-[9px] font-extrabold uppercase tracking-widest text-on-surface-variant mb-1">Trump Suit</span>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-3xl text-primary" data-icon="spades" style="font-variation-settings: 'FILL' 1;">playing_cards</span>
+<span class="font-headline text-lg font-extrabold text-primary tracking-tight">SPADES</span>
+</div>
+</div>
+<!-- AI Narration Overlay (Friendly Integrated Style) -->
+<div class="absolute top-24 right-8 z-10 max-w-[240px]">
+<div class="bg-[#fffaeb] p-4 rounded-2xl border-2 border-[#ffca53] shadow-lg relative">
+<div class="flex items-center gap-2 mb-1.5">
+<span class="material-symbols-outlined text-accent-gold text-lg" data-icon="auto_awesome">auto_awesome</span>
+<span class="text-[10px] font-bold text-[#765600] uppercase tracking-wider">AI Assistant</span>
+</div>
+<p class="text-xs font-semibold text-on-surface leading-relaxed">
+                    "A bold move playing the 5! This puts the Dealer on the spot."
+                </p>
+<!-- Little tail for the speech bubble -->
+<div class="absolute -bottom-2 right-6 w-4 h-4 bg-[#fffaeb] border-b-2 border-r-2 border-[#ffca53] rotate-45"></div>
+</div>
+</div>
+<!-- The Table Surface (Bright Soft Teal/Green) -->
+<div class="relative w-[90%] max-w-4xl aspect-[1.4] bg-table-green rounded-[80px] border-[12px] border-[#1e5c47] table-glow flex items-center justify-center overflow-hidden">
+<!-- Table Texture Overlay -->
+<div class="absolute inset-0 opacity-20 mix-blend-overlay pointer-events-none" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBwjlqUTjh4ZvlnDBF-n2py2Q_wFlIXPsy3mE6FjikUO1YycIKRIgl55Nc9HlcGtm-gxuOCVTRTrmebu0rr4dGqSd9wajM2Jwx1Tt7odvhqxkiyqd_ZbgwI6OPMgC8RJmBxTez31ZsBxCun8Vf45_CaU4fnAdkq5gra-ztKcqc7Ksf7MdSJvbiitScHsIVsLhOmsA2wlkburCiO5rc9rV_CHHJC5_jdbS5_P2669duiueSzcxsVgla7zwrCEGamfJ4nU0Po88QykrY')"></div>
+<!-- Players -->
+<!-- Opponent North -->
+<div class="absolute top-6 flex flex-col items-center gap-2">
+<div class="w-14 h-14 rounded-full border-4 border-white/30 overflow-hidden shadow-md">
+<img alt="Silas" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBtRYsT1l2au1HbUVy0g4SgYE1qRqbkf252cnXApvcpQrYjCou6UoQMQOx5WDXrq2EK8nZYGTiwIT2MPlRDO_TEF6afn-nKtN3FnCqNE6wEE9fV45QGdZvDIZfTyTcvCmCI8zZxhabZD7cyfQ8A4X3vdzrQrD5uawlgmTAYd-0WFGE-56p-k5Rs-QD1PewjlEX7hrO9xptnVFZkvOQAkXvtXDnmPxGQoyOMxByljgRjWKUnfh_IC8rbPnofgXGgt4K3G0z07kiFahc"/>
+</div>
+<div class="bg-white/90 px-3 py-0.5 rounded-full shadow-sm">
+<span class="text-[10px] font-bold text-primary">SILAS • 12</span>
+</div>
+</div>
+<!-- Opponent West -->
+<div class="absolute left-6 flex items-center gap-3">
+<div class="bg-white/90 px-3 py-0.5 rounded-full shadow-sm">
+<span class="text-[10px] font-bold text-primary">ELARA • 08</span>
+</div>
+<div class="w-14 h-14 rounded-full border-4 border-white/30 overflow-hidden shadow-md">
+<img alt="Elara" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBH1D5q-N1oDnwnxkrS7PCwTvzDCNWn0-JvIoWgoy9kXdTAVyQUiMxfyuqnz-VpEy67bVEHNxKVqa0CSnqTW6Z6LQY08PucKE7m_YaERQjD8tLkfFQfUGtunSnQMLzxs9hpIq0m_voSU0l0FuHcIi32fsiYVWETexKtpkJsAwRwG4ZmuiTZ8Pmxjwo95bk4XKBbUUgbWWFgeglnYtpb-0VcHv5wLZ8q6BxVWztA02NZWxHjKF-8Wh1utvXWVKFZ62OtG6maesKBlEk"/>
+</div>
+</div>
+<!-- Opponent East -->
+<div class="absolute right-6 flex items-center gap-3">
+<div class="w-14 h-14 rounded-full border-4 border-accent-gold overflow-hidden shadow-md ring-4 ring-accent-gold/20">
+<img alt="Marcus" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCYeIriZgx2hMIjMLyIf_XLApt-fODQnji6uIfPtlTy2tEkgaxqz3y7cIBsi2Idysl8s_wjn-maXE1eEZpxqT-goV0QbiiX77H6KsWTHDfjRLpaIqDPoXwXubjD91MHqxrVilRzzbQ2XkI3aDksTS0qof-wDNoQ4wpsz2S5IG0TKVx_K1Q2nkqCb1EfM0hx_QmGzNShkWpk0_mdj3hgOPm6jQrbIKsHnVZhdLkb0KV5wb9GGg2YKq7kKiS_u5YZazrfeljhY947NIk"/>
+</div>
+<div class="bg-accent-gold px-3 py-0.5 rounded-full shadow-md">
+<span class="text-[10px] font-bold text-[#765600]">MARCUS • 21</span>
+</div>
+</div>
+<!-- Current Lift (Center Table) -->
+<div class="relative w-48 h-40 flex items-center justify-center">
+<!-- Played Card 1 -->
+<div class="absolute -translate-y-6 -translate-x-6 rotate-[-15deg] w-20 h-28 bg-white rounded-xl card-shadow p-2 flex flex-col justify-between border border-gray-100">
+<div class="flex flex-col items-start leading-none">
+<span class="font-headline font-extrabold text-lg text-on-surface">A</span>
+<span class="material-symbols-outlined text-[12px] text-on-surface" data-icon="spades" style="font-variation-settings: 'FILL' 1;">playing_cards</span>
+</div>
+<div class="flex justify-center">
+<span class="material-symbols-outlined text-3xl text-primary/5" data-icon="spades" style="font-variation-settings: 'FILL' 1;">playing_cards</span>
+</div>
+<div class="flex flex-col items-end leading-none rotate-180">
+<span class="font-headline font-extrabold text-lg text-on-surface">A</span>
+<span class="material-symbols-outlined text-[12px] text-on-surface" data-icon="spades" style="font-variation-settings: 'FILL' 1;">playing_cards</span>
+</div>
+</div>
+<!-- Played Card 2 -->
+<div class="absolute translate-x-10 translate-y-4 rotate-[10deg] w-20 h-28 bg-white rounded-xl card-shadow p-2 flex flex-col justify-between border-2 border-primary/10">
+<div class="flex flex-col items-start leading-none">
+<span class="font-headline font-extrabold text-lg text-red-500">5</span>
+<span class="material-symbols-outlined text-[12px] text-red-500" data-icon="spades" style="font-variation-settings: 'FILL' 1;">playing_cards</span>
+</div>
+<div class="flex justify-center">
+<span class="material-symbols-outlined text-3xl text-red-500/5" data-icon="spades" style="font-variation-settings: 'FILL' 1;">playing_cards</span>
+</div>
+<div class="flex flex-col items-end leading-none rotate-180">
+<span class="font-headline font-extrabold text-lg text-red-500">5</span>
+<span class="material-symbols-outlined text-[12px] text-red-500" data-icon="spades" style="font-variation-settings: 'FILL' 1;">playing_cards</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Player's Hand -->
+<div class="absolute bottom-10 left-1/2 -translate-x-1/2 flex items-end justify-center gap-2">
+<!-- Card 1 -->
+<div class="group relative w-24 h-36 bg-white rounded-xl border border-outline-variant card-shadow p-3 flex flex-col justify-between -rotate-12 translate-y-4 hover:translate-y-0 transition-all cursor-pointer">
+<div class="flex flex-col items-start leading-none">
+<span class="font-headline font-bold text-xl text-on-surface">J</span>
+<span class="material-symbols-outlined text-sm text-on-surface" data-icon="spades" style="font-variation-settings: 'FILL' 1;">playing_cards</span>
+</div>
+<div class="flex flex-col items-end leading-none rotate-180">
+<span class="font-headline font-bold text-xl text-on-surface">J</span>
+<span class="material-symbols-outlined text-sm text-on-surface" data-icon="spades" style="font-variation-settings: 'FILL' 1;">playing_cards</span>
+</div>
+</div>
+<!-- Card 2 (Selected) -->
+<div class="group relative w-24 h-36 bg-white rounded-xl active-selection card-shadow p-3 flex flex-col justify-between -translate-y-10 transition-all cursor-pointer z-20">
+<div class="flex flex-col items-start leading-none">
+<span class="font-headline font-bold text-xl text-primary">10</span>
+<span class="material-symbols-outlined text-sm text-primary" data-icon="spades" style="font-variation-settings: 'FILL' 1;">playing_cards</span>
+</div>
+<div class="absolute -top-10 left-1/2 -translate-x-1/2 bg-accent-gold text-[#765600] text-[10px] font-extrabold px-3 py-1.5 rounded-full uppercase tracking-wider whitespace-nowrap shadow-md">Play Card</div>
+<div class="flex flex-col items-end leading-none rotate-180">
+<span class="font-headline font-bold text-xl text-primary">10</span>
+<span class="material-symbols-outlined text-sm text-primary" data-icon="spades" style="font-variation-settings: 'FILL' 1;">playing_cards</span>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="group relative w-24 h-36 bg-white rounded-xl border border-outline-variant card-shadow p-3 flex flex-col justify-between rotate-0 translate-y-2 hover:translate-y-0 transition-all cursor-pointer">
+<div class="flex flex-col items-start leading-none">
+<span class="font-headline font-bold text-xl text-red-500">Q</span>
+<span class="material-symbols-outlined text-sm text-red-500" data-icon="favorite" style="font-variation-settings: 'FILL' 1;">favorite</span>
+</div>
+<div class="flex flex-col items-end leading-none rotate-180">
+<span class="font-headline font-bold text-xl text-red-500">Q</span>
+<span class="material-symbols-outlined text-sm text-red-500" data-icon="favorite" style="font-variation-settings: 'FILL' 1;">favorite</span>
+</div>
+</div>
+<!-- Card 4 -->
+<div class="group relative w-24 h-36 bg-white rounded-xl border border-outline-variant card-shadow p-3 flex flex-col justify-between rotate-12 translate-y-6 hover:translate-y-0 transition-all cursor-pointer">
+<div class="flex flex-col items-start leading-none">
+<span class="font-headline font-bold text-xl text-on-surface">8</span>
+<span class="material-symbols-outlined text-sm text-on-surface" data-icon="token" style="font-variation-settings: 'FILL' 1;">token</span>
+</div>
+<div class="flex flex-col items-end leading-none rotate-180">
+<span class="font-headline font-bold text-xl text-on-surface">8</span>
+<span class="material-symbols-outlined text-sm text-on-surface" data-icon="token" style="font-variation-settings: 'FILL' 1;">token</span>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Shared Component) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-6 pb-8 pt-4 bg-white/80 backdrop-blur-xl rounded-t-[2rem] shadow-[0px_-10px_30px_rgba(0,105,75,0.05)]">
+<button class="flex flex-col items-center justify-center bg-[#ffca53] text-[#765600] rounded-full px-5 py-2 scale-110 shadow-lg active:scale-90 transition-all duration-300 ease-out">
+<span class="material-symbols-outlined" data-icon="Style">style</span>
+<span class="font-['Be_Vietnam_Pro'] text-[9px] font-bold uppercase tracking-wider mt-0.5">Lobbies</span>
+</button>
+<button class="flex flex-col items-center justify-center text-[#00694b]/60 px-4 py-2 hover:text-[#00694b] transition-colors active:scale-90 duration-300 ease-out">
+<span class="material-symbols-outlined" data-icon="leaderboard">leaderboard</span>
+<span class="font-['Be_Vietnam_Pro'] text-[9px] font-bold uppercase tracking-wider mt-0.5">Rankings</span>
+</button>
+<button class="flex flex-col items-center justify-center text-[#00694b]/60 px-4 py-2 hover:text-[#00694b] transition-colors active:scale-90 duration-300 ease-out">
+<span class="material-symbols-outlined" data-icon="person_playful">person</span>
+<span class="font-['Be_Vietnam_Pro'] text-[9px] font-bold uppercase tracking-wider mt-0.5">Account</span>
+</button>
+</nav>
+</body></html>

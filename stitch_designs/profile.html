@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Be_Vietnam_Pro:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary-container": "#006145",
+                        "outline": "#747776",
+                        "surface-container": "#e6e9e7",
+                        "secondary-fixed": "#ffca53",
+                        "error": "#b31b25",
+                        "primary-fixed": "#8cfece",
+                        "tertiary": "#006762",
+                        "on-tertiary-container": "#005854",
+                        "surface-bright": "#f5f7f5",
+                        "surface-tint": "#00694b",
+                        "secondary-dim": "#674b00",
+                        "on-primary": "#c7ffe3",
+                        "on-surface-variant": "#595c5b",
+                        "on-primary-fixed-variant": "#006d4e",
+                        "tertiary-container": "#73f1e7",
+                        "on-secondary-fixed": "#453100",
+                        "surface-container-low": "#eff1ef",
+                        "tertiary-fixed-dim": "#63e2d9",
+                        "outline-variant": "#abaeac",
+                        "surface-container-highest": "#d9dedb",
+                        "on-tertiary-fixed-variant": "#00635e",
+                        "on-secondary-fixed-variant": "#684c00",
+                        "on-tertiary-fixed": "#004440",
+                        "on-tertiary": "#befff9",
+                        "secondary": "#765600",
+                        "tertiary-dim": "#005a55",
+                        "surface-variant": "#d9dedb",
+                        "on-error": "#ffefee",
+                        "surface-container-lowest": "#ffffff",
+                        "background": "#f5f7f5",
+                        "error-container": "#fb5151",
+                        "on-primary-fixed": "#004d36",
+                        "surface-container-high": "#e0e3e1",
+                        "on-background": "#2c2f2e",
+                        "tertiary-fixed": "#73f1e7",
+                        "primary-fixed-dim": "#7eefc0",
+                        "primary-dim": "#005b41",
+                        "inverse-on-surface": "#9b9d9c",
+                        "secondary-container": "#ffca53",
+                        "primary": "#00694b",
+                        "surface": "#f5f7f5",
+                        "on-secondary-container": "#5c4300",
+                        "inverse-primary": "#8cfece",
+                        "on-secondary": "#fff1db",
+                        "on-surface": "#2c2f2e",
+                        "error-dim": "#9f0519",
+                        "secondary-fixed-dim": "#f8ba00",
+                        "inverse-surface": "#0b0f0e"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Plus Jakarta Sans"],
+                        "body": ["Be Vietnam Pro"],
+                        "label": ["Plus Jakarta Sans"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+        }
+        .editorial-shadow {
+            box-shadow: 0px 20px 40px rgba(118, 86, 0, 0.08);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background font-body text-on-background selection:bg-primary-container">
+<!-- TopAppBar -->
+<header class="w-full top-0 sticky bg-[#f5f7f5] dark:bg-[#1a1c1a] z-50 transition-colors">
+<div class="flex justify-between items-center px-6 h-16 w-full">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary-container overflow-hidden editorial-shadow border-2 border-surface-container-lowest">
+<img alt="Avatar" class="w-full h-full object-cover" data-alt="professional headshot of a smiling young man with warm lighting and a soft blurred garden background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDFTQd4q-hIVPnFxh4-Qb2JaV2yrbEUwEI0kNYp7HFO76InlMiVvRypZFG1frFRkptWG6HqLWG28yl-xRKRB31cA9m7aZ2akVbypvyTUW_GdAwjM9urtvyj_kZvmYcQjo8ChdZclQE_SUNv14erWPmbUbxHHw1IxgBEIRNfp3eBtRnao7wZunC7E1ZvuwfP2aYkkTLke_57TgH6UHXO2JQieGfPPz5Z-DvRRXm8vDD3ao31rtJc4FuooqksvxgZ9vm81VUKTox45J8"/>
+</div>
+<span class="font-['Plus_Jakarta_Sans'] tracking-tight text-2xl font-bold text-[#00694b] dark:text-[#3EB489]">Pedro</span>
+</div>
+<button class="hover:bg-[#00694b]/5 transition-colors p-2 rounded-full scale-95 active:scale-90 duration-200">
+<span class="material-symbols-outlined text-[#00694b] dark:text-[#3EB489]">settings</span>
+</button>
+</div>
+<div class="h-[1px] w-full bg-[#e8ebe8]"></div>
+</header>
+<main class="max-w-4xl mx-auto px-6 pt-8 pb-32">
+<!-- Hero Profile Section -->
+<section class="relative mb-12 flex flex-col md:flex-row items-center gap-8">
+<div class="relative group">
+<div class="w-40 h-40 md:w-48 md:h-48 rounded-lg overflow-hidden editorial-shadow transform -rotate-2 hover:rotate-0 transition-transform duration-500 border-4 border-surface-container-lowest">
+<img alt="Player avatar" class="w-full h-full object-cover" data-alt="detailed close-up of a friendly male player with soft natural sunlight and a vibrant mint colored background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDmb9ronV5jTEYEOhKPnlsS_xsq_4xFiK4--MsVPH_9jQDiHafWebwHPSZIJ4MYhdIlVhQdib1lO0CRu-nL3IoWFnyyMrgpT1bsESE3MFirdTVPUJxo_LiagqNDiZSVfASCCcjps2sYy-uiJzqMUUIH2_cchqhQHv2S2jmH8adTVk24W0ttqJ6yBKeHfGn-tXXdiTvx7ZmCKhei0ntaM7HGC_ecCW-gHgM6mHiZDDuqOW7qRsHLkn8lU1dGWBHOo23Ey7CQmPAkVmg"/>
+</div>
+<button class="absolute -bottom-2 -right-2 bg-secondary text-on-secondary rounded-full p-4 shadow-lg hover:scale-110 active:scale-95 transition-all duration-300">
+<span class="material-symbols-outlined" data-weight="fill" style="font-variation-settings: 'FILL' 1;">photo_camera</span>
+</button>
+</div>
+<div class="flex-1 space-y-4 text-center md:text-left">
+<div class="inline-block px-4 py-1 rounded-full bg-secondary-container text-on-secondary-container font-label text-sm font-bold tracking-wider">
+                    PRO PLAYER
+                </div>
+<h1 class="font-headline text-4xl md:text-5xl font-extrabold tracking-tight text-primary leading-tight">
+                    Alex Rivera
+                </h1>
+<p class="text-on-surface-variant max-w-md">
+                    Master of the Deck since 2022. Competing from the sunny verandas of Barcelona.
+                </p>
+<div class="pt-2">
+<button class="bg-gradient-to-br from-primary to-primary-dim text-on-primary px-8 py-3 rounded-xl font-bold editorial-shadow hover:opacity-90 transition-opacity active:scale-95">
+                        Upload New Picture
+                    </button>
+</div>
+</div>
+</section>
+<!-- Bento Stats Grid -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+<!-- Main Stats Card -->
+<div class="md:col-span-2 bg-surface-container-low rounded-lg p-8 flex flex-col justify-between relative overflow-hidden group">
+<div class="absolute -right-12 -top-12 w-48 h-48 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-colors"></div>
+<div class="relative z-10">
+<h2 class="font-headline text-2xl font-bold mb-6">Performance Summary</h2>
+<div class="grid grid-cols-2 gap-8">
+<div>
+<span class="font-label text-sm text-on-surface-variant uppercase tracking-widest">Games Won</span>
+<div class="flex items-baseline gap-2">
+<span class="text-5xl font-extrabold text-primary">128</span>
+<span class="material-symbols-outlined text-secondary" data-weight="fill" style="font-variation-settings: 'FILL' 1;">military_tech</span>
+</div>
+</div>
+<div>
+<span class="font-label text-sm text-on-surface-variant uppercase tracking-widest">Points Accumulated</span>
+<div class="flex items-baseline gap-2">
+<span class="text-5xl font-extrabold text-on-background">14.2k</span>
+<span class="material-symbols-outlined text-tertiary">star</span>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-8 flex gap-4 relative z-10">
+<div class="flex-1 h-2 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="w-[75%] h-full bg-primary rounded-full"></div>
+</div>
+<span class="font-label text-xs font-bold text-on-surface-variant">LVL 42</span>
+</div>
+</div>
+<!-- Small Achievement Card -->
+<div class="bg-secondary-container rounded-lg p-6 flex flex-col items-center justify-center text-center editorial-shadow">
+<div class="w-16 h-16 rounded-full bg-surface-container-lowest flex items-center justify-center mb-4">
+<span class="material-symbols-outlined text-secondary text-4xl" data-weight="fill" style="font-variation-settings: 'FILL' 1;">emoji_events</span>
+</div>
+<h3 class="font-headline font-bold text-on-secondary-container">Win Streak</h3>
+<p class="text-3xl font-extrabold text-on-secondary-container">12</p>
+<span class="text-xs font-medium text-on-secondary-container/70 mt-1">Personal Best</span>
+</div>
+</section>
+<!-- Profile Settings Section -->
+<section class="bg-surface-container-lowest rounded-lg p-8 editorial-shadow">
+<h2 class="font-headline text-2xl font-bold mb-8">Account Details</h2>
+<div class="space-y-8">
+<!-- Name Field -->
+<div class="group">
+<label class="block font-label text-sm font-bold text-on-surface-variant mb-2 px-1">Display Name</label>
+<div class="relative">
+<input class="w-full bg-surface-container-low border-none rounded-lg px-6 py-4 font-medium focus:ring-2 focus:ring-primary/20 transition-all text-on-background" type="text" value="Alex Rivera"/>
+<span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-outline">edit</span>
+</div>
+</div>
+<!-- Bio / Tagline -->
+<div class="group">
+<label class="block font-label text-sm font-bold text-on-surface-variant mb-2 px-1">Player Tagline</label>
+<div class="relative">
+<input class="w-full bg-surface-container-low border-none rounded-lg px-6 py-4 font-medium focus:ring-2 focus:ring-primary/20 transition-all text-on-background" placeholder="Tell the veranda about yourself..." type="text"/>
+</div>
+</div>
+<!-- Toggle Actions -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
+<div class="flex items-center justify-between p-4 rounded-lg bg-surface-container-low">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-tertiary">public</span>
+<span class="font-medium">Public Profile</span>
+</div>
+<div class="w-12 h-6 bg-primary rounded-full relative">
+<div class="absolute right-1 top-1 w-4 h-4 bg-white rounded-full"></div>
+</div>
+</div>
+<div class="flex items-center justify-between p-4 rounded-lg bg-surface-container-low">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-outline">notifications</span>
+<span class="font-medium">Game Invites</span>
+</div>
+<div class="w-12 h-6 bg-outline-variant rounded-full relative">
+<div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full"></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-2 bg-[#f5f7f5]/80 dark:bg-[#1a1c1a]/80 backdrop-blur-xl h-20 rounded-t-[2rem] shadow-[0px_-4px_24px_rgba(0,0,0,0.04)]">
+<a class="flex flex-col items-center justify-center text-[#2c2f2e] opacity-60 hover:opacity-100 scale-95 active:scale-110 transition-transform duration-300 ease-out" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="font-['Be_Vietnam_Pro'] text-[11px] font-semibold mt-1">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#2c2f2e] opacity-60 hover:opacity-100 scale-95 active:scale-110 transition-transform duration-300 ease-out" href="#">
+<span class="material-symbols-outlined">mail</span>
+<span class="font-['Be_Vietnam_Pro'] text-[11px] font-semibold mt-1">Inbox</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#2c2f2e] opacity-60 hover:opacity-100 scale-95 active:scale-110 transition-transform duration-300 ease-out" href="#">
+<span class="material-symbols-outlined">leaderboard</span>
+<span class="font-['Be_Vietnam_Pro'] text-[11px] font-semibold mt-1">Rankings</span>
+</a>
+<!-- Active Tab: Profile -->
+<a class="flex flex-col items-center justify-center bg-[#ffca53] text-[#765600] rounded-full px-4 py-1 scale-95 active:scale-110 transition-transform duration-300 ease-out" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">person</span>
+<span class="font-['Be_Vietnam_Pro'] text-[11px] font-semibold">Profile</span>
+</a>
+</nav>
+</body></html>

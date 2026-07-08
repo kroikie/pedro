@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Veranda Play | Pedro Lobby</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&amp;family=Space+Grotesk:wght@500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary": "#00694b", // Mint
+                        "secondary": "#ffca53", // Marigold
+                        "accent": "#765600",
+                        "background": "#f5f7f5",
+                        "surface": "#ffffff",
+                        "on-surface": "#2c2f2e",
+                        "on-surface-variant": "#5a6360",
+                        "outline-variant": "#e0e7e3"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.5rem",
+                        "lg": "0.75rem",
+                        "xl": "1rem",
+                        "2xl": "1.5rem",
+                        "3xl": "2rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Plus Jakarta Sans"],
+                        "body": ["Be Vietnam Pro"],
+                        "label": ["Be Vietnam Pro"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background-color: #f5f7f5;
+            color: #2c2f2e;
+        }
+        h1, h2, h3, .headline-font {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        .soft-shadow {
+            box-shadow: 0 10px 30px -5px rgba(0, 105, 75, 0.08);
+        }
+        .amber-glow {
+            box-shadow: 0 8px 24px -4px rgba(255, 202, 83, 0.4);
+        }
+    </style>
+</head>
+<body class="selection:bg-secondary/30 selection:text-accent">
+<!-- TopAppBar Component (from DATA:COMPONENTS:COMPONENTS_8) -->
+<header class="fixed top-0 z-50 bg-[#f5f7f5] dark:bg-emerald-950 w-full flex justify-between items-center px-6 py-4">
+<div class="flex items-center gap-3">
+<img alt="Profile" class="w-8 h-8 rounded-full border-2 border-primary/20" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCA-Dd13XCFzkkMqpNix7xl6o4R584L-ZMc9d_4o-wMcnRf43v8srfXesHZQyD00-qRYwN2XxquNrQD_nnedDiIS76Bq8bYrIJtfCcZABBefNb-wIUFV4U3az5p8PO2mQc27mwXlvUND47AGAK28v4_G2uViseEibAs6KlPj-tC6Y8fMEKf7ly1XuB9zOYaHHSOLUdrVsJJPRArvA8QNx5kTfa3dTm7fjMQhgfayCHn1vuLmVAhm1I148y-1pDI7jkfS2LY4LanNXo"/>
+<span class="font-['Plus_Jakarta_Sans'] tracking-tight text-xl font-bold text-[#00694b] dark:text-emerald-400">Veranda Play</span>
+</div>
+<div class="flex items-center gap-4">
+<div class="bg-white px-3 py-1.5 rounded-full flex items-center gap-2 soft-shadow border border-primary/5">
+<span class="text-primary font-bold text-sm">$4,250</span>
+<span class="material-symbols-outlined text-secondary text-lg">account_balance_wallet</span>
+</div>
+<button class="text-primary/60 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">settings_heart</span>
+</button>
+</div>
+</header>
+<main class="pt-24 pb-36 px-6 max-w-6xl mx-auto min-h-screen">
+<!-- Game Header Section -->
+<div class="flex flex-col md:flex-row justify-between items-end mb-10 gap-6">
+<div class="space-y-1">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+<span class="text-primary text-xs font-bold uppercase tracking-widest">Private Table</span>
+</div>
+<h1 class="text-4xl md:text-5xl font-extrabold tracking-tight text-primary leading-tight">Pedro Championship</h1>
+<p class="text-on-surface-variant text-sm font-medium">Room #882 • Hosted by @AtelierMaster</p>
+</div>
+<div class="flex gap-3">
+<div class="bg-white p-4 rounded-2xl soft-shadow border border-primary/5 flex flex-col items-center min-w-[90px]">
+<span class="text-[10px] uppercase font-bold text-primary/40 tracking-widest mb-1">Target</span>
+<span class="text-2xl font-bold text-primary">21</span>
+</div>
+<div class="bg-white p-4 rounded-2xl soft-shadow border border-primary/5 flex flex-col items-center min-w-[90px]">
+<span class="text-[10px] uppercase font-bold text-primary/40 tracking-widest mb-1">Min Bid</span>
+<span class="text-2xl font-bold text-primary">6</span>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+<!-- Player Slots -->
+<div class="lg:col-span-8 space-y-6">
+<h2 class="text-xs font-bold uppercase tracking-widest text-primary/50 flex items-center gap-2">
+                Players Joined (3/6)
+            </h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<!-- Host Player Card -->
+<div class="bg-white p-5 rounded-3xl flex items-center gap-4 soft-shadow border-l-4 border-primary group transition-all duration-300">
+<div class="relative">
+<img alt="Host" class="w-14 h-14 rounded-2xl object-cover ring-2 ring-primary/10" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCA-Dd13XCFzkkMqpNix7xl6o4R584L-ZMc9d_4o-wMcnRf43v8srfXesHZQyD00-qRYwN2XxquNrQD_nnedDiIS76Bq8bYrIJtfCcZABBefNb-wIUFV4U3az5p8PO2mQc27mwXlvUND47AGAK28v4_G2uViseEibAs6KlPj-tC6Y8fMEKf7ly1XuB9zOYaHHSOLUdrVsJJPRArvA8QNx5kTfa3dTm7fjMQhgfayCHn1vuLmVAhm1I148y-1pDI7jkfS2LY4LanNXo"/>
+<div class="absolute -bottom-1 -right-1 bg-secondary text-accent text-[8px] font-black px-1.5 py-0.5 rounded-lg uppercase shadow-sm">Host</div>
+</div>
+<div class="flex flex-col">
+<span class="text-lg font-bold text-primary">AtelierMaster</span>
+<span class="text-[10px] text-primary/60 font-bold uppercase tracking-tight">Ready to deal</span>
+</div>
+</div>
+<!-- Player Card -->
+<div class="bg-white p-5 rounded-3xl flex items-center gap-4 soft-shadow border border-primary/5 hover:border-primary/20 transition-all">
+<img alt="Player" class="w-14 h-14 rounded-2xl object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBXyi158sRj32p6BD9f5M7-KjKJ9B0X3ZD1fxxyQ3wCkk7u7c1ZB2pV6bdBRLkIH1pqRSp8YwvuxSBw4sv4pGSO_SBlI0hLwXkaREo17-h5ZJPXrFk8SKDoJp8_5uI0aAcJwEEHZTdXktzkkGZ8eRmqu1eZ3Y5HcWvP36_Fmf09HSs9WVtYEy88gtQizu--ZojihFAioQ_7ISrEQkmpgPDbiNN0x-mStLOTBQ4riMTrGnHwBayMCDJdWPGFVEFgZi_8PCW4SpHwPYk"/>
+<div class="flex flex-col">
+<span class="text-lg font-bold text-primary">VelvetAce</span>
+<span class="text-[10px] text-on-surface-variant font-bold uppercase tracking-tight">Waiting...</span>
+</div>
+</div>
+<!-- Player Card -->
+<div class="bg-white p-5 rounded-3xl flex items-center gap-4 soft-shadow border border-primary/5 hover:border-primary/20 transition-all">
+<img alt="Player" class="w-14 h-14 rounded-2xl object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBiIaAroAtCafo407SGkwmIQTA69MD0PGlhbUydKLecSGBMJmlKJOCeLdEC5DM8R6XzsQ3oadhTokia8Sl4AeXXyRmlASKUjK9DFrDYqZ1tPHGyGZ8jmKAhyDL1_U4IWhWTLo35f9_0-04PlawqeHnhK0jQMbZFrmXe5VsDx96xGgS1AeCLwyVANCFHgK5NsybOxA7No7CX71aghqo4h0aQoWVUig_9R7v4_OOMXDa4nRTBhAXEsOZ2Bt_Eh6tj6MgioTL-havah-k"/>
+<div class="flex flex-col">
+<span class="text-lg font-bold text-primary">HighRoller_88</span>
+<span class="text-[10px] text-on-surface-variant font-bold uppercase tracking-tight">Waiting...</span>
+</div>
+</div>
+<!-- Invite Slot -->
+<button class="bg-white border-2 border-dashed border-primary/20 hover:border-primary/40 hover:bg-emerald-50/50 p-5 rounded-3xl flex items-center justify-center gap-3 transition-all group">
+<span class="material-symbols-outlined text-primary/40 group-hover:text-primary transition-colors">person_add</span>
+<span class="font-bold uppercase tracking-widest text-[10px] text-primary/50 group-hover:text-primary">Invite Friend</span>
+</button>
+<!-- Empty Slot -->
+<div class="bg-primary/5 p-5 rounded-3xl flex items-center gap-4 opacity-50">
+<div class="w-14 h-14 rounded-2xl bg-white flex items-center justify-center">
+<span class="material-symbols-outlined text-primary/30">lock</span>
+</div>
+<div class="flex flex-col">
+<span class="text-lg font-bold text-primary/40">Empty Slot</span>
+<span class="text-[10px] font-bold uppercase text-primary/30 tracking-tight">Waiting</span>
+</div>
+</div>
+<!-- Empty Slot -->
+<div class="bg-primary/5 p-5 rounded-3xl flex items-center gap-4 opacity-50">
+<div class="w-14 h-14 rounded-2xl bg-white flex items-center justify-center">
+<span class="material-symbols-outlined text-primary/30">lock</span>
+</div>
+<div class="flex flex-col">
+<span class="text-lg font-bold text-primary/40">Empty Slot</span>
+<span class="text-[10px] font-bold uppercase text-primary/30 tracking-tight">Waiting</span>
+</div>
+</div>
+</div>
+<!-- Action Button -->
+<div class="pt-8 flex justify-center">
+<button class="px-12 py-5 bg-secondary text-accent font-black uppercase tracking-[0.2em] text-sm rounded-2xl amber-glow hover:scale-[1.03] active:scale-95 transition-all duration-300">
+                    Start Match
+                </button>
+</div>
+</div>
+<!-- Side Panel: Chat & Info -->
+<div class="lg:col-span-4 flex flex-col gap-6">
+<!-- Chat Window -->
+<div class="bg-white rounded-[2.5rem] soft-shadow border border-primary/5 overflow-hidden flex flex-col h-[480px]">
+<div class="px-6 py-4 bg-primary/5 flex items-center justify-between border-b border-primary/5">
+<span class="font-bold uppercase tracking-widest text-[10px] text-primary">Table Chat</span>
+<span class="text-[9px] font-bold text-primary/40">4 Players Online</span>
+</div>
+<div class="flex-grow p-6 overflow-y-auto space-y-4 text-sm">
+<div class="flex flex-col items-start gap-1">
+<span class="text-[9px] font-black uppercase tracking-widest text-primary/50">AtelierMaster</span>
+<div class="bg-primary text-white px-4 py-2.5 rounded-2xl rounded-tl-none shadow-sm">
+                            Welcome everyone. Playing to 21 today.
+                        </div>
+</div>
+<div class="flex flex-col items-start gap-1">
+<span class="text-[9px] font-black uppercase tracking-widest text-primary/50">VelvetAce</span>
+<div class="bg-primary/5 text-primary px-4 py-2.5 rounded-2xl rounded-tl-none border border-primary/5">
+                            Sounds good. Pedro is high, right?
+                        </div>
+</div>
+<div class="flex flex-col items-start gap-1">
+<span class="text-[9px] font-black uppercase tracking-widest text-primary/50">AtelierMaster</span>
+<div class="bg-primary text-white px-4 py-2.5 rounded-2xl rounded-tl-none shadow-sm">
+                            Standard rules. Low, High, Jack, Game, and Pedro (9) of trump.
+                        </div>
+</div>
+<div class="flex flex-col items-start gap-1">
+<span class="text-[9px] font-black uppercase tracking-widest text-primary/50">HighRoller_88</span>
+<div class="bg-primary/5 text-primary px-4 py-2.5 rounded-2xl rounded-tl-none border border-primary/5">
+                            Let's get it started. 💰
+                        </div>
+</div>
+</div>
+<div class="p-5 bg-primary/5 border-t border-primary/5">
+<div class="relative flex items-center">
+<input class="w-full bg-white border-none rounded-2xl px-5 py-3 text-sm focus:ring-2 focus:ring-secondary placeholder:text-primary/30 soft-shadow" placeholder="Message table..." type="text"/>
+<button class="absolute right-3 p-2 text-primary hover:text-secondary transition-colors">
+<span class="material-symbols-outlined text-xl">send</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Rules Summary -->
+<div class="bg-white p-6 rounded-3xl soft-shadow border border-primary/5 space-y-4">
+<h3 class="text-[10px] font-black uppercase tracking-widest text-primary/40">Table Rules</h3>
+<div class="space-y-3">
+<div class="flex justify-between items-center text-xs">
+<span class="text-primary/50">Trump Bid</span>
+<span class="font-bold text-primary">Clockwise</span>
+</div>
+<div class="flex justify-between items-center text-xs">
+<span class="text-primary/50">Deck Style</span>
+<span class="font-bold text-primary">Standard (52)</span>
+</div>
+<div class="flex justify-between items-center text-xs">
+<span class="text-primary/50">Teams</span>
+<span class="font-bold text-primary">Fixed (2v2)</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar Component (from DATA:COMPONENTS:COMPONENTS_8) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-6 pb-8 pt-4 bg-white/80 dark:bg-emerald-900/80 backdrop-blur-xl shadow-[0px_-10px_30px_rgba(0,105,75,0.05)] rounded-t-[2rem]">
+<div class="flex flex-col items-center justify-center bg-[#ffca53] text-[#765600] rounded-full px-5 py-2 scale-110 shadow-lg cursor-pointer transition-all duration-300 ease-out active:scale-90">
+<span class="material-symbols-outlined">style</span>
+<span class="font-['Be_Vietnam_Pro'] text-[11px] font-semibold uppercase tracking-wider mt-1">Lobbies</span>
+</div>
+<div class="flex flex-col items-center justify-center text-[#00694b]/60 dark:text-emerald-400/60 px-4 py-2 hover:text-[#00694b] transition-colors cursor-pointer active:scale-90 transition-all duration-300 ease-out">
+<span class="material-symbols-outlined">leaderboard</span>
+<span class="font-['Be_Vietnam_Pro'] text-[11px] font-semibold uppercase tracking-wider mt-1">Rankings</span>
+</div>
+<div class="flex flex-col items-center justify-center text-[#00694b]/60 dark:text-emerald-400/60 px-4 py-2 hover:text-[#00694b] transition-colors cursor-pointer active:scale-90 transition-all duration-300 ease-out">
+<span class="material-symbols-outlined">person_playful</span>
+<span class="font-['Be_Vietnam_Pro'] text-[11px] font-semibold uppercase tracking-wider mt-1">Account</span>
+</div>
+</nav>
+<!-- Decorative Background Detail -->
+<div class="fixed bottom-0 right-0 -z-10 opacity-5 pointer-events-none">
+<svg fill="none" height="800" viewbox="0 0 800 800" width="800" xmlns="http://www.w3.org/2000/svg">
+<circle cx="400" cy="400" r="390" stroke="#00694b" stroke-dasharray="20 40" stroke-width="4"></circle>
+<circle cx="400" cy="400" r="300" stroke="#00694b" stroke-width="1"></circle>
+<path d="M400 0V800" stroke="#00694b" stroke-width="0.5"></path>
+<path d="M0 400H800" stroke="#00694b" stroke-width="0.5"></path>
+</svg>
+</div>
+</body></html>

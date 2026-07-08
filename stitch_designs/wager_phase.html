@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>High-Stakes Atelier - Pedro Board</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;family=Be+Vietnam+Pro:wght@300;400;500;600;700&amp;family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Manrope:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                "mint": {
+                    "50": "#f0fdf4",
+                    "100": "#dcfce7",
+                    "200": "#bbf7d0",
+                    "500": "#22c55e",
+                    "600": "#16a34a",
+                    "700": "#15803d",
+                    "900": "#00694b" // Primary Mint from component data
+                },
+                "marigold": {
+                    "50": "#fffbeb",
+                    "100": "#fef3c7",
+                    "400": "#fbbf24",
+                    "500": "#f59e0b",
+                    "600": "#d97706",
+                    "DEFAULT": "#ffca53", // Marigold from component data
+                    "on": "#765600"
+                },
+                "surface": {
+                    "light": "#f5f7f5",
+                    "card": "#ffffff",
+                    "border": "#e2e8e2"
+                }
+            },
+            "borderRadius": {
+                "DEFAULT": "0.5rem",
+                "lg": "0.75rem",
+                "xl": "1rem",
+                "2xl": "1.5rem",
+                "3xl": "2rem",
+                "full": "9999px"
+            },
+            "fontFamily": {
+                "headline": ["Plus Jakarta Sans"],
+                "body": ["Manrope"],
+                "label": ["Be Vietnam Pro"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #f5f7f5;
+            color: #2c2f2e;
+            font-family: 'Manrope', sans-serif;
+            overflow: hidden;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .felt-table {
+            background: radial-gradient(circle at center, #ffffff 0%, #f0fdf4 100%);
+        }
+        .card-shadow {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+        .bidding-glow {
+            box-shadow: 0 20px 50px rgba(0, 105, 75, 0.08);
+        }
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col">
+<!-- TopAppBar (Shared Component) -->
+<header class="fixed top-0 w-full z-50 bg-[#f5f7f5] flex justify-between items-center px-6 py-4">
+<div class="flex items-center gap-4 transition-transform active:scale-95 duration-200 cursor-pointer">
+<img alt="Profile" class="w-10 h-10 rounded-full border-2 border-mint-900/10" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDEgMAky1TLdSPsHba7PBxvCEl-h48p8XUCS8nCnxfmuDHLRwrT3RTtSjPPhxSzIj7yiaAYh77VZrxUohwwEw4RmkMQZIIsQbC1K5LcUlhZGTrp14ZxPWd4m58xMRbg_LM9Xhk5ODoh9i0eZJt4LQkRCoz7_dVw0xkY6ra5rjUE24RYUjyzvtCWKIFbCH_15km57_LgCkjtf9G3Zm92oEA3X-3CnuoEvAvgQIV3ATsJiuUP-8NwZGK1rcvkoIEoLPv6CPCkLIXwUX0"/>
+<h1 class="font-['Plus_Jakarta_Sans'] tracking-tight text-xl font-bold text-[#00694b]">Veranda Play</h1>
+</div>
+<div class="flex items-center gap-4">
+<div class="bg-white px-4 py-1.5 rounded-full flex items-center gap-2 border border-mint-900/5 shadow-sm">
+<span class="material-symbols-outlined text-marigold-600 text-sm" style="font-variation-settings: 'FILL' 1;">payments</span>
+<span class="font-headline font-bold text-sm text-mint-900 tracking-tighter">4,250</span>
+</div>
+<span class="material-symbols-outlined text-[#00694b] hover:bg-emerald-50 p-2 rounded-full transition-colors cursor-pointer">settings_heart</span>
+</div>
+</header>
+<!-- Main Game Canvas -->
+<main class="flex-grow relative felt-table pt-20 pb-28 overflow-hidden">
+<!-- Opponent Top -->
+<div class="absolute top-24 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
+<div class="relative">
+<img alt="Julian" class="w-14 h-14 rounded-full border-2 border-white shadow-md grayscale opacity-50" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDEgMAky1TLdSPsHba7PBxvCEl-h48p8XUCS8nCnxfmuDHLRwrT3RTtSjPPhxSzIj7yiaAYh77VZrxUohwwEw4RmkMQZIIsQbC1K5LcUlhZGTrp14ZxPWd4m58xMRbg_LM9Xhk5ODoh9i0eZJt4LQkRCoz7_dVw0xkY6ra5rjUE24RYUjyzvtCWKIFbCH_15km57_LgCkjtf9G3Zm92oEA3X-3CnuoEvAvgQIV3ATsJiuUP-8NwZGK1rcvkoIEoLPv6CPCkLIXwUX0"/>
+<div class="absolute -bottom-1 -right-1 bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase border border-white">PASS</div>
+</div>
+<span class="text-[10px] font-label font-bold uppercase tracking-wider text-gray-400">Julian V.</span>
+</div>
+<!-- Opponent Left -->
+<div class="absolute left-6 top-1/2 -translate-y-1/2 flex flex-col items-center gap-2">
+<div class="relative">
+<img alt="Elena" class="w-14 h-14 rounded-full border-2 border-white shadow-md grayscale opacity-50" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD78EvkbTeBEu3-uRZF0GXbbNMbqBfKqlUsGyNOByLMdeoY5zR5cfH36fX0dcmniQMEv7pSzRuF_WhO97YtMM5MbxqtmcOLEQPwH_4kItPRjiavCFGL8Xjka5LSNDwDnCNIlRvU6Fp_ss_CZHkYXLya2v9-ZCz2bL0PbE4mZo8npLL9TsvWMcxOOliC2kjFx0MedVJi9OG52ZcTQ0XjMRhbbSFLdvGvNfPW1FzDv6W5O2pTduSL4FUotAkW2-fZ_PevVfFsEBtF-Xc"/>
+<div class="absolute -bottom-1 -right-1 bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase border border-white">PASS</div>
+</div>
+<span class="text-[10px] font-label font-bold uppercase tracking-wider text-gray-400">Elena M.</span>
+</div>
+<!-- Opponent Right -->
+<div class="absolute right-6 top-1/2 -translate-y-1/2 flex flex-col items-center gap-2">
+<div class="relative">
+<div class="absolute -inset-2 rounded-full bg-marigold/30 blur-md"></div>
+<img alt="Marcus" class="w-16 h-16 rounded-full border-4 border-white shadow-lg" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD0mpEewBzBNkIcuvEyp4-WQgpvxKsFpnM7qBD4pjpnj_fmqcoF7OLebGjzyHtgHJo85Kl-ygbUeLA0MeoGupxYHILngah_o8VdOMW0RM8QMgw-VgEYbgcBWaJ3mt9CdJpTEhp3fpjIzbPMezD_FoQQO6KUsB4lsSFsZxouDhtFnw6zolx12_172He1sv9oLmyY786f3ye2gme7PuwaoBSO3huujFag5wcT6lWHFZV0YbJNOS4eLQgNNvh4vZtDdXwnoKWgG3JPE1w"/>
+<div class="absolute -bottom-1.5 -right-1.5 bg-marigold text-marigold-on px-2.5 py-1 rounded-full text-[10px] font-bold shadow-md border border-white">BID: 12</div>
+</div>
+<span class="text-[10px] font-label font-bold uppercase tracking-wider text-marigold-on">Marcus Thorne</span>
+</div>
+<!-- Bidding Interface (Central Focus) -->
+<div class="absolute inset-0 flex items-center justify-center pointer-events-none p-6">
+<div class="w-full max-w-sm pointer-events-auto bg-white/70 backdrop-blur-2xl rounded-3xl border border-white shadow-xl bidding-glow p-8 flex flex-col items-center gap-8">
+<div class="text-center space-y-0.5">
+<p class="text-mint-900/40 font-label text-[10px] uppercase tracking-[0.2em] font-bold">Current High Bid</p>
+<div class="flex items-center justify-center gap-3">
+<span class="material-symbols-outlined text-marigold text-5xl" style="font-variation-settings: 'FILL' 1;">stars</span>
+<span class="font-headline text-7xl font-extrabold text-mint-900 tracking-tighter">12</span>
+</div>
+</div>
+<div class="grid grid-cols-4 gap-2.5 w-full">
+<button class="bg-white/80 hover:bg-white text-mint-900 h-14 rounded-2xl flex items-center justify-center font-headline text-lg font-bold border border-mint-900/5 shadow-sm transition-all active:scale-95">6</button>
+<button class="bg-white/80 hover:bg-white text-mint-900 h-14 rounded-2xl flex items-center justify-center font-headline text-lg font-bold border border-mint-900/5 shadow-sm transition-all active:scale-95">7</button>
+<button class="bg-white/80 hover:bg-white text-mint-900 h-14 rounded-2xl flex items-center justify-center font-headline text-lg font-bold border border-mint-900/5 shadow-sm transition-all active:scale-95">8</button>
+<button class="bg-white/80 hover:bg-white text-mint-900 h-14 rounded-2xl flex items-center justify-center font-headline text-lg font-bold border border-mint-900/5 shadow-sm transition-all active:scale-95">9</button>
+<button class="bg-white/80 hover:bg-white text-mint-900 h-14 rounded-2xl flex items-center justify-center font-headline text-lg font-bold border border-mint-900/5 shadow-sm transition-all active:scale-95">10</button>
+<button class="bg-white/80 hover:bg-white text-mint-900 h-14 rounded-2xl flex items-center justify-center font-headline text-lg font-bold border border-mint-900/5 shadow-sm transition-all active:scale-95">11</button>
+<button class="bg-marigold/10 text-marigold-on border-2 border-marigold/40 h-14 rounded-2xl flex items-center justify-center font-headline text-lg font-bold">12</button>
+<button class="bg-marigold text-marigold-on hover:scale-[1.04] active:scale-95 transition-all h-14 rounded-2xl flex items-center justify-center font-headline text-lg font-extrabold shadow-lg shadow-marigold/20">13</button>
+<button class="col-span-4 bg-mint-900 text-white hover:bg-mint-700 transition-all active:scale-[0.98] h-14 rounded-2xl flex items-center justify-center font-label text-sm uppercase tracking-widest font-bold shadow-lg shadow-mint-900/10 mt-2">Place Bid</button>
+<button class="col-span-4 bg-white/50 text-mint-900/60 hover:text-mint-900 transition-colors h-10 rounded-xl flex items-center justify-center font-label text-[10px] uppercase tracking-widest font-bold">Pass Turn</button>
+</div>
+</div>
+</div>
+<!-- Chat Bubble (AI Commentary) -->
+<div class="absolute left-6 bottom-36 max-w-[240px]">
+<div class="bg-white/90 backdrop-blur-md p-4 rounded-2xl rounded-bl-none border border-white shadow-xl">
+<p class="text-[10px] font-label text-marigold-on font-bold uppercase tracking-wider mb-1 flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">auto_awesome</span> Pedro AI
+                </p>
+<p class="text-xs font-body text-mint-900 leading-relaxed">The bidding is heating up! Who will take the lead?</p>
+</div>
+</div>
+<!-- Player Hand -->
+<div class="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-end justify-center w-full px-6">
+<div class="flex -space-x-10 hover:-space-x-4 transition-all duration-500 ease-out py-4">
+<!-- Card 1 (Ace of Hearts) -->
+<div class="w-20 h-30 bg-white rounded-xl card-shadow p-2 flex flex-col justify-between border border-gray-100 transform hover:-translate-y-8 transition-transform cursor-pointer relative group">
+<div class="flex flex-col items-start leading-none">
+<span class="font-headline font-bold text-lg text-red-500">A</span>
+<span class="material-symbols-outlined text-red-500 text-sm" style="font-variation-settings: 'FILL' 1;">favorite</span>
+</div>
+<div class="flex justify-center opacity-5">
+<span class="material-symbols-outlined text-4xl text-red-500" style="font-variation-settings: 'FILL' 1;">favorite</span>
+</div>
+<div class="flex flex-col items-end leading-none rotate-180">
+<span class="font-headline font-bold text-lg text-red-500">A</span>
+<span class="material-symbols-outlined text-red-500 text-sm" style="font-variation-settings: 'FILL' 1;">favorite</span>
+</div>
+</div>
+<!-- Card 2 (King) -->
+<div class="w-20 h-30 bg-white rounded-xl card-shadow p-2 flex flex-col justify-between border border-gray-100 transform hover:-translate-y-8 transition-transform cursor-pointer relative">
+<div class="flex flex-col items-start leading-none">
+<span class="font-headline font-bold text-lg text-gray-800">K</span>
+<span class="material-symbols-outlined text-gray-800 text-sm" style="font-variation-settings: 'FILL' 1;">playing_cards</span>
+</div>
+<div class="flex justify-center opacity-5">
+<span class="material-symbols-outlined text-4xl text-gray-800" style="font-variation-settings: 'FILL' 1;">playing_cards</span>
+</div>
+<div class="flex flex-col items-end leading-none rotate-180">
+<span class="font-headline font-bold text-lg text-gray-800">K</span>
+<span class="material-symbols-outlined text-gray-800 text-sm" style="font-variation-settings: 'FILL' 1;">playing_cards</span>
+</div>
+</div>
+<!-- Card 3 (Pedro/5) -->
+<div class="w-20 h-30 bg-white rounded-xl card-shadow p-2 flex flex-col justify-between border border-marigold/30 transform hover:-translate-y-8 transition-transform cursor-pointer ring-2 ring-marigold/10 bg-gradient-to-br from-white to-marigold/5">
+<div class="flex flex-col items-start leading-none">
+<span class="font-headline font-bold text-lg text-red-500">5</span>
+<span class="material-symbols-outlined text-red-500 text-sm" style="font-variation-settings: 'FILL' 1;">favorite</span>
+</div>
+<div class="text-center font-headline text-[8px] font-extrabold text-marigold-on bg-marigold/20 py-0.5 rounded uppercase tracking-widest">PEDRO</div>
+<div class="flex flex-col items-end leading-none rotate-180">
+<span class="font-headline font-bold text-lg text-red-500">5</span>
+<span class="material-symbols-outlined text-red-500 text-sm" style="font-variation-settings: 'FILL' 1;">favorite</span>
+</div>
+</div>
+<!-- Card 4 (Q) -->
+<div class="w-20 h-30 bg-white rounded-xl card-shadow p-2 flex flex-col justify-between border border-gray-100 transform hover:-translate-y-8 transition-transform cursor-pointer relative">
+<div class="flex flex-col items-start leading-none">
+<span class="font-headline font-bold text-lg text-gray-800">Q</span>
+<span class="material-symbols-outlined text-gray-800 text-sm" style="font-variation-settings: 'FILL' 1;">groups</span>
+</div>
+<div class="flex flex-col items-end leading-none rotate-180">
+<span class="font-headline font-bold text-lg text-gray-800">Q</span>
+<span class="material-symbols-outlined text-gray-800 text-sm" style="font-variation-settings: 'FILL' 1;">groups</span>
+</div>
+</div>
+<!-- Card 5 (J) -->
+<div class="w-20 h-30 bg-white rounded-xl card-shadow p-2 flex flex-col justify-between border border-gray-100 transform hover:-translate-y-8 transition-transform cursor-pointer relative">
+<div class="flex flex-col items-start leading-none">
+<span class="font-headline font-bold text-lg text-red-500">J</span>
+<span class="material-symbols-outlined text-red-500 text-sm" style="font-variation-settings: 'FILL' 1;">diamond</span>
+</div>
+<div class="flex flex-col items-end leading-none rotate-180">
+<span class="font-headline font-bold text-lg text-red-500">J</span>
+<span class="material-symbols-outlined text-red-500 text-sm" style="font-variation-settings: 'FILL' 1;">diamond</span>
+</div>
+</div>
+<!-- Card 6 (10) -->
+<div class="w-20 h-30 bg-white rounded-xl card-shadow p-2 flex flex-col justify-between border border-gray-100 transform hover:-translate-y-8 transition-transform cursor-pointer relative">
+<div class="flex flex-col items-start leading-none">
+<span class="font-headline font-bold text-lg text-gray-800">10</span>
+<span class="material-symbols-outlined text-gray-800 text-sm" style="font-variation-settings: 'FILL' 1;">playing_cards</span>
+</div>
+<div class="flex flex-col items-end leading-none rotate-180">
+<span class="font-headline font-bold text-lg text-gray-800">10</span>
+<span class="material-symbols-outlined text-gray-800 text-sm" style="font-variation-settings: 'FILL' 1;">playing_cards</span>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Shared Component) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-6 pb-8 pt-4 bg-white/80 backdrop-blur-xl rounded-t-[2rem] shadow-[0px_-10px_30px_rgba(0,105,75,0.05)]">
+<div class="flex flex-col items-center justify-center bg-[#ffca53] text-[#765600] rounded-full px-5 py-2 scale-110 shadow-lg transition-all duration-300 ease-out active:scale-90 cursor-pointer">
+<span class="material-symbols-outlined">style</span>
+<span class="font-['Be_Vietnam_Pro'] text-[11px] font-semibold uppercase tracking-wider">Lobbies</span>
+</div>
+<div class="flex flex-col items-center justify-center text-[#00694b]/60 px-4 py-2 hover:text-[#00694b] transition-all duration-300 active:scale-90 cursor-pointer">
+<span class="material-symbols-outlined">leaderboard</span>
+<span class="font-['Be_Vietnam_Pro'] text-[11px] font-semibold uppercase tracking-wider">Rankings</span>
+</div>
+<div class="flex flex-col items-center justify-center text-[#00694b]/60 px-4 py-2 hover:text-[#00694b] transition-all duration-300 active:scale-90 cursor-pointer">
+<span class="material-symbols-outlined">person_playful</span>
+<span class="font-['Be_Vietnam_Pro'] text-[11px] font-semibold uppercase tracking-wider">Account</span>
+</div>
+</nav>
+</body></html>

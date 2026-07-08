@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Veranda Play - Round Summary</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Be+Vietnam+Pro:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "mint": {
+              "50": "#f0fdf4",
+              "100": "#dcfce7",
+              "500": "#22c55e",
+              "600": "#16a34a",
+              "700": "#15803d",
+              "900": "#00694b"
+            },
+            "marigold": {
+              "100": "#fef9c3",
+              "400": "#fbbf24",
+              "500": "#f59e0b",
+              "600": "#d97706"
+            },
+            "background": "#f5f7f5",
+            "surface": "#ffffff",
+            "on-surface": "#2c2f2e",
+            "on-surface-variant": "#5c6260"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.5rem",
+            "lg": "1rem",
+            "xl": "1.5rem",
+            "full": "9999px"
+          },
+          "fontFamily": {
+            "headline": ["Plus Jakarta Sans"],
+            "body": ["Be Vietnam Pro"]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    body { font-family: 'Be Vietnam Pro', sans-serif; }
+    .headline-font { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .action-gradient {
+      background: linear-gradient(135deg, #00694b 0%, #15803d 100%);
+    }
+    .marigold-gradient {
+      background: linear-gradient(135deg, #ffca53 0%, #f59e0b 100%);
+    }
+    .card-shadow {
+      box-shadow: 0 4px 20px -2px rgba(0, 105, 75, 0.05);
+    }
+  </style>
+</head>
+<body class="bg-background text-on-surface min-h-screen flex flex-col items-center">
+<!-- TopAppBar Component -->
+<header class="fixed top-0 w-full z-50 flex justify-between items-center px-6 py-4 bg-[#f5f7f5] transition-transform duration-200">
+<div class="flex items-center gap-2">
+<img alt="Current player profile photo" class="w-10 h-10 rounded-full object-cover border-2 border-mint-900/10" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDtIW40lyrkVzBqsrwgHEJ9oDrbG5Dzb84xw_I30BihOoIU4Btz5nINiL279jHJyqWcq1oCoS3cKKwZctgDwwaX8qNhMhKUWbYUrKwDtNIdLyyEolAIby0uB48-P12iycmefy8eFny89O9Nf-vhdgqr2a-BM-rd13cPkCOR5tRa7XtLC1doY5XoFzXUgX9Z_jSnODvidWDCqKHxWvqWavp085b8xYWnQCARnWkF0kXo4siIVcmI66KFYvsrhpRLi7pPlmXbjFXKk4U"/>
+</div>
+<div class="text-xl font-bold text-[#00694b] headline-font tracking-tight">Veranda Play</div>
+<button class="flex items-center justify-center p-2 rounded-full hover:bg-emerald-50 active:scale-95 transition-all text-[#00694b]">
+<span class="material-symbols-outlined" data-icon="settings_heart">settings_heart</span>
+</button>
+</header>
+<main class="relative w-full max-w-md px-6 pt-24 pb-32 flex flex-col items-center">
+<!-- Round Identity -->
+<div class="mb-8 text-center">
+<h2 class="headline-font text-mint-900/60 uppercase tracking-[0.2em] text-xs font-bold">Round 08 Complete</h2>
+<div class="headline-font text-mint-900 text-6xl font-extrabold tracking-tighter mt-1">Summary</div>
+</div>
+<!-- Result Grid -->
+<div class="w-full space-y-4">
+<!-- Winner Card -->
+<div class="bg-white rounded-3xl p-6 relative overflow-hidden card-shadow border border-mint-100">
+<div class="absolute top-0 right-0 p-4">
+<div class="bg-marigold-100 text-marigold-600 p-2 rounded-xl">
+<span class="material-symbols-outlined" data-icon="stars" style="font-variation-settings: 'FILL' 1;">stars</span>
+</div>
+</div>
+<div class="flex items-center gap-4 mb-6">
+<div class="relative">
+<img alt="Alex Mercer" class="w-16 h-16 rounded-full border-4 border-mint-100 object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDtIW40lyrkVzBqsrwgHEJ9oDrbG5Dzb84xw_I30BihOoIU4Btz5nINiL279jHJyqWcq1oCoS3cKKwZctgDwwaX8qNhMhKUWbYUrKwDtNIdLyyEolAIby0uB48-P12iycmefy8eFny89O9Nf-vhdgqr2a-BM-rd13cPkCOR5tRa7XtLC1doY5XoFzXUgX9Z_jSnODvidWDCqKHxWvqWavp085b8xYWnQCARnWkF0kXo4siIVcmI66KFYvsrhpRLi7pPlmXbjFXKk4U"/>
+<div class="absolute -bottom-1 -right-1 bg-mint-500 w-5 h-5 rounded-full border-2 border-white"></div>
+</div>
+<div>
+<p class="text-mint-600 font-bold text-[10px] uppercase tracking-widest">Grand Winner</p>
+<h3 class="headline-font text-2xl font-bold text-mint-900">Alex Mercer</h3>
+</div>
+</div>
+<div class="flex justify-between items-end">
+<div>
+<span class="text-mint-500 font-black text-4xl">+7</span>
+<span class="text-on-surface-variant text-xs ml-1 font-medium">pts gained</span>
+</div>
+<div class="text-right">
+<p class="text-mint-900/40 text-[10px] uppercase font-bold">Target Hit</p>
+<p class="headline-font text-3xl font-black text-mint-900 tracking-tight">52/52</p>
+</div>
+</div>
+</div>
+<!-- Other Players Row -->
+<div class="grid grid-cols-1 gap-3">
+<!-- Player 2 -->
+<div class="bg-white/60 rounded-2xl p-4 flex items-center justify-between border border-white card-shadow">
+<div class="flex items-center gap-3">
+<img alt="Sophia Chen" class="w-12 h-12 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBGNbym_64TnhMAS1GD7iXwhqcsD_PY3qiVUyEPoGDeAras6vGvVt3DEqcjIpDNDC41tmBcHV0ulG9bzJnNf4T67zXdBDilI02-Jk2UVVbSdDrMPO5ergNs7C8Z-BXEz6Ie0iiQmpj-S3RnFqM3ucXaY1G6kXJZNsjvAhT-J91teMOR5dt3eicAG4Ff9GEukxNKOp7lehnoUOvUq4l2HvfHs4QJyTDaBm87VUp-zQIDbTep7LA__HHsFTDAvOEfHHntFZ2IX80alJk"/>
+<div>
+<h3 class="headline-font font-bold text-on-surface">Sophia Chen</h3>
+<p class="text-marigold-600 font-bold text-xs">+3 pts</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-on-surface-variant text-[10px] uppercase font-bold">Score</p>
+<p class="headline-font text-xl font-bold text-mint-900">41</p>
+</div>
+</div>
+<!-- Player 3 -->
+<div class="bg-white/60 rounded-2xl p-4 flex items-center justify-between border border-white card-shadow">
+<div class="flex items-center gap-3">
+<img alt="Marcus Vane" class="w-12 h-12 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDF7rBk3V1r9OZRiCPJv28LhzXW_u3CnyWUE9aPVGWGv3-lPTR77V5luSx66SapSOr3ORBDbXW1w39WEFAm1xlNe09qcHieepAURYiktQHUj2NcxME6u8tdUTwqwCvX6XvA78RH-xD2n4tCx9sei7Zih51kgh2yKOaGcYTv5GRBjFe7njyu0voSr4S8zzBFtw2xLU98WOtS4s5SidTx24HEptxMCmxvCuU-YBc2BMsbeq6uIloPYxkswV2HHZY4obxw9lbQvr7KHZc"/>
+<div>
+<h3 class="headline-font font-bold text-on-surface">Marcus Vane</h3>
+<p class="text-marigold-600 font-bold text-xs">+2 pts</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-on-surface-variant text-[10px] uppercase font-bold">Score</p>
+<p class="headline-font text-xl font-bold text-mint-900">34</p>
+</div>
+</div>
+<!-- Player 4 -->
+<div class="bg-white/60 rounded-2xl p-4 flex items-center justify-between border border-white card-shadow">
+<div class="flex items-center gap-3">
+<img alt="Elena Rossi" class="w-12 h-12 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuArYvscJaL5VM9GHiQRSuaSMVSow1Z9UjZD0ctD-QUBvqUb7yDCppH6BktdM0QZxphWQOW_5FRXb4k3ZhFEjNqmbxHk9N6aEp1XNfWdwKq88Iuyags6u5zncbHzDqbfo3qSN5xFmQ9-uuz1z4AReuqUMipDRWS7x3EasoiBASwIr16rS3TvSkgTUzCMYKXxDYqxzPC2mkeLQ3YPl1BwPLyIMqNbhpoBEg9b8h7n5_OlXXq7eJWc97cb1q-nwCFvnHbFUp-W9-MxG24"/>
+<div>
+<h3 class="headline-font font-bold text-on-surface">Elena Rossi</h3>
+<p class="text-red-500 font-bold text-xs">-1 pt</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-on-surface-variant text-[10px] uppercase font-bold">Score</p>
+<p class="headline-font text-xl font-bold text-mint-900">28</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Action Area -->
+<div class="mt-10 w-full space-y-6">
+<button class="action-gradient w-full py-5 rounded-3xl text-white font-bold uppercase tracking-[0.15em] text-sm flex items-center justify-center gap-3 shadow-[0_10px_25px_rgba(0,105,75,0.2)] hover:scale-[1.02] active:scale-95 transition-all">
+      Play Next Round
+      <span class="material-symbols-outlined text-xl" data-icon="arrow_forward">arrow_forward</span>
+</button>
+<button class="w-full text-mint-900/60 uppercase text-[10px] font-bold tracking-widest hover:text-mint-900 transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="history">history</span>
+      Full Match History
+    </button>
+</div>
+</main>
+<!-- BottomNavBar Component -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-6 pb-8 pt-4 bg-white/80 backdrop-blur-xl shadow-[0px_-10px_30px_rgba(0,105,75,0.05)] rounded-t-[2rem]">
+<div class="flex flex-col items-center justify-center marigold-gradient text-[#765600] rounded-full px-5 py-2 scale-110 shadow-lg active:scale-90 transition-all duration-300 ease-out">
+<span class="material-symbols-outlined" data-icon="style" style="font-variation-settings: 'FILL' 1;">style</span>
+<span class="font-['Be_Vietnam_Pro'] text-[11px] font-semibold uppercase tracking-wider">Lobbies</span>
+</div>
+<div class="flex flex-col items-center justify-center text-[#00694b]/60 px-4 py-2 hover:text-[#00694b] transition-colors active:scale-90 duration-300">
+<span class="material-symbols-outlined" data-icon="leaderboard">leaderboard</span>
+<span class="font-['Be_Vietnam_Pro'] text-[11px] font-semibold uppercase tracking-wider">Rankings</span>
+</div>
+<div class="flex flex-col items-center justify-center text-[#00694b]/60 px-4 py-2 hover:text-[#00694b] transition-colors active:scale-90 duration-300">
+<span class="material-symbols-outlined" data-icon="person_playful">person</span>
+<span class="font-['Be_Vietnam_Pro'] text-[11px] font-semibold uppercase tracking-wider">Account</span>
+</div>
+</nav>
+</body></html>
