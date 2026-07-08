@@ -1,6 +1,11 @@
 {
   "version": 1,
   "skills": {
+    "developing-genkit-dart": {
+      "source": "firebase/agent-skills",
+      "sourceType": "github",
+      "computedHash": "aa92490e4db5038730c629477ad968796f329040433625cf9b7bb13e26a859e3"
+    },
     "developing-genkit-js": {
       "source": "firebase/agent-skills",
       "sourceType": "github",
