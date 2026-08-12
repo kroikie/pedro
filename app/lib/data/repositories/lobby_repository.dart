@@ -60,7 +60,7 @@ class LobbyRepository {
   }
 
   Future<String> createGame(String roomName, {int targetScore = 35}) async {
-    final result = await _functions.httpsCallable('createGame').call({
+    final result = await _functions.httpsCallable('create-game').call({
       'roomName': roomName,
       'targetScore': targetScore,
     });
@@ -68,20 +68,20 @@ class LobbyRepository {
   }
 
   Future<void> joinGame(String gameId) async {
-    await _functions.httpsCallable('joinGame').call({
+    await _functions.httpsCallable('join-game').call({
       'gameId': gameId,
     });
   }
 
   Future<void> invitePlayer(String gameId, String targetPlayerId) async {
-    await _functions.httpsCallable('invitePlayer').call({
+    await _functions.httpsCallable('invite-player').call({
       'gameId': gameId,
       'targetPlayerId': targetPlayerId,
     });
   }
 
   Future<void> uninvitePlayer(String gameId, String targetPlayerId) async {
-    await _functions.httpsCallable('uninvitePlayer').call({
+    await _functions.httpsCallable('uninvite-player').call({
       'gameId': gameId,
       'targetPlayerId': targetPlayerId,
     });

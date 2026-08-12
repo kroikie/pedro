@@ -6,6 +6,8 @@ import 'package:functions/game/logic.dart';
 import 'package:functions/game/narrator.dart';
 
 void main(List<String> args) {
+  FirebaseApp.initializeApp();
+
   runFunctions((firebase) {
     // 1. createGame
     firebase.https.onCall(name: 'createGame', (request, response) async {
@@ -23,7 +25,7 @@ void main(List<String> args) {
       }
 
       final uid = auth.uid;
-      final firestore = FirebaseApp.initializeApp().firestore();
+      final firestore = firebase.adminApp.firestore();
       final gameRef = firestore.collection('games').doc();
 
       final gameData = {
@@ -52,7 +54,7 @@ void main(List<String> args) {
       final gameId = data['gameId'] as String;
       final targetPlayerId = data['targetPlayerId'] as String;
 
-      final firestore = FirebaseApp.initializeApp().firestore();
+      final firestore = firebase.adminApp.firestore();
       final gameRef = firestore.collection('games').doc(gameId);
       final gameDoc = await gameRef.get();
 
@@ -79,7 +81,7 @@ void main(List<String> args) {
       final gameId = data['gameId'] as String;
       final targetPlayerId = data['targetPlayerId'] as String;
 
-      final firestore = FirebaseApp.initializeApp().firestore();
+      final firestore = firebase.adminApp.firestore();
       final gameRef = firestore.collection('games').doc(gameId);
       final gameDoc = await gameRef.get();
 
@@ -105,7 +107,7 @@ void main(List<String> args) {
       final data = request.data as Map<String, dynamic>;
       final gameId = data['gameId'] as String;
 
-      final firestore = FirebaseApp.initializeApp().firestore();
+      final firestore = firebase.adminApp.firestore();
       final gameRef = firestore.collection('games').doc(gameId);
       final gameDoc = await gameRef.get();
 
@@ -146,7 +148,7 @@ void main(List<String> args) {
       final data = request.data as Map<String, dynamic>;
       final gameId = data['gameId'] as String;
 
-      final firestore = FirebaseApp.initializeApp().firestore();
+      final firestore = firebase.adminApp.firestore();
       final gameRef = firestore.collection('games').doc(gameId);
       final gameDoc = await gameRef.get();
 
@@ -164,16 +166,26 @@ void main(List<String> args) {
 
       int cardsPerPlayer = 0;
       switch (playerIds.length) {
-        case 4: cardsPerPlayer = 9; break;
-        case 5: cardsPerPlayer = 6; break;
-        case 6: cardsPerPlayer = 4; break;
-        case 7: cardsPerPlayer = 3; break;
-        case 8: cardsPerPlayer = 2; break;
+        case 4:
+          cardsPerPlayer = 9;
+          break;
+        case 5:
+          cardsPerPlayer = 6;
+          break;
+        case 6:
+          cardsPerPlayer = 4;
+          break;
+        case 7:
+          cardsPerPlayer = 3;
+          break;
+        case 8:
+          cardsPerPlayer = 2;
+          break;
       }
 
       final deck = shuffle(createDeck());
       final playerHands = <String, List<Card>>{};
-      
+
       var deckPointer = 0;
       for (final pid in playerIds) {
         playerHands[pid] = deck.sublist(deckPointer, deckPointer + cardsPerPlayer);
@@ -187,20 +199,25 @@ void main(List<String> args) {
           'dealerId': auth.uid,
           'phase': 'wadger',
           'deck': remainingDeck.map((c) => c.toJson()).toList(),
-          'playerStates': playerIds.map((pid) => {
-            'uid': pid,
-            'hand': playerHands[pid]!.map((c) => c.toJson()).toList(),
-            'currentRoundPoints': 0,
-            'totalScore': 0,
-            'capturedValueCards': [],
-            'earnedPoints': []
-          }).toList(),
+          'playerStates':
+              playerIds
+                  .map(
+                    (pid) => {
+                      'uid': pid,
+                      'hand': playerHands[pid]!.map((c) => c.toJson()).toList(),
+                      'currentRoundPoints': 0,
+                      'totalScore': 0,
+                      'capturedValueCards': [],
+                      'earnedPoints': [],
+                    },
+                  )
+                  .toList(),
           'bidWinnerId': null,
           'bidValue': 0,
           'turnIndex': (playerIds.indexOf(auth.uid) + 1) % playerIds.length,
           'consecutivePasses': 0,
-          'playedCards': []
-        }
+          'playedCards': [],
+        },
       };
 
       await gameRef.update(sessionData);
@@ -216,7 +233,7 @@ void main(List<String> args) {
       final gameId = data['gameId'] as String;
       final bid = data['bid'] as int?;
 
-      final firestore = FirebaseApp.initializeApp().firestore();
+      final firestore = firebase.adminApp.firestore();
       final gameRef = firestore.collection('games').doc(gameId);
       final gameDoc = await gameRef.get();
 
@@ -256,13 +273,17 @@ void main(List<String> args) {
       if (newConsecutivePasses == numPlayers - 1 && newBidWinnerId != null) {
         nextPhase = 'discarding';
         nextTurnIndex = playerIds.indexOf(newBidWinnerId);
-        for (final ps in playerStates) ps['earnedPoints'] = [];
+        for (final ps in playerStates) {
+          ps['earnedPoints'] = [];
+        }
       } else if (newConsecutivePasses == numPlayers) {
         newBidValue = 1;
         newBidWinnerId = round['dealerId'] as String;
         nextPhase = 'discarding';
         nextTurnIndex = playerIds.indexOf(newBidWinnerId);
-        for (final ps in playerStates) ps['earnedPoints'] = [];
+        for (final ps in playerStates) {
+          ps['earnedPoints'] = [];
+        }
       }
 
       await gameRef.update({
@@ -271,17 +292,22 @@ void main(List<String> args) {
         'currentRound.consecutivePasses': newConsecutivePasses,
         'currentRound.phase': nextPhase,
         'currentRound.turnIndex': nextTurnIndex,
-        'currentRound.playerStates': playerStates
+        'currentRound.playerStates': playerStates,
       });
 
       final userDoc = await firestore.collection('users').doc(auth.uid).get();
       final userData = userDoc.data();
-      final playerName = (userData?['screenName'] ?? userData?['displayName'] ?? "A player") as String;
+      final playerName =
+          (userData?['screenName'] ?? userData?['displayName'] ?? "A player") as String;
 
       final shouldNarrate = bid != null || (newConsecutivePasses == 1 || nextPhase != 'wadger');
       if (shouldNarrate) {
-        narrateBid(gameId, playerName, bid, round['bidValue'] as int)
-          .catchError((e) => print('Narration error: $e'));
+        narrateBid(
+          gameId,
+          playerName,
+          bid,
+          round['bidValue'] as int,
+        ).catchError((e) => print('Narration error: $e'));
       }
 
       return CallableResult({'success': true});
@@ -297,7 +323,7 @@ void main(List<String> args) {
       final suitName = data['suit'] as String;
       final suit = Suit.values.byName(suitName);
 
-      final firestore = FirebaseApp.initializeApp().firestore();
+      final firestore = firebase.adminApp.firestore();
       final gameRef = firestore.collection('games').doc(gameId);
       final gameDoc = await gameRef.get();
 
@@ -313,21 +339,24 @@ void main(List<String> args) {
       final discardedCards = <Card>[];
 
       for (final ps in playerStates) {
-        final hand = (ps['hand'] as Iterable).map((c) => Card.fromJson(c as Map<String, dynamic>)).toList();
+        final hand =
+            (ps['hand'] as Iterable).map((c) => Card.fromJson(c as Map<String, dynamic>)).toList();
         final keep = hand.where((c) => c.suit == suit).toList();
         final discard = hand.where((c) => c.suit != suit).toList();
         ps['hand'] = keep.map((c) => c.toJson()).toList();
         discardedCards.addAll(discard);
       }
 
-      final deck = (round['deck'] as Iterable).map((c) => Card.fromJson(c as Map<String, dynamic>)).toList();
+      final deck =
+          (round['deck'] as Iterable).map((c) => Card.fromJson(c as Map<String, dynamic>)).toList();
       deck.addAll(shuffle(discardedCards));
 
       final bidWinnerIndex = playerIds.indexOf(auth.uid);
       for (var i = 0; i < playerIds.length; i++) {
         final pid = playerIds[(bidWinnerIndex + i) % playerIds.length];
         final ps = playerStates.firstWhere((p) => p['uid'] == pid);
-        final hand = (ps['hand'] as Iterable).map((c) => Card.fromJson(c as Map<String, dynamic>)).toList();
+        final hand =
+            (ps['hand'] as Iterable).map((c) => Card.fromJson(c as Map<String, dynamic>)).toList();
         while (hand.length < 6 && deck.isNotEmpty) {
           hand.add(deck.removeAt(0));
         }
@@ -340,9 +369,9 @@ void main(List<String> args) {
         'currentRound.playerStates': playerStates,
         'currentRound.deck': deck.map((c) => c.toJson()).toList(),
         'currentRound.turnIndex': bidWinnerIndex,
-        'currentRound.currentLift': { 'leadPlayerId': auth.uid, 'plays': {}, 'winnerId': null },
+        'currentRound.currentLift': {'leadPlayerId': auth.uid, 'plays': {}, 'winnerId': null},
         'currentRound.highTrumpPlayerId': null,
-        'currentRound.lowTrumpPlayerId': null
+        'currentRound.lowTrumpPlayerId': null,
       });
 
       return CallableResult({'success': true});
@@ -358,7 +387,7 @@ void main(List<String> args) {
       final cardData = data['card'] as Map<String, dynamic>;
       final card = Card.fromJson(cardData);
 
-      final firestore = FirebaseApp.initializeApp().firestore();
+      final firestore = firebase.adminApp.firestore();
       final gameRef = firestore.collection('games').doc(gameId);
       final gameDoc = await gameRef.get();
 
@@ -374,7 +403,10 @@ void main(List<String> args) {
 
       final playerStates = List<Map<String, dynamic>>.from(round['playerStates'] as Iterable);
       final playerState = playerStates.firstWhere((p) => p['uid'] == auth.uid);
-      final hand = (playerState['hand'] as Iterable).map((c) => Card.fromJson(c as Map<String, dynamic>)).toList();
+      final hand =
+          (playerState['hand'] as Iterable)
+              .map((c) => Card.fromJson(c as Map<String, dynamic>))
+              .toList();
 
       final cardIndex = hand.indexWhere((c) => c.suit == card.suit && c.rank == card.rank);
       if (cardIndex == -1) throw InvalidArgumentError('Card not in hand.');
@@ -390,7 +422,8 @@ void main(List<String> args) {
         final leadSuit = leadCard.suit;
         if (card.suit != trumpSuit && card.suit != leadSuit) {
           final hasLeadSuit = hand.any((c) => c.suit == leadSuit);
-          if (hasLeadSuit) throw InvalidArgumentError('Must follow suit (${leadSuit.name}) or play Trump.');
+          if (hasLeadSuit)
+            throw InvalidArgumentError('Must follow suit (${leadSuit.name}) or play Trump.');
         }
       }
 
@@ -406,9 +439,11 @@ void main(List<String> args) {
       if (card.suit == trumpSuit) {
         // High Trump logic
         final highTrumpPlayedCardData = round['highTrumpPlayedCard'] as Map<String, dynamic>?;
-        final highTrumpPlayedCard = highTrumpPlayedCardData != null ? Card.fromJson(highTrumpPlayedCardData) : null;
-        
-        if (highTrumpPlayedCard == null || rankValues[card.rank]! > rankValues[highTrumpPlayedCard.rank]!) {
+        final highTrumpPlayedCard =
+            highTrumpPlayedCardData != null ? Card.fromJson(highTrumpPlayedCardData) : null;
+
+        if (highTrumpPlayedCard == null ||
+            rankValues[card.rank]! > rankValues[highTrumpPlayedCard.rank]!) {
           final oldHolderId = round['highTrumpPlayerId'] as String?;
           if (oldHolderId != null) {
             final oldHolder = playerStates.firstWhere((p) => p['uid'] == oldHolderId);
@@ -418,17 +453,26 @@ void main(List<String> args) {
             oldHolder['earnedPoints'] = ep;
           }
           playerState['currentRoundPoints'] = (playerState['currentRoundPoints'] as int) + 1;
-          playerState['earnedPoints'] = List<String>.from(playerState['earnedPoints'] as Iterable? ?? [])..add('High');
+          playerState['earnedPoints'] = List<String>.from(
+            playerState['earnedPoints'] as Iterable? ?? [],
+          )..add('High');
           round['highTrumpPlayerId'] = auth.uid;
           round['highTrumpPlayedCard'] = card.toJson();
-          narratePointEvent(gameId, "A player", "High", false).catchError((e) => print('Narration error: $e'));
+          narratePointEvent(
+            gameId,
+            "A player",
+            "High",
+            false,
+          ).catchError((e) => print('Narration error: $e'));
         }
 
         // Low Trump logic
         final lowTrumpPlayedCardData = round['lowTrumpPlayedCard'] as Map<String, dynamic>?;
-        final lowTrumpPlayedCard = lowTrumpPlayedCardData != null ? Card.fromJson(lowTrumpPlayedCardData) : null;
+        final lowTrumpPlayedCard =
+            lowTrumpPlayedCardData != null ? Card.fromJson(lowTrumpPlayedCardData) : null;
 
-        if (lowTrumpPlayedCard == null || rankValues[card.rank]! < rankValues[lowTrumpPlayedCard.rank]!) {
+        if (lowTrumpPlayedCard == null ||
+            rankValues[card.rank]! < rankValues[lowTrumpPlayedCard.rank]!) {
           final oldHolderId = round['lowTrumpPlayerId'] as String?;
           if (oldHolderId != null) {
             final oldHolder = playerStates.firstWhere((p) => p['uid'] == oldHolderId);
@@ -438,10 +482,17 @@ void main(List<String> args) {
             oldHolder['earnedPoints'] = ep;
           }
           playerState['currentRoundPoints'] = (playerState['currentRoundPoints'] as int) + 1;
-          playerState['earnedPoints'] = List<String>.from(playerState['earnedPoints'] as Iterable? ?? [])..add('Low');
+          playerState['earnedPoints'] = List<String>.from(
+            playerState['earnedPoints'] as Iterable? ?? [],
+          )..add('Low');
           round['lowTrumpPlayerId'] = auth.uid;
           round['lowTrumpPlayedCard'] = card.toJson();
-          narratePointEvent(gameId, "A player", "Low", false).catchError((e) => print('Narration error: $e'));
+          narratePointEvent(
+            gameId,
+            "A player",
+            "Low",
+            false,
+          ).catchError((e) => print('Narration error: $e'));
         }
       }
 
@@ -450,11 +501,15 @@ void main(List<String> args) {
       if (plays.length == playerIds.length) {
         final leadPlayerId = currentLift['leadPlayerId'] as String;
         final leadSuit = Card.fromJson(plays[leadPlayerId] as Map<String, dynamic>).suit;
-        
+
         final typedPlays = <String, Card>{};
         plays.forEach((k, v) => typedPlays[k] = Card.fromJson(v as Map<String, dynamic>));
 
-        final winnerId = evaluateLiftWinner(plays: typedPlays, leadSuit: leadSuit, trumpSuit: trumpSuit);
+        final winnerId = evaluateLiftWinner(
+          plays: typedPlays,
+          leadSuit: leadSuit,
+          trumpSuit: trumpSuit,
+        );
         currentLift['winnerId'] = winnerId;
 
         final winnerState = playerStates.firstWhere((p) => p['uid'] == winnerId);
@@ -467,25 +522,48 @@ void main(List<String> args) {
           if (playedCard.suit == trumpSuit) {
             if (playedCard.rank == Rank.five) {
               liftPoints += 5;
-              winnerState['earnedPoints'] = List<String>.from(winnerState['earnedPoints'] as Iterable? ?? [])..add('5');
-              narratePointEvent(gameId, "A player", "5", false).catchError((e) => print('Narration error: $e'));
+              winnerState['earnedPoints'] = List<String>.from(
+                winnerState['earnedPoints'] as Iterable? ?? [],
+              )..add('5');
+              narratePointEvent(
+                gameId,
+                "A player",
+                "5",
+                false,
+              ).catchError((e) => print('Narration error: $e'));
             }
             if (playedCard.rank == Rank.nine) {
               liftPoints += 9;
-              winnerState['earnedPoints'] = List<String>.from(winnerState['earnedPoints'] as Iterable? ?? [])..add('9');
-              narratePointEvent(gameId, "A player", "9", false).catchError((e) => print('Narration error: $e'));
+              winnerState['earnedPoints'] = List<String>.from(
+                winnerState['earnedPoints'] as Iterable? ?? [],
+              )..add('9');
+              narratePointEvent(
+                gameId,
+                "A player",
+                "9",
+                false,
+              ).catchError((e) => print('Narration error: $e'));
             }
             if (playedCard.rank == Rank.jack) {
               final isStolen = pId != winnerId;
               liftPoints += isStolen ? 3 : 1;
-              winnerState['earnedPoints'] = List<String>.from(winnerState['earnedPoints'] as Iterable? ?? [])..add(isStolen ? 'Hang Jack' : 'Jack');
-              narratePointEvent(gameId, "A player", "Jack", isStolen).catchError((e) => print('Narration error: $e'));
+              winnerState['earnedPoints'] = List<String>.from(
+                winnerState['earnedPoints'] as Iterable? ?? [],
+              )..add(isStolen ? 'Hang Jack' : 'Jack');
+              narratePointEvent(
+                gameId,
+                "A player",
+                "Jack",
+                isStolen,
+              ).catchError((e) => print('Narration error: $e'));
             }
           }
 
-          final valueMap = { Rank.ten: 10, Rank.jack: 1, Rank.queen: 2, Rank.king: 3, Rank.ace: 4 };
+          final valueMap = {Rank.ten: 10, Rank.jack: 1, Rank.queen: 2, Rank.king: 3, Rank.ace: 4};
           if (valueMap.containsKey(playedCard.rank)) {
-            final cvc = List<Map<String, dynamic>>.from(winnerState['capturedValueCards'] as Iterable? ?? []);
+            final cvc = List<Map<String, dynamic>>.from(
+              winnerState['capturedValueCards'] as Iterable? ?? [],
+            );
             cvc.add(playedCard.toJson());
             winnerState['capturedValueCards'] = cvc;
           }
@@ -512,7 +590,7 @@ void main(List<String> args) {
         'currentRound.highTrumpPlayedCard': round['highTrumpPlayedCard'],
         'currentRound.lowTrumpPlayerId': round['lowTrumpPlayerId'],
         'currentRound.lowTrumpPlayedCard': round['lowTrumpPlayedCard'],
-        'currentRound.playedCards': playedCards
+        'currentRound.playedCards': playedCards,
       });
 
       return CallableResult({'success': true});
@@ -520,8 +598,13 @@ void main(List<String> args) {
   });
 }
 
-Future<void> finalizeRound(DocumentReference gameRef, Map<String, dynamic> gameData, List<Map<String, dynamic>> playerStates, Map<String, dynamic> round) async {
-  final valueMap = { 'ten': 10, 'jack': 1, 'queen': 2, 'king': 3, 'ace': 4 };
+Future<void> finalizeRound(
+  DocumentReference gameRef,
+  Map<String, dynamic> gameData,
+  List<Map<String, dynamic>> playerStates,
+  Map<String, dynamic> round,
+) async {
+  final valueMap = {'ten': 10, 'jack': 1, 'queen': 2, 'king': 3, 'ace': 4};
   int bestValue = -1;
   Map<String, dynamic>? gamePointWinner;
 
@@ -542,7 +625,9 @@ Future<void> finalizeRound(DocumentReference gameRef, Map<String, dynamic> gameD
 
   if (gamePointWinner != null) {
     gamePointWinner['currentRoundPoints'] = (gamePointWinner['currentRoundPoints'] as int) + 1;
-    gamePointWinner['earnedPoints'] = List<String>.from(gamePointWinner['earnedPoints'] as Iterable? ?? [])..add('Game');
+    gamePointWinner['earnedPoints'] = List<String>.from(
+      gamePointWinner['earnedPoints'] as Iterable? ?? [],
+    )..add('Game');
   }
 
   final bidWinnerId = round['bidWinnerId'] as String;
@@ -562,14 +647,17 @@ Future<void> finalizeRound(DocumentReference gameRef, Map<String, dynamic> gameD
   }
 
   final targetScore = gameData['targetScore'] as int;
-  final winner = playerStates.firstWhere((ps) => (ps['totalScore'] as int) >= targetScore, orElse: () => <String, dynamic>{});
+  final winner = playerStates.firstWhere(
+    (ps) => (ps['totalScore'] as int) >= targetScore,
+    orElse: () => <String, dynamic>{},
+  );
 
   if (winner.isNotEmpty) {
     await gameRef.update({
       'status': 'finished',
       'currentRound.playerStates': playerStates,
       'currentRound.phase': 'finished',
-      'winnerId': winner['uid']
+      'winnerId': winner['uid'],
     });
   } else {
     final playerIds = List<String>.from(gameData['playerIds'] as Iterable);
@@ -579,11 +667,21 @@ Future<void> finalizeRound(DocumentReference gameRef, Map<String, dynamic> gameD
 
     int cardsPerPlayer = 0;
     switch (playerIds.length) {
-      case 4: cardsPerPlayer = 9; break;
-      case 5: cardsPerPlayer = 6; break;
-      case 6: cardsPerPlayer = 4; break;
-      case 7: cardsPerPlayer = 3; break;
-      case 8: cardsPerPlayer = 2; break;
+      case 4:
+        cardsPerPlayer = 9;
+        break;
+      case 5:
+        cardsPerPlayer = 6;
+        break;
+      case 6:
+        cardsPerPlayer = 4;
+        break;
+      case 7:
+        cardsPerPlayer = 3;
+        break;
+      case 8:
+        cardsPerPlayer = 2;
+        break;
     }
 
     final deck = shuffle(createDeck());
@@ -599,23 +697,24 @@ Future<void> finalizeRound(DocumentReference gameRef, Map<String, dynamic> gameD
       'dealerId': newDealerId,
       'phase': 'wadger',
       'deck': remainingDeck.map((c) => c.toJson()).toList(),
-      'playerStates': playerIds.map((pid) {
-        final prev = playerStates.firstWhere((p) => p['uid'] == pid);
-        return {
-          'uid': pid,
-          'hand': playerHands[pid]!.map((c) => c.toJson()).toList(),
-          'currentRoundPoints': 0,
-          'totalScore': prev['totalScore'],
-          'capturedValueCards': [],
-          'earnedPoints': []
-        };
-      }).toList(),
+      'playerStates':
+          playerIds.map((pid) {
+            final prev = playerStates.firstWhere((p) => p['uid'] == pid);
+            return {
+              'uid': pid,
+              'hand': playerHands[pid]!.map((c) => c.toJson()).toList(),
+              'currentRoundPoints': 0,
+              'totalScore': prev['totalScore'],
+              'capturedValueCards': [],
+              'earnedPoints': [],
+            };
+          }).toList(),
       'bidWinnerId': null,
       'bidValue': 0,
       'turnIndex': (playerIds.indexOf(newDealerId) + 1) % playerIds.length,
       'consecutivePasses': 0,
-      'playedCards': []
+      'playedCards': [],
     };
-    await gameRef.update({ 'currentRound': nextRound });
+    await gameRef.update({'currentRound': nextRound});
   }
 }

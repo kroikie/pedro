@@ -10,6 +10,7 @@ import 'package:flutter/foundation.dart';
 import 'firebase_options.dart';
 import 'package:firebase_ui_auth/firebase_ui_auth.dart' hide ProfileScreen;
 import 'package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'data/repositories/player_repository.dart';
 import 'data/models/player.dart';
@@ -64,8 +65,129 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Pedro',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: const ColorScheme(
+          brightness: Brightness.light,
+          primary: Color(0xFF00694B),
+          onPrimary: Color(0xFFC7FFE3),
+          primaryContainer: Color(0xFF8CFECE),
+          onPrimaryContainer: Color(0xFF006145),
+          secondary: Color(0xFF765600),
+          onSecondary: Color(0xFFFFF1DB),
+          secondaryContainer: Color(0xFFFFCA53),
+          onSecondaryContainer: Color(0xFF5C4300),
+          tertiary: Color(0xFF006762),
+          onTertiary: Color(0xFFBEFFF9),
+          tertiaryContainer: Color(0xFF73F1E7),
+          onTertiaryContainer: Color(0xFF005854),
+          error: Color(0xFFB31B25),
+          onError: Color(0xFFFFEFEE),
+          errorContainer: Color(0xFFFB5151),
+          onErrorContainer: Color(0xFF570008),
+          surface: Color(0xFFF5F7F5),
+          onSurface: Color(0xFF2C2F2E),
+          onSurfaceVariant: Color(0xFF595C5B),
+          outline: Color(0xFF747776),
+          outlineVariant: Color(0xFFABAEAC),
+          shadow: Color(0xFF000000),
+          inverseSurface: Color(0xFF0B0F0E),
+          onInverseSurface: Color(0xFF9B9D9C),
+          inversePrimary: Color(0xFF8CFECE),
+        ),
         useMaterial3: true,
+        scaffoldBackgroundColor: const Color(0xFFF5F7F5),
+        textTheme: GoogleFonts.beVietnamProTextTheme(
+          ThemeData.light().textTheme,
+        ).copyWith(
+          displayLarge: GoogleFonts.plusJakartaSans(
+            textStyle: ThemeData.light().textTheme.displayLarge,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.02,
+          ),
+          displayMedium: GoogleFonts.plusJakartaSans(
+            textStyle: ThemeData.light().textTheme.displayMedium,
+            fontWeight: FontWeight.w800,
+          ),
+          displaySmall: GoogleFonts.plusJakartaSans(
+            textStyle: ThemeData.light().textTheme.displaySmall,
+            fontWeight: FontWeight.w800,
+          ),
+          headlineLarge: GoogleFonts.plusJakartaSans(
+            textStyle: ThemeData.light().textTheme.headlineLarge,
+            fontWeight: FontWeight.bold,
+          ),
+          headlineMedium: GoogleFonts.plusJakartaSans(
+            textStyle: ThemeData.light().textTheme.headlineMedium,
+            fontWeight: FontWeight.bold,
+          ),
+          headlineSmall: GoogleFonts.plusJakartaSans(
+            textStyle: ThemeData.light().textTheme.headlineSmall,
+            fontWeight: FontWeight.bold,
+          ),
+          titleLarge: GoogleFonts.plusJakartaSans(
+            textStyle: ThemeData.light().textTheme.titleLarge,
+            fontWeight: FontWeight.bold,
+          ),
+          titleMedium: GoogleFonts.plusJakartaSans(
+            textStyle: ThemeData.light().textTheme.titleMedium,
+            fontWeight: FontWeight.bold,
+          ),
+          titleSmall: GoogleFonts.plusJakartaSans(
+            textStyle: ThemeData.light().textTheme.titleSmall,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        cardTheme: CardThemeData(
+          color: Colors.white,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(color: Color(0x26ABAEAC), width: 1),
+          ),
+        ),
+        chipTheme: ChipThemeData(
+          backgroundColor: const Color(0xFFEFF1EF),
+          disabledColor: const Color(0xFFEFF1EF),
+          selectedColor: const Color(0xFFFFCA53),
+          secondarySelectedColor: const Color(0xFFFFCA53),
+          labelStyle: GoogleFonts.plusJakartaSans(
+            fontWeight: FontWeight.bold,
+            color: const Color(0xFF2C2F2E),
+            fontSize: 12,
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(9999),
+            side: BorderSide.none,
+          ),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: const Color(0xFFEFF1EF), // surface-container-low is better/breezier
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFF00694B), width: 2),
+          ),
+          labelStyle: GoogleFonts.plusJakartaSans(
+            color: const Color(0xFF595C5B),
+          ),
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF00694B),
+            foregroundColor: const Color(0xFFC7FFE3),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24),
+            ),
+            elevation: 0,
+            textStyle: GoogleFonts.plusJakartaSans(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
       ),
       initialRoute: '/',
       routes: {

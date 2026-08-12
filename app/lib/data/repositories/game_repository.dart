@@ -28,25 +28,25 @@ class GameRepository {
   }
 
   Future<void> startGame(String gameId) async {
-    await _functions.httpsCallable('startGame').call({'gameId': gameId});
+    await _functions.httpsCallable('start-game').call({'gameId': gameId});
   }
 
   Future<void> submitBid(String gameId, int? bid) async {
-    await _functions.httpsCallable('submitBid').call({
+    await _functions.httpsCallable('submit-bid').call({
       'gameId': gameId,
       'bid': bid,
     });
   }
 
   Future<void> setTrumpSuit(String gameId, Suit suit) async {
-    await _functions.httpsCallable('setTrumpSuit').call({
+    await _functions.httpsCallable('set-trump-suit').call({
       'gameId': gameId,
       'suit': suit.name,
     });
   }
 
   Future<void> playCard(String gameId, Card card) async {
-    await _functions.httpsCallable('playCard').call({
+    await _functions.httpsCallable('play-card').call({
       'gameId': gameId,
       'card': card.toMap(),
     });
