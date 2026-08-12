@@ -139,9 +139,9 @@ This document outlines the development plan for the Pedro multiplayer card game,
 ## Sprint 7: Website, Analytics & Polish
 **Goal:** Build the marketing site, integrate analytics, polish the UI, and prepare for deployment.
 
-- **Task 7.1: Website Content Creation**
-  - **Description:** Populate the VitePress pages: App Overview, Download Links, and How to Play.
-  - **Validation:** The website provides complete and accurate information about the game.
+- **Task 7.1: Player-Facing Website Content Creation**
+  - **Description:** Populate the VitePress website pages designed exclusively for app users: Game Overview, How to Play (Rules, Bidding, Scoring, & Strategy), and Download/App Access links. The website serves as an engaging player guide to teach end users how to play the game and must not include any details about the technology stack.
+  - **Validation:** The website provides clear, engaging end-user guides and gameplay instructions with all technology stack references omitted.
 
 - **Task 7.2: Analytics & Performance Integration**
   - **Description:** Add Firebase Analytics, Performance Monitoring, and Crashlytics to the Flutter app.

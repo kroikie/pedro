@@ -1,18 +1,17 @@
 # Pedro: The Ultimate Multiplayer Card Game
 
-Welcome to the official documentation and hub for **Pedro**, a cross-platform multiplayer card game built with Flutter and Firebase.
+Welcome to the official player guide and hub for **Pedro**, the thrilling multiplayer trick-taking card game. Join your friends or challenge players online in high-stakes bidding, tactical trump selection, and fast-paced card play!
 
-## Features
+## Key Features
 
-- **Real-time Multiplayer:** Play with 4 to 8 players seamlessly.
-- **AI-Powered Experience:**
-  - **Global Narrator:** A witty AI that comments on game events in real-time using Google Genkit.
-  - **Inner Voice Assistant:** A private AI coach to help you with bidding and strategy.
-- **Customizable Profiles:** Define your name and upload a unique avatar.
-- **Cross-Platform:** Available on Android, iOS, and Web.
+- **Real-Time Multiplayer:** Play with 4 to 8 players in seamless, synchronized card matches.
+- **Interactive AI Companions:**
+  - **In-Game AI Narrator:** Enjoy real-time, entertaining commentary and game banter as the match unfolds.
+  - **Personal AI Coach:** Get live strategy suggestions, bidding advice, and tactical insights during your turns.
+- **Customizable Profiles:** Set custom display names and upload your own player avatar.
+- **Cross-Platform Play:** Join the fun from your mobile device (Android, iOS) or directly in your web browser.
 
 ## Quick Links
 
-- [How to Play](./rules)
-- [App Overview](./overview)
-- [Technical Stack](./stack)
+- [How to Play & Rules](./rules)
+- [Game & App Overview](./overview)

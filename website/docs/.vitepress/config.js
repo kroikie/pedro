@@ -1,17 +1,19 @@
 export default {
   title: 'Pedro',
-  description: 'Multiplayer Card Game Documentation',
+  description: 'The Ultimate Pedro Multiplayer Card Game Player Guide',
   themeConfig: {
     nav: [
       { text: 'Home', link: '/' },
+      { text: 'Game Overview', link: '/overview' },
       { text: 'How to Play', link: '/rules' },
     ],
     sidebar: [
       {
-        text: 'Guide',
+        text: 'Player Guide',
         items: [
-          { text: 'Introduction', link: '/' },
-          { text: 'Rules', link: '/rules' },
+          { text: 'Welcome', link: '/' },
+          { text: 'Game Overview', link: '/overview' },
+          { text: 'How to Play', link: '/rules' },
         ]
       }
     ],
