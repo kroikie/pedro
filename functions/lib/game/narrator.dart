@@ -1,14 +1,22 @@
+import 'dart:io';
 import 'package:genkit/genkit.dart';
 import 'package:genkit_google_genai/genkit_google_genai.dart';
 import 'package:google_cloud_firestore/google_cloud_firestore.dart';
 import 'package:firebase_admin_sdk/firebase_admin_sdk.dart';
 import 'deck.dart';
 
-final ai = Genkit(
-  plugins: [
-    googleAI(apiKey: 'AIzaSyDn6HLlxBpHf1qu8ndYqlz5pMwGNjaf-GM'),
-  ],
-);
+String? get _geminiApiKey =>
+    Platform.environment['GEMINI_API_KEY'] ??
+    Platform.environment['GOOGLE_GENAI_API_KEY'];
+
+Genkit _getAi() {
+  final apiKey = _geminiApiKey;
+  return Genkit(
+    plugins: [
+      googleAI(apiKey: apiKey),
+    ],
+  );
+}
 
 Future<void> postCommentary(String gameId, String text) async {
   final firestore = FirebaseApp.initializeApp().firestore();
@@ -26,16 +34,27 @@ Future<void> postCommentary(String gameId, String text) async {
 }
 
 Future<void> narrateWelcome(String gameId, String roomName) async {
-  const prompt = 'You are a witty card game narrator for Pedro. '
-      'A new game room named "{roomName}" has just been created. '
-      'Provide a short, 1-sentence witty welcome message for the players joining this room.';
+  final fallback = 'Welcome to $roomName! Pull up a chair and let\'s deal the cards for Pedro.';
+  String text = fallback;
 
-  final response = await ai.generate(
-    model: googleAI.gemini('gemini-1.5-flash'),
-    prompt: prompt.replaceAll('{roomName}', roomName),
-  );
+  if (_geminiApiKey != null && _geminiApiKey!.isNotEmpty) {
+    try {
+      final ai = _getAi();
+      const prompt = 'You are a witty card game narrator for Pedro. '
+          'A new game room named "{roomName}" has just been created. '
+          'Provide a short, 1-sentence witty welcome message for the players joining this room.';
 
-  await postCommentary(gameId, response.text.trim());
+      final response = await ai.generate(
+        model: googleAI.gemini('gemini-2.5-flash'),
+        prompt: prompt.replaceAll('{roomName}', roomName),
+      );
+      text = response.text.trim();
+    } catch (e) {
+      print('Gemini narration error: $e');
+    }
+  }
+
+  await postCommentary(gameId, text);
 }
 
 Future<void> narrateBid(String gameId, String playerName, int? bid, int previousBid) async {
@@ -50,17 +69,26 @@ Future<void> narrateBid(String gameId, String playerName, int? bid, int previous
     context = "$playerName raised the bid to $bid. A solid, calculated move.";
   }
 
-  final prompt = 'You are a witty, slightly sarcastic card game narrator for a game called Pedro. '
-      'Event: $context '
-      'Provide a short, 1-sentence witty reaction or commentary about this bidding action. '
-      'Keep it lighthearted, competitive, and brief.';
+  String text = context;
+  if (_geminiApiKey != null && _geminiApiKey!.isNotEmpty) {
+    try {
+      final ai = _getAi();
+      final prompt = 'You are a witty, slightly sarcastic card game narrator for a game called Pedro. '
+          'Event: $context '
+          'Provide a short, 1-sentence witty reaction or commentary about this bidding action. '
+          'Keep it lighthearted, competitive, and brief.';
 
-  final response = await ai.generate(
-    model: googleAI.gemini('gemini-1.5-flash'),
-    prompt: prompt,
-  );
+      final response = await ai.generate(
+        model: googleAI.gemini('gemini-2.5-flash'),
+        prompt: prompt,
+      );
+      text = response.text.trim();
+    } catch (e) {
+      print('Gemini narration error: $e');
+    }
+  }
 
-  await postCommentary(gameId, response.text.trim());
+  await postCommentary(gameId, text);
 }
 
 Future<void> narratePointEvent(String gameId, String playerName, String pointType, bool isStolen) async {
@@ -79,27 +107,47 @@ Future<void> narratePointEvent(String gameId, String playerName, String pointTyp
     context = '$playerName just played the lowest trump. They get 1 point even if they lose the lift!';
   }
 
-  final prompt = 'You are a witty card game narrator for Pedro. '
-      'Event: $context '
-      'Provide a short, 1-sentence witty reaction to this specific event. '
-      'If it is a "Hang Jack" event, be extra dramatic about the theft.';
+  String text = context;
+  if (_geminiApiKey != null && _geminiApiKey!.isNotEmpty) {
+    try {
+      final ai = _getAi();
+      final prompt = 'You are a witty card game narrator for Pedro. '
+          'Event: $context '
+          'Provide a short, 1-sentence witty reaction to this specific event. '
+          'If it is a "Hang Jack" event, be extra dramatic about the theft.';
 
-  final response = await ai.generate(
-    model: googleAI.gemini('gemini-1.5-flash'),
-    prompt: prompt,
-  );
+      final response = await ai.generate(
+        model: googleAI.gemini('gemini-2.5-flash'),
+        prompt: prompt,
+      );
+      text = response.text.trim();
+    } catch (e) {
+      print('Gemini narration error: $e');
+    }
+  }
 
-  await postCommentary(gameId, response.text.trim());
+  await postCommentary(gameId, text);
 }
 
 Future<void> narratePlay(String gameId, String playerId, Card card, bool isSpecial) async {
   if (!isSpecial) return;
-  final prompt = 'You are a witty card game narrator for Pedro. '
-      'A player just played a high-value card: ${card.rank.name} of ${card.suit.name}. '
-      'Provide a short, 1-sentence witty reaction.';
-  final response = await ai.generate(
-    model: googleAI.gemini('gemini-1.5-flash'),
-    prompt: prompt,
-  );
-  await postCommentary(gameId, response.text.trim());
+  String text = 'A player just played the ${card.rank.name} of ${card.suit.name}!';
+
+  if (_geminiApiKey != null && _geminiApiKey!.isNotEmpty) {
+    try {
+      final ai = _getAi();
+      final prompt = 'You are a witty card game narrator for Pedro. '
+          'A player just played a high-value card: ${card.rank.name} of ${card.suit.name}. '
+          'Provide a short, 1-sentence witty reaction.';
+      final response = await ai.generate(
+        model: googleAI.gemini('gemini-2.5-flash'),
+        prompt: prompt,
+      );
+      text = response.text.trim();
+    } catch (e) {
+      print('Gemini narration error: $e');
+    }
+  }
+
+  await postCommentary(gameId, text);
 }

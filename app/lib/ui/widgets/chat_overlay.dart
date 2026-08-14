@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../data/repositories/chat_repository.dart';
 import '../../data/repositories/player_repository.dart';
 import '../../data/models/chat_message.dart';
-import '../../data/models/player.dart';
 
 class ChatOverlay extends StatefulWidget {
   const ChatOverlay({super.key, required this.gameId});

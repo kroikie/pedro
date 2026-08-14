@@ -8,3 +8,8 @@ build/
 .pub/
 .flutter-plugins
 .flutter-plugins-dependencies
+.secret.local
+.secret.*.local
+.env
+.env.*.local
+emulator-data/

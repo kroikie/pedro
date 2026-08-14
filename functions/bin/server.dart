@@ -18,7 +18,7 @@ void main(List<String> args) {
 
       final data = request.data as Map<String, dynamic>;
       final roomName = data['roomName'] as String?;
-      final targetScore = data['targetScore'] as int? ?? 35;
+      final targetScore = (data['targetScore'] as num?)?.toInt() ?? 35;
 
       if (roomName == null || roomName.isEmpty) {
         throw InvalidArgumentError('Room name is required.');
@@ -231,7 +231,7 @@ void main(List<String> args) {
 
       final data = request.data as Map<String, dynamic>;
       final gameId = data['gameId'] as String;
-      final bid = data['bid'] as int?;
+      final bid = (data['bid'] as num?)?.toInt();
 
       final firestore = firebase.adminApp.firestore();
       final gameRef = firestore.collection('games').doc(gameId);
@@ -243,17 +243,17 @@ void main(List<String> args) {
       final round = gameData['currentRound'] as Map<String, dynamic>;
       if (round['phase'] != 'wadger') throw FailedPreconditionError('Not in wadger phase.');
 
-      final playerIds = List<String>.from(round['playerIds'] as Iterable);
-      final turnIndex = round['turnIndex'] as int;
+      final playerIds = List<String>.from(gameData['playerIds'] as Iterable);
+      final turnIndex = (round['turnIndex'] as num).toInt();
 
       if (auth.uid != playerIds[turnIndex]) throw FailedPreconditionError('Not your turn.');
 
       final playerStates = List<Map<String, dynamic>>.from(round['playerStates'] as Iterable);
       final playerState = playerStates.firstWhere((p) => p['uid'] == auth.uid);
 
-      int newBidValue = round['bidValue'] as int;
+      int newBidValue = (round['bidValue'] as num).toInt();
       String? newBidWinnerId = round['bidWinnerId'] as String?;
-      int newConsecutivePasses = round['consecutivePasses'] as int? ?? 0;
+      int newConsecutivePasses = (round['consecutivePasses'] as num?)?.toInt() ?? 0;
 
       if (bid == null) {
         newConsecutivePasses++;
@@ -306,7 +306,7 @@ void main(List<String> args) {
           gameId,
           playerName,
           bid,
-          round['bidValue'] as int,
+          (round['bidValue'] as num).toInt(),
         ).catchError((e) => print('Narration error: $e'));
       }
 
@@ -398,7 +398,7 @@ void main(List<String> args) {
       if (round['phase'] != 'playing') throw FailedPreconditionError('Not in playing phase.');
 
       final playerIds = List<String>.from(gameData['playerIds'] as Iterable);
-      final turnIndex = round['turnIndex'] as int;
+      final turnIndex = (round['turnIndex'] as num).toInt();
       if (auth.uid != playerIds[turnIndex]) throw FailedPreconditionError('Not your turn.');
 
       final playerStates = List<Map<String, dynamic>>.from(round['playerStates'] as Iterable);
@@ -422,8 +422,9 @@ void main(List<String> args) {
         final leadSuit = leadCard.suit;
         if (card.suit != trumpSuit && card.suit != leadSuit) {
           final hasLeadSuit = hand.any((c) => c.suit == leadSuit);
-          if (hasLeadSuit)
+          if (hasLeadSuit) {
             throw InvalidArgumentError('Must follow suit (${leadSuit.name}) or play Trump.');
+          }
         }
       }
 
@@ -447,12 +448,12 @@ void main(List<String> args) {
           final oldHolderId = round['highTrumpPlayerId'] as String?;
           if (oldHolderId != null) {
             final oldHolder = playerStates.firstWhere((p) => p['uid'] == oldHolderId);
-            oldHolder['currentRoundPoints'] = (oldHolder['currentRoundPoints'] as int) - 1;
+            oldHolder['currentRoundPoints'] = ((oldHolder['currentRoundPoints'] as num?)?.toInt() ?? 0) - 1;
             final ep = List<String>.from(oldHolder['earnedPoints'] as Iterable? ?? []);
             ep.remove('High');
             oldHolder['earnedPoints'] = ep;
           }
-          playerState['currentRoundPoints'] = (playerState['currentRoundPoints'] as int) + 1;
+          playerState['currentRoundPoints'] = ((playerState['currentRoundPoints'] as num?)?.toInt() ?? 0) + 1;
           playerState['earnedPoints'] = List<String>.from(
             playerState['earnedPoints'] as Iterable? ?? [],
           )..add('High');
@@ -476,12 +477,12 @@ void main(List<String> args) {
           final oldHolderId = round['lowTrumpPlayerId'] as String?;
           if (oldHolderId != null) {
             final oldHolder = playerStates.firstWhere((p) => p['uid'] == oldHolderId);
-            oldHolder['currentRoundPoints'] = (oldHolder['currentRoundPoints'] as int) - 1;
+            oldHolder['currentRoundPoints'] = ((oldHolder['currentRoundPoints'] as num?)?.toInt() ?? 0) - 1;
             final ep = List<String>.from(oldHolder['earnedPoints'] as Iterable? ?? []);
             ep.remove('Low');
             oldHolder['earnedPoints'] = ep;
           }
-          playerState['currentRoundPoints'] = (playerState['currentRoundPoints'] as int) + 1;
+          playerState['currentRoundPoints'] = ((playerState['currentRoundPoints'] as num?)?.toInt() ?? 0) + 1;
           playerState['earnedPoints'] = List<String>.from(
             playerState['earnedPoints'] as Iterable? ?? [],
           )..add('Low');
@@ -568,7 +569,7 @@ void main(List<String> args) {
             winnerState['capturedValueCards'] = cvc;
           }
         }
-        winnerState['currentRoundPoints'] = (winnerState['currentRoundPoints'] as int) + liftPoints;
+        winnerState['currentRoundPoints'] = ((winnerState['currentRoundPoints'] as num?)?.toInt() ?? 0) + liftPoints;
 
         final allHandsEmpty = playerStates.every((p) => (p['hand'] as Iterable).isEmpty);
         if (allHandsEmpty) {
@@ -624,31 +625,31 @@ Future<void> finalizeRound(
   }
 
   if (gamePointWinner != null) {
-    gamePointWinner['currentRoundPoints'] = (gamePointWinner['currentRoundPoints'] as int) + 1;
+    gamePointWinner['currentRoundPoints'] = ((gamePointWinner['currentRoundPoints'] as num?)?.toInt() ?? 0) + 1;
     gamePointWinner['earnedPoints'] = List<String>.from(
       gamePointWinner['earnedPoints'] as Iterable? ?? [],
     )..add('Game');
   }
 
   final bidWinnerId = round['bidWinnerId'] as String;
-  final bidValue = round['bidValue'] as int;
+  final bidValue = (round['bidValue'] as num).toInt();
 
   for (final ps in playerStates) {
-    final crp = ps['currentRoundPoints'] as int;
+    final crp = (ps['currentRoundPoints'] as num?)?.toInt() ?? 0;
     if (ps['uid'] == bidWinnerId) {
       if (crp >= bidValue) {
-        ps['totalScore'] = (ps['totalScore'] as int) + crp;
+        ps['totalScore'] = ((ps['totalScore'] as num?)?.toInt() ?? 0) + crp;
       } else {
-        ps['totalScore'] = (ps['totalScore'] as int) - bidValue;
+        ps['totalScore'] = ((ps['totalScore'] as num?)?.toInt() ?? 0) - bidValue;
       }
     } else {
-      ps['totalScore'] = (ps['totalScore'] as int) + crp;
+      ps['totalScore'] = ((ps['totalScore'] as num?)?.toInt() ?? 0) + crp;
     }
   }
 
-  final targetScore = gameData['targetScore'] as int;
+  final targetScore = (gameData['targetScore'] as num?)?.toInt() ?? 35;
   final winner = playerStates.firstWhere(
-    (ps) => (ps['totalScore'] as int) >= targetScore,
+    (ps) => ((ps['totalScore'] as num?)?.toInt() ?? 0) >= targetScore,
     orElse: () => <String, dynamic>{},
   );
 
@@ -704,7 +705,7 @@ Future<void> finalizeRound(
               'uid': pid,
               'hand': playerHands[pid]!.map((c) => c.toJson()).toList(),
               'currentRoundPoints': 0,
-              'totalScore': prev['totalScore'],
+              'totalScore': (prev['totalScore'] as num?)?.toInt() ?? 0,
               'capturedValueCards': [],
               'earnedPoints': [],
             };

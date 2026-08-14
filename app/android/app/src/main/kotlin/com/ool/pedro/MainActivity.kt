@@ -1,4 +1,4 @@
-package com.ool.pedro.pedro
+package com.ool.pedro
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -51,7 +51,7 @@ void main() async {
 
   FirebaseUIAuth.configureProviders([
     EmailAuthProvider(),
-    GoogleProvider(clientId: 'dummy-client-id-for-emulator'),
+    GoogleProvider(clientId: '260654198138-u5jt4poqnr78d0sierk6e0r1pcikm8gf.apps.googleusercontent.com'),
   ]);
 
   runApp(const MyApp());
