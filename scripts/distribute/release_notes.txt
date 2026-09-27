@@ -1,0 +1,5 @@
+Pedro Beta Release
+- Multiplayer lobby and game synchronization
+- Bidding phase and trump selection mechanics
+- Real-time scoring and lift collection
+- Inner Voice AI Strategy Coach

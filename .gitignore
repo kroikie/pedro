@@ -13,3 +13,17 @@ build/
 .env
 .env.*.local
 emulator-data/
+
+# Worktrees
+.worktrees/
+
+# Deployment & Distribution artifacts
+deploy_attempt.log
+downloaded_testers.txt
+key.properties
+*.jks
+*.keystore
+*.apk
+*.aab
+*.ipa
+vendor/bundle/

@@ -1,0 +1,97 @@
+name: pr-check
+
+on:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  detect-changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      app: ${{ steps.filter.outputs.app }}
+      functions: ${{ steps.filter.outputs.functions }}
+      website: ${{ steps.filter.outputs.website }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Check changed paths
+        id: filter
+        run: |
+          DIFF=$(git diff --name-only origin/${{ github.base_ref }}...HEAD)
+          echo "Changed files:"
+          echo "$DIFF"
+          echo "app=$(echo "$DIFF" | grep -E '^(app/|firebase\.json|firestore\.rules|storage\.rules)' >/dev/null && echo 'true' || echo 'false')" >> "$GITHUB_OUTPUT"
+          echo "functions=$(echo "$DIFF" | grep -E '^(functions/|firebase\.json|firestore\.rules)' >/dev/null && echo 'true' || echo 'false')" >> "$GITHUB_OUTPUT"
+          echo "website=$(echo "$DIFF" | grep -E '^website/' >/dev/null && echo 'true' || echo 'false')" >> "$GITHUB_OUTPUT"
+
+  functions-check:
+    name: Functions Check & Tests
+    needs: detect-changes
+    if: needs.detect-changes.outputs.functions == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+      - name: Build and verify functions
+        working-directory: ./functions
+        run: |
+          dart pub get
+          dart run build_runner build
+          git diff --exit-code functions.yaml
+          dart test
+
+  app-check:
+    name: Flutter App Check & Tests
+    needs: detect-changes
+    if: needs.detect-changes.outputs.app == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Test and build app
+        working-directory: ./app
+        run: |
+          flutter pub get
+          flutter test
+          flutter build web
+
+  website-check:
+    name: Website & Docs Check
+    needs: detect-changes
+    if: needs.detect-changes.outputs.website == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+      - name: Build docs site
+        run: |
+          npm install --prefix website
+          npm run --prefix website docs:build
+
+  pr-status:
+    name: PR Validation
+    needs: [detect-changes, functions-check, app-check, website-check]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Evaluate Results
+        run: |
+          if [[ "${{ needs.functions-check.result }}" == "failure" || "${{ needs.app-check.result }}" == "failure" || "${{ needs.website-check.result }}" == "failure" ]]; then
+            echo "One or more PR checks failed."
+            exit 1
+          fi
+          if [[ "${{ needs.functions-check.result }}" == "cancelled" || "${{ needs.app-check.result }}" == "cancelled" || "${{ needs.website-check.result }}" == "cancelled" ]]; then
+            echo "One or more PR checks were cancelled."
+            exit 1
+          fi
+          echo "All checks passed successfully or were appropriately skipped."

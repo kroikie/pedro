@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "version": "1.0",
+  "description": "Model role mapping for Pedro development workflow",
+  "roles": {
+    "author": {
+      "preferred_model": "Gemini 3.8 Flash (High)",
+      "reasoning_level": "high",
+      "subagent_tier": "flash",
+      "description": "Used for code implementation, file editing, build runner, and test execution with high thinking effort"
+    },
+    "reviewer": {
+      "preferred_model": "Claude Sonnet 4.6 (Thinking)",
+      "subagent_tier": "pro",
+      "description": "Used for deep static review, requirement audit, architecture compliance, and quality sign-off"
+    }
+  }
+}
