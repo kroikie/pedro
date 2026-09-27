@@ -14,6 +14,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'data/repositories/player_repository.dart';
 import 'data/models/player.dart';
+import 'data/emulator_config.dart';
 
 import 'ui/screens/auth_screen.dart';
 import 'ui/screens/profile_screen.dart';
@@ -38,12 +39,12 @@ void main() async {
   const bool useEmulator = true;
   if (useEmulator) {
     try {
-      const String host = kIsWeb ? 'localhost' : '10.0.2.2';
+      final String host = resolveEmulatorHost();
       await FirebaseAuth.instance.useAuthEmulator(host, 9099);
       FirebaseFirestore.instance.useFirestoreEmulator(host, 8080);
       FirebaseFunctions.instance.useFunctionsEmulator(host, 5001);
       await FirebaseStorage.instance.useStorageEmulator(host, 9199);
-      debugPrint('Connected to Firebase emulators successfully.');
+      debugPrint('Connected to Firebase emulators successfully ($host).');
     } catch (e) {
       debugPrint('Failed to connect to emulators: $e');
     }
