@@ -10,6 +10,7 @@ import '../widgets/avatar_widget.dart';
 import '../widgets/chat_overlay.dart';
 import '../../data/services/bid_assistant_service.dart';
 import '../../data/services/tactical_coach_service.dart';
+import '../../data/logic/card_play_validator.dart';
 
 class GameBoardScreen extends StatefulWidget {
   const GameBoardScreen({super.key, required this.gameId});
@@ -31,6 +32,7 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
   
   String? _moveSuggestion;
   bool _isAnalyzingMove = false;
+  bool _isSubmittingCard = false;
 
   Future<void> _analyzeHand(List<pedro.Card> hand) async {
     if (_bidSuggestion != null || _isAnalyzingHand) return;
@@ -235,9 +237,15 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
     final isMyTurn = round.turnIndex == localIndex;
 
     if (round.phase == RoundPhase.wadger && isMyTurn) {
-      _analyzeHand(localState.hand);
-    } else if (round.phase != RoundPhase.wadger) {
-      _bidSuggestion = null;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _analyzeHand(localState.hand);
+      });
+    } else if (round.phase != RoundPhase.wadger && _bidSuggestion != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _bidSuggestion != null) {
+          setState(() => _bidSuggestion = null);
+        }
+      });
     }
 
     return Container(
@@ -292,6 +300,10 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
           ],
           if (round.phase == RoundPhase.discarding && isMyTurn && round.bidWinnerId == _uid)
             _buildTrumpSelector(session),
+          if (_isSubmittingCard) ...[
+            const SizedBox(height: 4),
+            const LinearProgressIndicator(),
+          ],
           const SizedBox(height: 8),
           const Text('Your Hand', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
           const SizedBox(height: 4),
@@ -304,18 +316,12 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                   child: CardWidget(
                     card: card,
                     onTap: (round.phase == RoundPhase.playing && isMyTurn) 
-                        ? () async {
-                            try {
-                              await _gameRepo.playCard(widget.gameId, card);
-                              setState(() => _moveSuggestion = null);
-                            } catch (e) {
-                              if (mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Invalid Move: $e')),
-                                );
-                              }
-                            }
-                          }
+                        ? () => _playCard(
+                            card: card,
+                            hand: localState.hand,
+                            round: round,
+                            isMyTurn: isMyTurn,
+                          )
                         : null,
                   ),
                 );
@@ -325,6 +331,56 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _playCard({
+    required pedro.Card card,
+    required List<pedro.Card> hand,
+    required RoundState round,
+    required bool isMyTurn,
+  }) async {
+    if (_isSubmittingCard) return;
+
+    final validation = validateCardPlay(
+      card: card,
+      hand: hand,
+      currentLift: round.currentLift,
+      trumpSuit: round.trumpSuit,
+      phase: round.phase,
+      isMyTurn: isMyTurn,
+    );
+
+    if (!validation.isLegal) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Invalid Move: ${validation.reason}'),
+          backgroundColor: Colors.red[800],
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isSubmittingCard = true);
+    try {
+      await _gameRepo.playCard(widget.gameId, card);
+      if (mounted) setState(() => _moveSuggestion = null);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Server Error: $e'),
+            backgroundColor: Colors.red[800],
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmittingCard = false);
+      }
+    }
   }
 
   Widget _buildBidControls(GameSession session) {

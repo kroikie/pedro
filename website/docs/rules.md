@@ -32,7 +32,7 @@ The goal of Pedro is to be the first player (or team) to reach the target winnin
 
 ### Phase 3: Gameplay & Lifts
 - The bid winner leads the first card (lift).
-- Players play one card per turn following suit rules or playing a trump card.
+- Players play one card per turn. You must follow the lead suit if you hold it, or you may play a trump card. Playing an off-suit card while holding the lead suit is an illegal move and will be rejected.
 - The highest trump card played wins the lift. If no trump is played, the highest card of the lead suit wins.
 - The winner of the lift leads the next trick.
 
