@@ -1,0 +1,316 @@
+name: Distribute Beta Builds
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      release_notes:
+        description: 'Release Notes for Testers'
+        required: false
+        default: 'Automated Beta Build'
+      groups:
+        description: 'Tester Groups (comma-separated)'
+        required: false
+        default: 'beta-testers'
+
+# Required permissions for Workload Identity Federation OIDC token minting and querying runners
+permissions:
+  contents: read
+  id-token: write
+  actions: read
+
+jobs:
+  resolve-runners:
+    name: Select Build Runners
+    runs-on: ubuntu-latest
+    outputs:
+      android_runner: ${{ steps.check.outputs.android_runner }}
+      ios_runner: ${{ steps.check.outputs.ios_runner }}
+    steps:
+      - name: Detect available self-hosted runners
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.RUNNER_PAT || github.token }}
+        run: |
+          # Default fallbacks to cloud runners
+          ANDROID_RUNNER='["ubuntu-latest"]'
+          IOS_RUNNER='["macos-15"]'
+
+          # Query GitHub Actions API for registered runners
+          RUNNERS_JSON=$(gh api "repos/${{ github.repository }}/actions/runners" 2>/dev/null || echo '{"runners":[]}')
+
+          # Check for online self-hosted Linux runner (for Android)
+          HAS_LINUX_RUNNER=$(echo "$RUNNERS_JSON" | jq -r '
+            [ .runners[]? | select(.status == "online" and ((.os | ascii_downcase) == "linux" or ([.labels[]?.name | ascii_downcase] | (index("linux") != null or index("android") != null))) and ([.labels[]?.name | ascii_downcase] | index("self-hosted") != null)) ] | length > 0
+          ')
+
+          # Check for online self-hosted macOS runner (for iOS)
+          HAS_MACOS_RUNNER=$(echo "$RUNNERS_JSON" | jq -r '
+            [ .runners[]? | select(.status == "online" and ((.os | ascii_downcase) == "macos" or ([.labels[]?.name | ascii_downcase] | (index("macos") != null or index("ios") != null))) and ([.labels[]?.name | ascii_downcase] | index("self-hosted") != null)) ] | length > 0
+          ')
+
+          if [ "$HAS_LINUX_RUNNER" = "true" ]; then
+            echo "Self-hosted Linux runner is online -> Using self-hosted runner for Android."
+            ANDROID_RUNNER='["self-hosted", "linux"]'
+          else
+            echo "No online self-hosted Linux runner found -> Falling back to ubuntu-latest."
+          fi
+
+          if [ "$HAS_MACOS_RUNNER" = "true" ]; then
+            echo "Self-hosted macOS runner is online -> Using self-hosted runner for iOS."
+            IOS_RUNNER='["self-hosted", "macos"]'
+          else
+            echo "No online self-hosted macOS runner found -> Falling back to macos-15."
+          fi
+
+          echo "android_runner=$ANDROID_RUNNER" >> "$GITHUB_OUTPUT"
+          echo "ios_runner=$IOS_RUNNER" >> "$GITHUB_OUTPUT"
+
+  distribute-android:
+    name: Build & Distribute Android
+    needs: resolve-runners
+    runs-on: ${{ fromJSON(needs.resolve-runners.outputs.android_runner) }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve App Version
+        id: version
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            VERSION_NAME="${GITHUB_REF_NAME#v}"
+          else
+            VERSION_NAME=$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//' || echo "0.0.1")
+          fi
+          BUILD_NUMBER="${{ github.run_number }}"
+          echo "version_name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
+          echo "build_number=$BUILD_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "Resolved version: $VERSION_NAME ($BUILD_NUMBER)"
+
+      - name: Authenticate to Google Cloud via Workload Identity Federation
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: 'projects/260654198138/locations/global/workloadIdentityPools/github-pool/providers/github-provider'
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT || 'github-actions-distribute@pedro-f65a6.iam.gserviceaccount.com' }}
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Set up Node.js for Firebase CLI
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+
+      - name: Configure Android Signing Keystore
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > app/android/app/pedro-release.jks
+          cat <<EOF > app/android/key.properties
+          storePassword=$ANDROID_KEYSTORE_PASSWORD
+          keyPassword=$ANDROID_KEY_PASSWORD
+          keyAlias=$ANDROID_KEY_ALIAS
+          storeFile=app/pedro-release.jks
+          EOF
+
+      - name: Build Android Release APK
+        run: |
+          cd app
+          flutter pub get
+          flutter build apk --release \
+            --build-name="${{ steps.version.outputs.version_name }}" \
+            --build-number="${{ steps.version.outputs.build_number }}"
+
+      - name: Distribute Android APK via Firebase CLI
+        env:
+          XDG_CONFIG_HOME: ${{ runner.temp }}
+        run: |
+          firebase appdistribution:distribute app/build/app/outputs/flutter-apk/app-release.apk \
+            --app "1:260654198138:android:bd1ed81efcde0ad2527ac3" \
+            --groups "${{ github.event.inputs.groups || 'beta-testers' }}" \
+            --release-notes "${{ github.event.inputs.release_notes || github.event.head_commit.message || 'Beta Release' }}"
+
+  distribute-ios:
+    name: Build & Distribute iOS
+    needs: resolve-runners
+    runs-on: ${{ fromJSON(needs.resolve-runners.outputs.ios_runner) }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve App Version
+        id: version
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            VERSION_NAME="${GITHUB_REF_NAME#v}"
+          else
+            VERSION_NAME=$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//' || echo "0.0.1")
+          fi
+          BUILD_NUMBER="${{ github.run_number }}"
+          echo "version_name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
+          echo "build_number=$BUILD_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "Resolved version: $VERSION_NAME ($BUILD_NUMBER)"
+
+      - name: Authenticate to Google Cloud via Workload Identity Federation
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: 'projects/260654198138/locations/global/workloadIdentityPools/github-pool/providers/github-provider'
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT || 'github-actions-distribute@pedro-f65a6.iam.gserviceaccount.com' }}
+
+      - name: Select Latest Xcode 16
+        run: |
+          LATEST_XCODE=$(find /Applications -maxdepth 1 -name "Xcode_16*.app" 2>/dev/null | sort -V | tail -n 1)
+          if [ -n "$LATEST_XCODE" ]; then
+            echo "Selecting Xcode at $LATEST_XCODE"
+            sudo xcode-select -s "$LATEST_XCODE/Contents/Developer"
+          fi
+          xcodebuild -version
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Set up Node.js for Firebase CLI
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+
+      - name: Install Apple Certificate and Provisioning Profile
+        env:
+          IOS_CERTIFICATE_BASE64: ${{ secrets.IOS_CERTIFICATE_BASE64 }}
+          IOS_P12_PASSWORD: ${{ secrets.IOS_P12_PASSWORD }}
+          IOS_PROVISION_PROFILE_BASE64: ${{ secrets.IOS_PROVISION_PROFILE_BASE64 }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          KEYCHAIN_PATH="$RUNNER_TEMP/build.keychain-db"
+
+          # Clean up any leftover temporary keychain
+          security delete-keychain "$KEYCHAIN_PATH" 2>/dev/null || true
+
+          # Create and unlock temporary keychain
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          # Set default keychain and add to user search list
+          CURRENT_KEYCHAINS=$(security list-keychains -d user | tr -d '"' | tr '\n' ' ')
+          security list-keychains -d user -s "$KEYCHAIN_PATH" $CURRENT_KEYCHAINS
+          security default-keychain -s "$KEYCHAIN_PATH"
+
+          # Download and import Apple Worldwide Developer Relations (WWDR) Intermediate Certificates
+          curl -sSf https://www.apple.com/certificateauthority/AppleWWDRCAG3.cer -o /tmp/AppleWWDRCAG3.cer
+          curl -sSf https://www.apple.com/certificateauthority/AppleWWDRCAG6.cer -o /tmp/AppleWWDRCAG6.cer
+          security import /tmp/AppleWWDRCAG3.cer -k "$KEYCHAIN_PATH" -T /usr/bin/codesign -T /usr/bin/security
+          security import /tmp/AppleWWDRCAG6.cer -k "$KEYCHAIN_PATH" -T /usr/bin/codesign -T /usr/bin/security
+          rm -f /tmp/AppleWWDRCAG3.cer /tmp/AppleWWDRCAG6.cer
+
+          # Import .p12 distribution certificate
+          echo "$IOS_CERTIFICATE_BASE64" | base64 --decode > /tmp/certificate.p12
+          security import /tmp/certificate.p12 -k "$KEYCHAIN_PATH" -P "$IOS_P12_PASSWORD" -A -T /usr/bin/codesign -T /usr/bin/security
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          rm -f /tmp/certificate.p12
+
+          # Install provisioning profile if provided as a static secret
+          if [ -n "$IOS_PROVISION_PROFILE_BASE64" ]; then
+            PROFILES_DIR=~/Library/MobileDevice/Provisioning\ Profiles
+            mkdir -p "$PROFILES_DIR"
+            echo "$IOS_PROVISION_PROFILE_BASE64" | base64 --decode > "$PROFILES_DIR/temp.mobileprovision"
+            UUID=$(security cms -D -i "$PROFILES_DIR/temp.mobileprovision" | plutil -extract UUID raw -)
+            echo "Installing profile with UUID: $UUID"
+            cp "$PROFILES_DIR/temp.mobileprovision" "$PROFILES_DIR/$UUID.mobileprovision"
+            rm -f "$PROFILES_DIR/temp.mobileprovision"
+          else
+            echo "Notice: No static provisioning profile supplied. Fastlane will generate and install it via sigh."
+          fi
+
+      - name: Pre-create build directories & install CocoaPods
+        run: |
+          cd app
+          mkdir -p build/ios/SourcePackages
+          flutter pub get
+          cd ios
+          pod install --repo-update
+
+      - name: Ensure Ruby 3.x in PATH
+        run: |
+          if [ -d "/opt/homebrew/opt/ruby/bin" ]; then
+            echo "/opt/homebrew/opt/ruby/bin" >> $GITHUB_PATH
+          elif [ -d "/usr/local/opt/ruby/bin" ]; then
+            echo "/usr/local/opt/ruby/bin" >> $GITHUB_PATH
+          fi
+
+      - name: Cache Ruby Gems
+        uses: actions/cache@v4
+        with:
+          path: app/ios/vendor/bundle
+          key: ${{ runner.os }}-gems-${{ hashFiles('app/ios/Gemfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-gems-
+
+      - name: Install Fastlane & Dependencies
+        run: |
+          cd app/ios
+          bundle config set --local path 'vendor/bundle'
+          bundle install --jobs 4 --retry 3
+
+      - name: Build & Distribute iOS Beta
+        env:
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT }}
+          VERSION_NAME: ${{ steps.version.outputs.version_name }}
+          BUILD_NUMBER: ${{ steps.version.outputs.build_number }}
+          XDG_CONFIG_HOME: ${{ runner.temp }}
+        run: |
+          if [ -n "$APP_STORE_CONNECT_API_KEY_ID" ] && [ -n "$APP_STORE_CONNECT_API_ISSUER_ID" ] && [ -n "$APP_STORE_CONNECT_API_KEY_CONTENT" ]; then
+            echo "Running Fastlane iOS distribution with automated UDID & profile management..."
+            cd app/ios
+            bundle exec fastlane distribute_beta \
+              groups:"${{ github.event.inputs.groups || 'beta-testers' }}" \
+              release_notes:"${{ github.event.inputs.release_notes || github.event.head_commit.message || 'Beta Release' }}"
+          else
+            echo "Building iOS IPA..."
+            cd app
+            flutter build ipa --release \
+              --export-options-plist=ios/ExportOptions.plist \
+              --build-name="${{ steps.version.outputs.version_name }}" \
+              --build-number="${{ steps.version.outputs.build_number }}"
+
+            echo "Distributing directly via Firebase CLI..."
+            firebase appdistribution:distribute build/ios/ipa/*.ipa \
+              --app "1:260654198138:ios:605e1e7955b0fb52527ac3" \
+              --groups "${{ github.event.inputs.groups || 'beta-testers' }}" \
+              --release-notes "${{ github.event.inputs.release_notes || github.event.head_commit.message || 'Beta Release' }}"
+          fi
+
+      - name: Clean up temporary keychain
+        if: always()
+        run: |
+          KEYCHAIN_PATH="$RUNNER_TEMP/build.keychain-db"
+          security delete-keychain "$KEYCHAIN_PATH" 2>/dev/null || true
