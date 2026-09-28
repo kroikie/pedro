@@ -68,6 +68,7 @@ cd ../functions && dart test
    gh pr review <pr-number> --comment -b "<review-report>"
    ```
 4. Once all CI checks in `pr-check.yml` pass, GitHub automatically squash-merges the PR into `master`.
+5. Upon merging into `master`, `.github/workflows/master-build.yml` automatically triggers a post-merge verification build across all three client targets (Web, Android APK, and iOS without codesigning) to guarantee mainline health.
 
 ### 5. Cleanup
 After the PR is submitted and auto-merge is active, remove the local worktree and branch:
