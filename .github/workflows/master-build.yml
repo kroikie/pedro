@@ -1,0 +1,144 @@
+name: master-build
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  detect-changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      app: ${{ steps.filter.outputs.app }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: Check changed paths
+        id: filter
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "Manual trigger -> building all targets."
+            echo "app=true" >> "$GITHUB_OUTPUT"
+          elif [ -n "${{ github.event.before }}" ] && [ "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]; then
+            DIFF=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} 2>/dev/null || git show --pretty="" --name-only ${{ github.sha }})
+            echo "Changed files:"
+            echo "$DIFF"
+            echo "app=$(echo "$DIFF" | grep -E '^(app/|firebase\.json|firestore\.rules|storage\.rules|\.github/workflows/master-build\.yml)' >/dev/null && echo 'true' || echo 'false')" >> "$GITHUB_OUTPUT"
+          else
+            DIFF=$(git diff --name-only HEAD^ HEAD 2>/dev/null || git show --pretty="" --name-only HEAD)
+            echo "Changed files:"
+            echo "$DIFF"
+            echo "app=$(echo "$DIFF" | grep -E '^(app/|firebase\.json|firestore\.rules|storage\.rules|\.github/workflows/master-build\.yml)' >/dev/null && echo 'true' || echo 'false')" >> "$GITHUB_OUTPUT"
+          fi
+
+  resolve-runners:
+    name: Select Build Runners
+    needs: detect-changes
+    if: needs.detect-changes.outputs.app == 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      android_runner: ${{ steps.check.outputs.android_runner }}
+      ios_runner: ${{ steps.check.outputs.ios_runner }}
+    steps:
+      - name: Detect available self-hosted runners
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.RUNNER_PAT || github.token }}
+        run: |
+          ANDROID_RUNNER='["ubuntu-latest"]'
+          IOS_RUNNER='["macos-15"]'
+
+          RUNNERS_JSON=$(gh api "repos/${{ github.repository }}/actions/runners" 2>/dev/null || echo '{"runners":[]}')
+
+          HAS_LINUX_RUNNER=$(echo "$RUNNERS_JSON" | jq -r '
+            [ .runners[]? | select(.status == "online" and ((.os | ascii_downcase) == "linux" or ([.labels[]?.name | ascii_downcase] | (index("linux") != null or index("android") != null))) and ([.labels[]?.name | ascii_downcase] | index("self-hosted") != null)) ] | length > 0
+          ')
+
+          HAS_MACOS_RUNNER=$(echo "$RUNNERS_JSON" | jq -r '
+            [ .runners[]? | select(.status == "online" and ((.os | ascii_downcase) == "macos" or ([.labels[]?.name | ascii_downcase] | (index("macos") != null or index("ios") != null))) and ([.labels[]?.name | ascii_downcase] | index("self-hosted") != null)) ] | length > 0
+          ')
+
+          if [ "$HAS_LINUX_RUNNER" = "true" ]; then
+            echo "Self-hosted Linux runner is online -> Using self-hosted runner for Android."
+            ANDROID_RUNNER='["self-hosted", "linux"]'
+          else
+            echo "No online self-hosted Linux runner found -> Falling back to ubuntu-latest."
+          fi
+
+          if [ "$HAS_MACOS_RUNNER" = "true" ]; then
+            echo "Self-hosted macOS runner is online -> Using self-hosted runner for iOS."
+            IOS_RUNNER='["self-hosted", "macos"]'
+          else
+            echo "No online self-hosted macOS runner found -> Falling back to macos-15."
+          fi
+
+          echo "android_runner=$ANDROID_RUNNER" >> "$GITHUB_OUTPUT"
+          echo "ios_runner=$IOS_RUNNER" >> "$GITHUB_OUTPUT"
+
+  build-web:
+    name: Build Web Target
+    needs: detect-changes
+    if: needs.detect-changes.outputs.app == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Build Web
+        working-directory: ./app
+        run: |
+          flutter pub get
+          flutter build web
+
+  build-android:
+    name: Build Android Target
+    needs: [detect-changes, resolve-runners]
+    if: needs.detect-changes.outputs.app == 'true'
+    runs-on: ${{ fromJSON(needs.resolve-runners.outputs.android_runner) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Build Android APK
+        working-directory: ./app
+        run: |
+          flutter pub get
+          flutter build apk --release
+
+  build-ios:
+    name: Build iOS Target
+    needs: [detect-changes, resolve-runners]
+    if: needs.detect-changes.outputs.app == 'true'
+    runs-on: ${{ fromJSON(needs.resolve-runners.outputs.ios_runner) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Pre-create build directories & install CocoaPods
+        run: |
+          cd app
+          mkdir -p build/ios/SourcePackages
+          flutter pub get
+          cd ios
+          pod install --repo-update || pod install
+      - name: Build iOS Application (No Codesign)
+        working-directory: ./app
+        run: |
+          flutter build ios --no-codesign --release
