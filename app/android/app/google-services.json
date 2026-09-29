@@ -22,6 +22,14 @@
           }
         },
         {
+          "client_id": "260654198138-rectc0rhp885kdafjhs787q9od1b6dsh.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.ool.pedro",
+            "certificate_hash": "b2d59e9fb981e5290e4b572556f0b543705583eb"
+          }
+        },
+        {
           "client_id": "260654198138-u5jt4poqnr78d0sierk6e0r1pcikm8gf.apps.googleusercontent.com",
           "client_type": 3
         }
