@@ -1,6 +1,8 @@
 // coverage:ignore-file
 // GENERATED CODE - DO NOT MODIFY BY HAND
+// dart format off
 // ignore_for_file: type=lint
+// ignore_for_file: invalid_use_of_protected_member
 // ignore_for_file: unused_element, unnecessary_cast, override_on_non_overriding_member
 // ignore_for_file: strict_raw_type, inference_failure_on_untyped_parameter
 
@@ -25,13 +27,13 @@ class GameStatusMapper extends EnumMapper<GameStatus> {
   @override
   GameStatus decode(dynamic value) {
     switch (value) {
-      case 'waiting':
+      case r'waiting':
         return GameStatus.waiting;
-      case 'starting':
+      case r'starting':
         return GameStatus.starting;
-      case 'playing':
+      case r'playing':
         return GameStatus.playing;
-      case 'finished':
+      case r'finished':
         return GameStatus.finished;
       default:
         throw MapperException.unknownEnumValue(value);
@@ -42,13 +44,13 @@ class GameStatusMapper extends EnumMapper<GameStatus> {
   dynamic encode(GameStatus self) {
     switch (self) {
       case GameStatus.waiting:
-        return 'waiting';
+        return r'waiting';
       case GameStatus.starting:
-        return 'starting';
+        return r'starting';
       case GameStatus.playing:
-        return 'playing';
+        return r'playing';
       case GameStatus.finished:
-        return 'finished';
+        return r'finished';
     }
   }
 }
@@ -82,20 +84,36 @@ class GameRoomMapper extends ClassMapperBase<GameRoom> {
   static String _$name(GameRoom v) => v.name;
   static const Field<GameRoom, String> _f$name = Field('name', _$name);
   static int _$targetScore(GameRoom v) => v.targetScore;
-  static const Field<GameRoom, int> _f$targetScore =
-      Field('targetScore', _$targetScore, opt: true, def: 35);
+  static const Field<GameRoom, int> _f$targetScore = Field(
+    'targetScore',
+    _$targetScore,
+    opt: true,
+    def: 35,
+  );
   static List<String> _$playerIds(GameRoom v) => v.playerIds;
-  static const Field<GameRoom, List<String>> _f$playerIds =
-      Field('playerIds', _$playerIds);
+  static const Field<GameRoom, List<String>> _f$playerIds = Field(
+    'playerIds',
+    _$playerIds,
+  );
   static List<String> _$invitedPlayerIds(GameRoom v) => v.invitedPlayerIds;
-  static const Field<GameRoom, List<String>> _f$invitedPlayerIds =
-      Field('invitedPlayerIds', _$invitedPlayerIds, opt: true, def: const []);
+  static const Field<GameRoom, List<String>> _f$invitedPlayerIds = Field(
+    'invitedPlayerIds',
+    _$invitedPlayerIds,
+    opt: true,
+    def: const [],
+  );
   static GameStatus _$status(GameRoom v) => v.status;
-  static const Field<GameRoom, GameStatus> _f$status =
-      Field('status', _$status, opt: true, def: GameStatus.waiting);
+  static const Field<GameRoom, GameStatus> _f$status = Field(
+    'status',
+    _$status,
+    opt: true,
+    def: GameStatus.waiting,
+  );
   static DateTime _$createdAt(GameRoom v) => v.createdAt;
-  static const Field<GameRoom, DateTime> _f$createdAt =
-      Field('createdAt', _$createdAt);
+  static const Field<GameRoom, DateTime> _f$createdAt = Field(
+    'createdAt',
+    _$createdAt,
+  );
 
   @override
   final MappableFields<GameRoom> fields = const {
@@ -111,14 +129,15 @@ class GameRoomMapper extends ClassMapperBase<GameRoom> {
 
   static GameRoom _instantiate(DecodingData data) {
     return GameRoom(
-        id: data.dec(_f$id),
-        hostId: data.dec(_f$hostId),
-        name: data.dec(_f$name),
-        targetScore: data.dec(_f$targetScore),
-        playerIds: data.dec(_f$playerIds),
-        invitedPlayerIds: data.dec(_f$invitedPlayerIds),
-        status: data.dec(_f$status),
-        createdAt: data.dec(_f$createdAt));
+      id: data.dec(_f$id),
+      hostId: data.dec(_f$hostId),
+      name: data.dec(_f$name),
+      targetScore: data.dec(_f$targetScore),
+      playerIds: data.dec(_f$playerIds),
+      invitedPlayerIds: data.dec(_f$invitedPlayerIds),
+      status: data.dec(_f$status),
+      createdAt: data.dec(_f$createdAt),
+    );
   }
 
   @override
@@ -135,17 +154,23 @@ class GameRoomMapper extends ClassMapperBase<GameRoom> {
 
 mixin GameRoomMappable {
   String toJson() {
-    return GameRoomMapper.ensureInitialized()
-        .encodeJson<GameRoom>(this as GameRoom);
+    return GameRoomMapper.ensureInitialized().encodeJson<GameRoom>(
+      this as GameRoom,
+    );
   }
 
   Map<String, dynamic> toMap() {
-    return GameRoomMapper.ensureInitialized()
-        .encodeMap<GameRoom>(this as GameRoom);
+    return GameRoomMapper.ensureInitialized().encodeMap<GameRoom>(
+      this as GameRoom,
+    );
   }
 
   GameRoomCopyWith<GameRoom, GameRoom, GameRoom> get copyWith =>
-      _GameRoomCopyWithImpl(this as GameRoom, $identity, $identity);
+      _GameRoomCopyWithImpl<GameRoom, GameRoom>(
+        this as GameRoom,
+        $identity,
+        $identity,
+      );
   @override
   String toString() {
     return GameRoomMapper.ensureInitialized().stringifyValue(this as GameRoom);
@@ -153,8 +178,10 @@ mixin GameRoomMappable {
 
   @override
   bool operator ==(Object other) {
-    return GameRoomMapper.ensureInitialized()
-        .equalsValue(this as GameRoom, other);
+    return GameRoomMapper.ensureInitialized().equalsValue(
+      this as GameRoom,
+      other,
+    );
   }
 
   @override
@@ -165,7 +192,7 @@ mixin GameRoomMappable {
 
 extension GameRoomValueCopy<$R, $Out> on ObjectCopyWith<$R, GameRoom, $Out> {
   GameRoomCopyWith<$R, GameRoom, $Out> get $asGameRoom =>
-      $base.as((v, t, t2) => _GameRoomCopyWithImpl(v, t, t2));
+      $base.as((v, t, t2) => _GameRoomCopyWithImpl<$R, $Out>(v, t, t2));
 }
 
 abstract class GameRoomCopyWith<$R, $In extends GameRoom, $Out>
@@ -173,15 +200,16 @@ abstract class GameRoomCopyWith<$R, $In extends GameRoom, $Out>
   ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>> get playerIds;
   ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>>
       get invitedPlayerIds;
-  $R call(
-      {String? id,
-      String? hostId,
-      String? name,
-      int? targetScore,
-      List<String>? playerIds,
-      List<String>? invitedPlayerIds,
-      GameStatus? status,
-      DateTime? createdAt});
+  $R call({
+    String? id,
+    String? hostId,
+    String? name,
+    int? targetScore,
+    List<String>? playerIds,
+    List<String>? invitedPlayerIds,
+    GameStatus? status,
+    DateTime? createdAt,
+  });
   GameRoomCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
 }
 
@@ -195,48 +223,57 @@ class _GameRoomCopyWithImpl<$R, $Out>
       GameRoomMapper.ensureInitialized();
   @override
   ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>> get playerIds =>
-      ListCopyWith($value.playerIds, (v, t) => ObjectCopyWith(v, $identity, t),
-          (v) => call(playerIds: v));
+      ListCopyWith(
+        $value.playerIds,
+        (v, t) => ObjectCopyWith(v, $identity, t),
+        (v) => call(playerIds: v),
+      );
   @override
   ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>>
       get invitedPlayerIds => ListCopyWith(
-          $value.invitedPlayerIds,
-          (v, t) => ObjectCopyWith(v, $identity, t),
-          (v) => call(invitedPlayerIds: v));
+            $value.invitedPlayerIds,
+            (v, t) => ObjectCopyWith(v, $identity, t),
+            (v) => call(invitedPlayerIds: v),
+          );
   @override
-  $R call(
-          {String? id,
-          String? hostId,
-          String? name,
-          int? targetScore,
-          List<String>? playerIds,
-          List<String>? invitedPlayerIds,
-          GameStatus? status,
-          DateTime? createdAt}) =>
-      $apply(FieldCopyWithData({
-        if (id != null) #id: id,
-        if (hostId != null) #hostId: hostId,
-        if (name != null) #name: name,
-        if (targetScore != null) #targetScore: targetScore,
-        if (playerIds != null) #playerIds: playerIds,
-        if (invitedPlayerIds != null) #invitedPlayerIds: invitedPlayerIds,
-        if (status != null) #status: status,
-        if (createdAt != null) #createdAt: createdAt
-      }));
+  $R call({
+    String? id,
+    String? hostId,
+    String? name,
+    int? targetScore,
+    List<String>? playerIds,
+    List<String>? invitedPlayerIds,
+    GameStatus? status,
+    DateTime? createdAt,
+  }) =>
+      $apply(
+        FieldCopyWithData({
+          if (id != null) #id: id,
+          if (hostId != null) #hostId: hostId,
+          if (name != null) #name: name,
+          if (targetScore != null) #targetScore: targetScore,
+          if (playerIds != null) #playerIds: playerIds,
+          if (invitedPlayerIds != null) #invitedPlayerIds: invitedPlayerIds,
+          if (status != null) #status: status,
+          if (createdAt != null) #createdAt: createdAt,
+        }),
+      );
   @override
   GameRoom $make(CopyWithData data) => GameRoom(
-      id: data.get(#id, or: $value.id),
-      hostId: data.get(#hostId, or: $value.hostId),
-      name: data.get(#name, or: $value.name),
-      targetScore: data.get(#targetScore, or: $value.targetScore),
-      playerIds: data.get(#playerIds, or: $value.playerIds),
-      invitedPlayerIds:
-          data.get(#invitedPlayerIds, or: $value.invitedPlayerIds),
-      status: data.get(#status, or: $value.status),
-      createdAt: data.get(#createdAt, or: $value.createdAt));
+        id: data.get(#id, or: $value.id),
+        hostId: data.get(#hostId, or: $value.hostId),
+        name: data.get(#name, or: $value.name),
+        targetScore: data.get(#targetScore, or: $value.targetScore),
+        playerIds: data.get(#playerIds, or: $value.playerIds),
+        invitedPlayerIds:
+            data.get(#invitedPlayerIds, or: $value.invitedPlayerIds),
+        status: data.get(#status, or: $value.status),
+        createdAt: data.get(#createdAt, or: $value.createdAt),
+      );
 
   @override
   GameRoomCopyWith<$R2, GameRoom, $Out2> $chain<$R2, $Out2>(
-          Then<$Out2, $R2> t) =>
-      _GameRoomCopyWithImpl($value, $cast, t);
+    Then<$Out2, $R2> t,
+  ) =>
+      _GameRoomCopyWithImpl<$R2, $Out2>($value, $cast, t);
 }

@@ -1,6 +1,8 @@
 // coverage:ignore-file
 // GENERATED CODE - DO NOT MODIFY BY HAND
+// dart format off
 // ignore_for_file: type=lint
+// ignore_for_file: invalid_use_of_protected_member
 // ignore_for_file: unused_element, unnecessary_cast, override_on_non_overriding_member
 // ignore_for_file: strict_raw_type, inference_failure_on_untyped_parameter
 
@@ -25,13 +27,13 @@ class RoundPhaseMapper extends EnumMapper<RoundPhase> {
   @override
   RoundPhase decode(dynamic value) {
     switch (value) {
-      case 'wadger':
+      case r'wadger':
         return RoundPhase.wadger;
-      case 'discarding':
+      case r'discarding':
         return RoundPhase.discarding;
-      case 'playing':
+      case r'playing':
         return RoundPhase.playing;
-      case 'finished':
+      case r'finished':
         return RoundPhase.finished;
       default:
         throw MapperException.unknownEnumValue(value);
@@ -42,13 +44,13 @@ class RoundPhaseMapper extends EnumMapper<RoundPhase> {
   dynamic encode(RoundPhase self) {
     switch (self) {
       case RoundPhase.wadger:
-        return 'wadger';
+        return r'wadger';
       case RoundPhase.discarding:
-        return 'discarding';
+        return r'discarding';
       case RoundPhase.playing:
-        return 'playing';
+        return r'playing';
       case RoundPhase.finished:
-        return 'finished';
+        return r'finished';
     }
   }
 }
@@ -78,17 +80,31 @@ class PlayerGameStateMapper extends ClassMapperBase<PlayerGameState> {
   static String _$uid(PlayerGameState v) => v.uid;
   static const Field<PlayerGameState, String> _f$uid = Field('uid', _$uid);
   static List<Card> _$hand(PlayerGameState v) => v.hand;
-  static const Field<PlayerGameState, List<Card>> _f$hand =
-      Field('hand', _$hand);
+  static const Field<PlayerGameState, List<Card>> _f$hand = Field(
+    'hand',
+    _$hand,
+  );
   static int _$currentRoundPoints(PlayerGameState v) => v.currentRoundPoints;
-  static const Field<PlayerGameState, int> _f$currentRoundPoints =
-      Field('currentRoundPoints', _$currentRoundPoints, opt: true, def: 0);
+  static const Field<PlayerGameState, int> _f$currentRoundPoints = Field(
+    'currentRoundPoints',
+    _$currentRoundPoints,
+    opt: true,
+    def: 0,
+  );
   static int _$totalScore(PlayerGameState v) => v.totalScore;
-  static const Field<PlayerGameState, int> _f$totalScore =
-      Field('totalScore', _$totalScore, opt: true, def: 0);
+  static const Field<PlayerGameState, int> _f$totalScore = Field(
+    'totalScore',
+    _$totalScore,
+    opt: true,
+    def: 0,
+  );
   static List<String> _$earnedPoints(PlayerGameState v) => v.earnedPoints;
-  static const Field<PlayerGameState, List<String>> _f$earnedPoints =
-      Field('earnedPoints', _$earnedPoints, opt: true, def: const []);
+  static const Field<PlayerGameState, List<String>> _f$earnedPoints = Field(
+    'earnedPoints',
+    _$earnedPoints,
+    opt: true,
+    def: const [],
+  );
 
   @override
   final MappableFields<PlayerGameState> fields = const {
@@ -101,11 +117,12 @@ class PlayerGameStateMapper extends ClassMapperBase<PlayerGameState> {
 
   static PlayerGameState _instantiate(DecodingData data) {
     return PlayerGameState(
-        uid: data.dec(_f$uid),
-        hand: data.dec(_f$hand),
-        currentRoundPoints: data.dec(_f$currentRoundPoints),
-        totalScore: data.dec(_f$totalScore),
-        earnedPoints: data.dec(_f$earnedPoints));
+      uid: data.dec(_f$uid),
+      hand: data.dec(_f$hand),
+      currentRoundPoints: data.dec(_f$currentRoundPoints),
+      totalScore: data.dec(_f$totalScore),
+      earnedPoints: data.dec(_f$earnedPoints),
+    );
   }
 
   @override
@@ -127,50 +144,61 @@ mixin PlayerGameStateMappable {
   }
 
   Map<String, dynamic> toMap() {
-    return PlayerGameStateMapper.ensureInitialized()
-        .encodeMap<PlayerGameState>(this as PlayerGameState);
+    return PlayerGameStateMapper.ensureInitialized().encodeMap<PlayerGameState>(
+      this as PlayerGameState,
+    );
   }
 
   PlayerGameStateCopyWith<PlayerGameState, PlayerGameState, PlayerGameState>
-      get copyWith => _PlayerGameStateCopyWithImpl(
-          this as PlayerGameState, $identity, $identity);
+      get copyWith =>
+          _PlayerGameStateCopyWithImpl<PlayerGameState, PlayerGameState>(
+            this as PlayerGameState,
+            $identity,
+            $identity,
+          );
   @override
   String toString() {
-    return PlayerGameStateMapper.ensureInitialized()
-        .stringifyValue(this as PlayerGameState);
+    return PlayerGameStateMapper.ensureInitialized().stringifyValue(
+      this as PlayerGameState,
+    );
   }
 
   @override
   bool operator ==(Object other) {
-    return PlayerGameStateMapper.ensureInitialized()
-        .equalsValue(this as PlayerGameState, other);
+    return PlayerGameStateMapper.ensureInitialized().equalsValue(
+      this as PlayerGameState,
+      other,
+    );
   }
 
   @override
   int get hashCode {
-    return PlayerGameStateMapper.ensureInitialized()
-        .hashValue(this as PlayerGameState);
+    return PlayerGameStateMapper.ensureInitialized().hashValue(
+      this as PlayerGameState,
+    );
   }
 }
 
 extension PlayerGameStateValueCopy<$R, $Out>
     on ObjectCopyWith<$R, PlayerGameState, $Out> {
   PlayerGameStateCopyWith<$R, PlayerGameState, $Out> get $asPlayerGameState =>
-      $base.as((v, t, t2) => _PlayerGameStateCopyWithImpl(v, t, t2));
+      $base.as((v, t, t2) => _PlayerGameStateCopyWithImpl<$R, $Out>(v, t, t2));
 }
 
 abstract class PlayerGameStateCopyWith<$R, $In extends PlayerGameState, $Out>
     implements ClassCopyWith<$R, $In, $Out> {
   ListCopyWith<$R, Card, CardCopyWith<$R, Card, Card>> get hand;
   ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>> get earnedPoints;
-  $R call(
-      {String? uid,
-      List<Card>? hand,
-      int? currentRoundPoints,
-      int? totalScore,
-      List<String>? earnedPoints});
+  $R call({
+    String? uid,
+    List<Card>? hand,
+    int? currentRoundPoints,
+    int? totalScore,
+    List<String>? earnedPoints,
+  });
   PlayerGameStateCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(
-      Then<$Out2, $R2> t);
+    Then<$Out2, $R2> t,
+  );
 }
 
 class _PlayerGameStateCopyWithImpl<$R, $Out>
@@ -183,40 +211,52 @@ class _PlayerGameStateCopyWithImpl<$R, $Out>
       PlayerGameStateMapper.ensureInitialized();
   @override
   ListCopyWith<$R, Card, CardCopyWith<$R, Card, Card>> get hand => ListCopyWith(
-      $value.hand, (v, t) => v.copyWith.$chain(t), (v) => call(hand: v));
+        $value.hand,
+        (v, t) => v.copyWith.$chain(t),
+        (v) => call(hand: v),
+      );
   @override
   ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>>
       get earnedPoints => ListCopyWith(
-          $value.earnedPoints,
-          (v, t) => ObjectCopyWith(v, $identity, t),
-          (v) => call(earnedPoints: v));
+            $value.earnedPoints,
+            (v, t) => ObjectCopyWith(v, $identity, t),
+            (v) => call(earnedPoints: v),
+          );
   @override
-  $R call(
-          {String? uid,
-          List<Card>? hand,
-          int? currentRoundPoints,
-          int? totalScore,
-          List<String>? earnedPoints}) =>
-      $apply(FieldCopyWithData({
-        if (uid != null) #uid: uid,
-        if (hand != null) #hand: hand,
-        if (currentRoundPoints != null) #currentRoundPoints: currentRoundPoints,
-        if (totalScore != null) #totalScore: totalScore,
-        if (earnedPoints != null) #earnedPoints: earnedPoints
-      }));
+  $R call({
+    String? uid,
+    List<Card>? hand,
+    int? currentRoundPoints,
+    int? totalScore,
+    List<String>? earnedPoints,
+  }) =>
+      $apply(
+        FieldCopyWithData({
+          if (uid != null) #uid: uid,
+          if (hand != null) #hand: hand,
+          if (currentRoundPoints != null)
+            #currentRoundPoints: currentRoundPoints,
+          if (totalScore != null) #totalScore: totalScore,
+          if (earnedPoints != null) #earnedPoints: earnedPoints,
+        }),
+      );
   @override
   PlayerGameState $make(CopyWithData data) => PlayerGameState(
-      uid: data.get(#uid, or: $value.uid),
-      hand: data.get(#hand, or: $value.hand),
-      currentRoundPoints:
-          data.get(#currentRoundPoints, or: $value.currentRoundPoints),
-      totalScore: data.get(#totalScore, or: $value.totalScore),
-      earnedPoints: data.get(#earnedPoints, or: $value.earnedPoints));
+        uid: data.get(#uid, or: $value.uid),
+        hand: data.get(#hand, or: $value.hand),
+        currentRoundPoints: data.get(
+          #currentRoundPoints,
+          or: $value.currentRoundPoints,
+        ),
+        totalScore: data.get(#totalScore, or: $value.totalScore),
+        earnedPoints: data.get(#earnedPoints, or: $value.earnedPoints),
+      );
 
   @override
   PlayerGameStateCopyWith<$R2, PlayerGameState, $Out2> $chain<$R2, $Out2>(
-          Then<$Out2, $R2> t) =>
-      _PlayerGameStateCopyWithImpl($value, $cast, t);
+    Then<$Out2, $R2> t,
+  ) =>
+      _PlayerGameStateCopyWithImpl<$R2, $Out2>($value, $cast, t);
 }
 
 class LiftMapper extends ClassMapperBase<Lift> {
@@ -235,14 +275,21 @@ class LiftMapper extends ClassMapperBase<Lift> {
   final String id = 'Lift';
 
   static String _$leadPlayerId(Lift v) => v.leadPlayerId;
-  static const Field<Lift, String> _f$leadPlayerId =
-      Field('leadPlayerId', _$leadPlayerId);
+  static const Field<Lift, String> _f$leadPlayerId = Field(
+    'leadPlayerId',
+    _$leadPlayerId,
+  );
   static Map<String, Card> _$plays(Lift v) => v.plays;
-  static const Field<Lift, Map<String, Card>> _f$plays =
-      Field('plays', _$plays);
+  static const Field<Lift, Map<String, Card>> _f$plays = Field(
+    'plays',
+    _$plays,
+  );
   static String? _$winnerId(Lift v) => v.winnerId;
-  static const Field<Lift, String> _f$winnerId =
-      Field('winnerId', _$winnerId, opt: true);
+  static const Field<Lift, String> _f$winnerId = Field(
+    'winnerId',
+    _$winnerId,
+    opt: true,
+  );
 
   @override
   final MappableFields<Lift> fields = const {
@@ -253,9 +300,10 @@ class LiftMapper extends ClassMapperBase<Lift> {
 
   static Lift _instantiate(DecodingData data) {
     return Lift(
-        leadPlayerId: data.dec(_f$leadPlayerId),
-        plays: data.dec(_f$plays),
-        winnerId: data.dec(_f$winnerId));
+      leadPlayerId: data.dec(_f$leadPlayerId),
+      plays: data.dec(_f$plays),
+      winnerId: data.dec(_f$winnerId),
+    );
   }
 
   @override
@@ -280,7 +328,7 @@ mixin LiftMappable {
   }
 
   LiftCopyWith<Lift, Lift, Lift> get copyWith =>
-      _LiftCopyWithImpl(this as Lift, $identity, $identity);
+      _LiftCopyWithImpl<Lift, Lift>(this as Lift, $identity, $identity);
   @override
   String toString() {
     return LiftMapper.ensureInitialized().stringifyValue(this as Lift);
@@ -299,7 +347,7 @@ mixin LiftMappable {
 
 extension LiftValueCopy<$R, $Out> on ObjectCopyWith<$R, Lift, $Out> {
   LiftCopyWith<$R, Lift, $Out> get $asLift =>
-      $base.as((v, t, t2) => _LiftCopyWithImpl(v, t, t2));
+      $base.as((v, t, t2) => _LiftCopyWithImpl<$R, $Out>(v, t, t2));
 }
 
 abstract class LiftCopyWith<$R, $In extends Lift, $Out>
@@ -318,26 +366,33 @@ class _LiftCopyWithImpl<$R, $Out> extends ClassCopyWithBase<$R, Lift, $Out>
   @override
   MapCopyWith<$R, String, Card, CardCopyWith<$R, Card, Card>> get plays =>
       MapCopyWith(
-          $value.plays, (v, t) => v.copyWith.$chain(t), (v) => call(plays: v));
+        $value.plays,
+        (v, t) => v.copyWith.$chain(t),
+        (v) => call(plays: v),
+      );
   @override
-  $R call(
-          {String? leadPlayerId,
-          Map<String, Card>? plays,
-          Object? winnerId = $none}) =>
-      $apply(FieldCopyWithData({
-        if (leadPlayerId != null) #leadPlayerId: leadPlayerId,
-        if (plays != null) #plays: plays,
-        if (winnerId != $none) #winnerId: winnerId
-      }));
+  $R call({
+    String? leadPlayerId,
+    Map<String, Card>? plays,
+    Object? winnerId = $none,
+  }) =>
+      $apply(
+        FieldCopyWithData({
+          if (leadPlayerId != null) #leadPlayerId: leadPlayerId,
+          if (plays != null) #plays: plays,
+          if (winnerId != $none) #winnerId: winnerId,
+        }),
+      );
   @override
   Lift $make(CopyWithData data) => Lift(
-      leadPlayerId: data.get(#leadPlayerId, or: $value.leadPlayerId),
-      plays: data.get(#plays, or: $value.plays),
-      winnerId: data.get(#winnerId, or: $value.winnerId));
+        leadPlayerId: data.get(#leadPlayerId, or: $value.leadPlayerId),
+        plays: data.get(#plays, or: $value.plays),
+        winnerId: data.get(#winnerId, or: $value.winnerId),
+      );
 
   @override
   LiftCopyWith<$R2, Lift, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t) =>
-      _LiftCopyWithImpl($value, $cast, t);
+      _LiftCopyWithImpl<$R2, $Out2>($value, $cast, t);
 }
 
 class RoundStateMapper extends ClassMapperBase<RoundState> {
@@ -359,32 +414,63 @@ class RoundStateMapper extends ClassMapperBase<RoundState> {
   final String id = 'RoundState';
 
   static String _$dealerId(RoundState v) => v.dealerId;
-  static const Field<RoundState, String> _f$dealerId =
-      Field('dealerId', _$dealerId);
+  static const Field<RoundState, String> _f$dealerId = Field(
+    'dealerId',
+    _$dealerId,
+  );
   static String? _$bidWinnerId(RoundState v) => v.bidWinnerId;
-  static const Field<RoundState, String> _f$bidWinnerId =
-      Field('bidWinnerId', _$bidWinnerId, opt: true);
+  static const Field<RoundState, String> _f$bidWinnerId = Field(
+    'bidWinnerId',
+    _$bidWinnerId,
+    opt: true,
+  );
   static int _$bidValue(RoundState v) => v.bidValue;
-  static const Field<RoundState, int> _f$bidValue =
-      Field('bidValue', _$bidValue, opt: true, def: 0);
+  static const Field<RoundState, int> _f$bidValue = Field(
+    'bidValue',
+    _$bidValue,
+    opt: true,
+    def: 0,
+  );
   static Suit? _$trumpSuit(RoundState v) => v.trumpSuit;
-  static const Field<RoundState, Suit> _f$trumpSuit =
-      Field('trumpSuit', _$trumpSuit, opt: true);
+  static const Field<RoundState, Suit> _f$trumpSuit = Field(
+    'trumpSuit',
+    _$trumpSuit,
+    opt: true,
+  );
   static RoundPhase _$phase(RoundState v) => v.phase;
-  static const Field<RoundState, RoundPhase> _f$phase =
-      Field('phase', _$phase, opt: true, def: RoundPhase.wadger);
+  static const Field<RoundState, RoundPhase> _f$phase = Field(
+    'phase',
+    _$phase,
+    opt: true,
+    def: RoundPhase.wadger,
+  );
   static Lift? _$currentLift(RoundState v) => v.currentLift;
-  static const Field<RoundState, Lift> _f$currentLift =
-      Field('currentLift', _$currentLift, opt: true);
+  static const Field<RoundState, Lift> _f$currentLift = Field(
+    'currentLift',
+    _$currentLift,
+    opt: true,
+  );
   static List<Card> _$discardedCards(RoundState v) => v.discardedCards;
-  static const Field<RoundState, List<Card>> _f$discardedCards =
-      Field('discardedCards', _$discardedCards, opt: true, def: const []);
+  static const Field<RoundState, List<Card>> _f$discardedCards = Field(
+    'discardedCards',
+    _$discardedCards,
+    opt: true,
+    def: const [],
+  );
   static List<Card> _$playedCards(RoundState v) => v.playedCards;
-  static const Field<RoundState, List<Card>> _f$playedCards =
-      Field('playedCards', _$playedCards, opt: true, def: const []);
+  static const Field<RoundState, List<Card>> _f$playedCards = Field(
+    'playedCards',
+    _$playedCards,
+    opt: true,
+    def: const [],
+  );
   static int _$turnIndex(RoundState v) => v.turnIndex;
-  static const Field<RoundState, int> _f$turnIndex =
-      Field('turnIndex', _$turnIndex, opt: true, def: 0);
+  static const Field<RoundState, int> _f$turnIndex = Field(
+    'turnIndex',
+    _$turnIndex,
+    opt: true,
+    def: 0,
+  );
 
   @override
   final MappableFields<RoundState> fields = const {
@@ -401,15 +487,16 @@ class RoundStateMapper extends ClassMapperBase<RoundState> {
 
   static RoundState _instantiate(DecodingData data) {
     return RoundState(
-        dealerId: data.dec(_f$dealerId),
-        bidWinnerId: data.dec(_f$bidWinnerId),
-        bidValue: data.dec(_f$bidValue),
-        trumpSuit: data.dec(_f$trumpSuit),
-        phase: data.dec(_f$phase),
-        currentLift: data.dec(_f$currentLift),
-        discardedCards: data.dec(_f$discardedCards),
-        playedCards: data.dec(_f$playedCards),
-        turnIndex: data.dec(_f$turnIndex));
+      dealerId: data.dec(_f$dealerId),
+      bidWinnerId: data.dec(_f$bidWinnerId),
+      bidValue: data.dec(_f$bidValue),
+      trumpSuit: data.dec(_f$trumpSuit),
+      phase: data.dec(_f$phase),
+      currentLift: data.dec(_f$currentLift),
+      discardedCards: data.dec(_f$discardedCards),
+      playedCards: data.dec(_f$playedCards),
+      turnIndex: data.dec(_f$turnIndex),
+    );
   }
 
   @override
@@ -426,27 +513,36 @@ class RoundStateMapper extends ClassMapperBase<RoundState> {
 
 mixin RoundStateMappable {
   String toJson() {
-    return RoundStateMapper.ensureInitialized()
-        .encodeJson<RoundState>(this as RoundState);
+    return RoundStateMapper.ensureInitialized().encodeJson<RoundState>(
+      this as RoundState,
+    );
   }
 
   Map<String, dynamic> toMap() {
-    return RoundStateMapper.ensureInitialized()
-        .encodeMap<RoundState>(this as RoundState);
+    return RoundStateMapper.ensureInitialized().encodeMap<RoundState>(
+      this as RoundState,
+    );
   }
 
   RoundStateCopyWith<RoundState, RoundState, RoundState> get copyWith =>
-      _RoundStateCopyWithImpl(this as RoundState, $identity, $identity);
+      _RoundStateCopyWithImpl<RoundState, RoundState>(
+        this as RoundState,
+        $identity,
+        $identity,
+      );
   @override
   String toString() {
-    return RoundStateMapper.ensureInitialized()
-        .stringifyValue(this as RoundState);
+    return RoundStateMapper.ensureInitialized().stringifyValue(
+      this as RoundState,
+    );
   }
 
   @override
   bool operator ==(Object other) {
-    return RoundStateMapper.ensureInitialized()
-        .equalsValue(this as RoundState, other);
+    return RoundStateMapper.ensureInitialized().equalsValue(
+      this as RoundState,
+      other,
+    );
   }
 
   @override
@@ -458,7 +554,7 @@ mixin RoundStateMappable {
 extension RoundStateValueCopy<$R, $Out>
     on ObjectCopyWith<$R, RoundState, $Out> {
   RoundStateCopyWith<$R, RoundState, $Out> get $asRoundState =>
-      $base.as((v, t, t2) => _RoundStateCopyWithImpl(v, t, t2));
+      $base.as((v, t, t2) => _RoundStateCopyWithImpl<$R, $Out>(v, t, t2));
 }
 
 abstract class RoundStateCopyWith<$R, $In extends RoundState, $Out>
@@ -466,16 +562,17 @@ abstract class RoundStateCopyWith<$R, $In extends RoundState, $Out>
   LiftCopyWith<$R, Lift, Lift>? get currentLift;
   ListCopyWith<$R, Card, CardCopyWith<$R, Card, Card>> get discardedCards;
   ListCopyWith<$R, Card, CardCopyWith<$R, Card, Card>> get playedCards;
-  $R call(
-      {String? dealerId,
-      String? bidWinnerId,
-      int? bidValue,
-      Suit? trumpSuit,
-      RoundPhase? phase,
-      Lift? currentLift,
-      List<Card>? discardedCards,
-      List<Card>? playedCards,
-      int? turnIndex});
+  $R call({
+    String? dealerId,
+    String? bidWinnerId,
+    int? bidValue,
+    Suit? trumpSuit,
+    RoundPhase? phase,
+    Lift? currentLift,
+    List<Card>? discardedCards,
+    List<Card>? playedCards,
+    int? turnIndex,
+  });
   RoundStateCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
 }
 
@@ -492,50 +589,61 @@ class _RoundStateCopyWithImpl<$R, $Out>
       $value.currentLift?.copyWith.$chain((v) => call(currentLift: v));
   @override
   ListCopyWith<$R, Card, CardCopyWith<$R, Card, Card>> get discardedCards =>
-      ListCopyWith($value.discardedCards, (v, t) => v.copyWith.$chain(t),
-          (v) => call(discardedCards: v));
+      ListCopyWith(
+        $value.discardedCards,
+        (v, t) => v.copyWith.$chain(t),
+        (v) => call(discardedCards: v),
+      );
   @override
   ListCopyWith<$R, Card, CardCopyWith<$R, Card, Card>> get playedCards =>
-      ListCopyWith($value.playedCards, (v, t) => v.copyWith.$chain(t),
-          (v) => call(playedCards: v));
+      ListCopyWith(
+        $value.playedCards,
+        (v, t) => v.copyWith.$chain(t),
+        (v) => call(playedCards: v),
+      );
   @override
-  $R call(
-          {String? dealerId,
-          Object? bidWinnerId = $none,
-          int? bidValue,
-          Object? trumpSuit = $none,
-          RoundPhase? phase,
-          Object? currentLift = $none,
-          List<Card>? discardedCards,
-          List<Card>? playedCards,
-          int? turnIndex}) =>
-      $apply(FieldCopyWithData({
-        if (dealerId != null) #dealerId: dealerId,
-        if (bidWinnerId != $none) #bidWinnerId: bidWinnerId,
-        if (bidValue != null) #bidValue: bidValue,
-        if (trumpSuit != $none) #trumpSuit: trumpSuit,
-        if (phase != null) #phase: phase,
-        if (currentLift != $none) #currentLift: currentLift,
-        if (discardedCards != null) #discardedCards: discardedCards,
-        if (playedCards != null) #playedCards: playedCards,
-        if (turnIndex != null) #turnIndex: turnIndex
-      }));
+  $R call({
+    String? dealerId,
+    Object? bidWinnerId = $none,
+    int? bidValue,
+    Object? trumpSuit = $none,
+    RoundPhase? phase,
+    Object? currentLift = $none,
+    List<Card>? discardedCards,
+    List<Card>? playedCards,
+    int? turnIndex,
+  }) =>
+      $apply(
+        FieldCopyWithData({
+          if (dealerId != null) #dealerId: dealerId,
+          if (bidWinnerId != $none) #bidWinnerId: bidWinnerId,
+          if (bidValue != null) #bidValue: bidValue,
+          if (trumpSuit != $none) #trumpSuit: trumpSuit,
+          if (phase != null) #phase: phase,
+          if (currentLift != $none) #currentLift: currentLift,
+          if (discardedCards != null) #discardedCards: discardedCards,
+          if (playedCards != null) #playedCards: playedCards,
+          if (turnIndex != null) #turnIndex: turnIndex,
+        }),
+      );
   @override
   RoundState $make(CopyWithData data) => RoundState(
-      dealerId: data.get(#dealerId, or: $value.dealerId),
-      bidWinnerId: data.get(#bidWinnerId, or: $value.bidWinnerId),
-      bidValue: data.get(#bidValue, or: $value.bidValue),
-      trumpSuit: data.get(#trumpSuit, or: $value.trumpSuit),
-      phase: data.get(#phase, or: $value.phase),
-      currentLift: data.get(#currentLift, or: $value.currentLift),
-      discardedCards: data.get(#discardedCards, or: $value.discardedCards),
-      playedCards: data.get(#playedCards, or: $value.playedCards),
-      turnIndex: data.get(#turnIndex, or: $value.turnIndex));
+        dealerId: data.get(#dealerId, or: $value.dealerId),
+        bidWinnerId: data.get(#bidWinnerId, or: $value.bidWinnerId),
+        bidValue: data.get(#bidValue, or: $value.bidValue),
+        trumpSuit: data.get(#trumpSuit, or: $value.trumpSuit),
+        phase: data.get(#phase, or: $value.phase),
+        currentLift: data.get(#currentLift, or: $value.currentLift),
+        discardedCards: data.get(#discardedCards, or: $value.discardedCards),
+        playedCards: data.get(#playedCards, or: $value.playedCards),
+        turnIndex: data.get(#turnIndex, or: $value.turnIndex),
+      );
 
   @override
   RoundStateCopyWith<$R2, RoundState, $Out2> $chain<$R2, $Out2>(
-          Then<$Out2, $R2> t) =>
-      _RoundStateCopyWithImpl($value, $cast, t);
+    Then<$Out2, $R2> t,
+  ) =>
+      _RoundStateCopyWithImpl<$R2, $Out2>($value, $cast, t);
 }
 
 class GameSessionMapper extends ClassMapperBase<GameSession> {
@@ -557,14 +665,20 @@ class GameSessionMapper extends ClassMapperBase<GameSession> {
   static String _$gameId(GameSession v) => v.gameId;
   static const Field<GameSession, String> _f$gameId = Field('gameId', _$gameId);
   static int _$targetScore(GameSession v) => v.targetScore;
-  static const Field<GameSession, int> _f$targetScore =
-      Field('targetScore', _$targetScore, opt: true, def: 35);
+  static const Field<GameSession, int> _f$targetScore = Field(
+    'targetScore',
+    _$targetScore,
+    opt: true,
+    def: 35,
+  );
   static List<PlayerGameState> _$playerStates(GameSession v) => v.playerStates;
   static const Field<GameSession, List<PlayerGameState>> _f$playerStates =
       Field('playerStates', _$playerStates);
   static RoundState _$currentRound(GameSession v) => v.currentRound;
-  static const Field<GameSession, RoundState> _f$currentRound =
-      Field('currentRound', _$currentRound);
+  static const Field<GameSession, RoundState> _f$currentRound = Field(
+    'currentRound',
+    _$currentRound,
+  );
 
   @override
   final MappableFields<GameSession> fields = const {
@@ -576,10 +690,11 @@ class GameSessionMapper extends ClassMapperBase<GameSession> {
 
   static GameSession _instantiate(DecodingData data) {
     return GameSession(
-        gameId: data.dec(_f$gameId),
-        targetScore: data.dec(_f$targetScore),
-        playerStates: data.dec(_f$playerStates),
-        currentRound: data.dec(_f$currentRound));
+      gameId: data.dec(_f$gameId),
+      targetScore: data.dec(_f$targetScore),
+      playerStates: data.dec(_f$playerStates),
+      currentRound: data.dec(_f$currentRound),
+    );
   }
 
   @override
@@ -596,27 +711,36 @@ class GameSessionMapper extends ClassMapperBase<GameSession> {
 
 mixin GameSessionMappable {
   String toJson() {
-    return GameSessionMapper.ensureInitialized()
-        .encodeJson<GameSession>(this as GameSession);
+    return GameSessionMapper.ensureInitialized().encodeJson<GameSession>(
+      this as GameSession,
+    );
   }
 
   Map<String, dynamic> toMap() {
-    return GameSessionMapper.ensureInitialized()
-        .encodeMap<GameSession>(this as GameSession);
+    return GameSessionMapper.ensureInitialized().encodeMap<GameSession>(
+      this as GameSession,
+    );
   }
 
   GameSessionCopyWith<GameSession, GameSession, GameSession> get copyWith =>
-      _GameSessionCopyWithImpl(this as GameSession, $identity, $identity);
+      _GameSessionCopyWithImpl<GameSession, GameSession>(
+        this as GameSession,
+        $identity,
+        $identity,
+      );
   @override
   String toString() {
-    return GameSessionMapper.ensureInitialized()
-        .stringifyValue(this as GameSession);
+    return GameSessionMapper.ensureInitialized().stringifyValue(
+      this as GameSession,
+    );
   }
 
   @override
   bool operator ==(Object other) {
-    return GameSessionMapper.ensureInitialized()
-        .equalsValue(this as GameSession, other);
+    return GameSessionMapper.ensureInitialized().equalsValue(
+      this as GameSession,
+      other,
+    );
   }
 
   @override
@@ -628,7 +752,7 @@ mixin GameSessionMappable {
 extension GameSessionValueCopy<$R, $Out>
     on ObjectCopyWith<$R, GameSession, $Out> {
   GameSessionCopyWith<$R, GameSession, $Out> get $asGameSession =>
-      $base.as((v, t, t2) => _GameSessionCopyWithImpl(v, t, t2));
+      $base.as((v, t, t2) => _GameSessionCopyWithImpl<$R, $Out>(v, t, t2));
 }
 
 abstract class GameSessionCopyWith<$R, $In extends GameSession, $Out>
@@ -637,11 +761,12 @@ abstract class GameSessionCopyWith<$R, $In extends GameSession, $Out>
           PlayerGameStateCopyWith<$R, PlayerGameState, PlayerGameState>>
       get playerStates;
   RoundStateCopyWith<$R, RoundState, RoundState> get currentRound;
-  $R call(
-      {String? gameId,
-      int? targetScore,
-      List<PlayerGameState>? playerStates,
-      RoundState? currentRound});
+  $R call({
+    String? gameId,
+    int? targetScore,
+    List<PlayerGameState>? playerStates,
+    RoundState? currentRound,
+  });
   GameSessionCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
 }
 
@@ -656,32 +781,40 @@ class _GameSessionCopyWithImpl<$R, $Out>
   @override
   ListCopyWith<$R, PlayerGameState,
           PlayerGameStateCopyWith<$R, PlayerGameState, PlayerGameState>>
-      get playerStates => ListCopyWith($value.playerStates,
-          (v, t) => v.copyWith.$chain(t), (v) => call(playerStates: v));
+      get playerStates => ListCopyWith(
+            $value.playerStates,
+            (v, t) => v.copyWith.$chain(t),
+            (v) => call(playerStates: v),
+          );
   @override
   RoundStateCopyWith<$R, RoundState, RoundState> get currentRound =>
       $value.currentRound.copyWith.$chain((v) => call(currentRound: v));
   @override
-  $R call(
-          {String? gameId,
-          int? targetScore,
-          List<PlayerGameState>? playerStates,
-          RoundState? currentRound}) =>
-      $apply(FieldCopyWithData({
-        if (gameId != null) #gameId: gameId,
-        if (targetScore != null) #targetScore: targetScore,
-        if (playerStates != null) #playerStates: playerStates,
-        if (currentRound != null) #currentRound: currentRound
-      }));
+  $R call({
+    String? gameId,
+    int? targetScore,
+    List<PlayerGameState>? playerStates,
+    RoundState? currentRound,
+  }) =>
+      $apply(
+        FieldCopyWithData({
+          if (gameId != null) #gameId: gameId,
+          if (targetScore != null) #targetScore: targetScore,
+          if (playerStates != null) #playerStates: playerStates,
+          if (currentRound != null) #currentRound: currentRound,
+        }),
+      );
   @override
   GameSession $make(CopyWithData data) => GameSession(
-      gameId: data.get(#gameId, or: $value.gameId),
-      targetScore: data.get(#targetScore, or: $value.targetScore),
-      playerStates: data.get(#playerStates, or: $value.playerStates),
-      currentRound: data.get(#currentRound, or: $value.currentRound));
+        gameId: data.get(#gameId, or: $value.gameId),
+        targetScore: data.get(#targetScore, or: $value.targetScore),
+        playerStates: data.get(#playerStates, or: $value.playerStates),
+        currentRound: data.get(#currentRound, or: $value.currentRound),
+      );
 
   @override
   GameSessionCopyWith<$R2, GameSession, $Out2> $chain<$R2, $Out2>(
-          Then<$Out2, $R2> t) =>
-      _GameSessionCopyWithImpl($value, $cast, t);
+    Then<$Out2, $R2> t,
+  ) =>
+      _GameSessionCopyWithImpl<$R2, $Out2>($value, $cast, t);
 }

@@ -8,6 +8,8 @@ import '../../data/models/player.dart';
 import '../../data/repositories/player_repository.dart';
 import '../widgets/avatar_widget.dart';
 import '../widgets/chat_overlay.dart';
+import '../widgets/reaction_bar.dart';
+import '../widgets/floating_reactions_overlay.dart';
 import '../../data/services/bid_assistant_service.dart';
 import '../../data/services/tactical_coach_service.dart';
 import '../../data/logic/card_play_validator.dart';
@@ -26,10 +28,10 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
   final _bidAssistant = BidAssistantService();
   final _tacticalCoach = TacticalCoachService();
   final _uid = FirebaseAuth.instance.currentUser?.uid;
-  
+
   String? _bidSuggestion;
   bool _isAnalyzingHand = false;
-  
+
   String? _moveSuggestion;
   bool _isAnalyzingMove = false;
   bool _isSubmittingCard = false;
@@ -46,7 +48,8 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
     }
   }
 
-  Future<void> _analyzeMove(List<pedro.Card> hand, Lift? lift, pedro.Suit? trump, List<pedro.Card> playedCards) async {
+  Future<void> _analyzeMove(List<pedro.Card> hand, Lift? lift,
+      pedro.Suit? trump, List<pedro.Card> playedCards) async {
     setState(() => _isAnalyzingMove = true);
     final suggestion = await _tacticalCoach.getMoveSuggestion(
       hand: hand,
@@ -67,20 +70,27 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
     return StreamBuilder<GameSession?>(
       stream: _gameRepo.watchGameSession(widget.gameId),
       builder: (context, snapshot) {
-        if (snapshot.hasError) return Scaffold(body: Center(child: Text('Error: ${snapshot.error}')));
-        if (!snapshot.hasData) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        if (snapshot.hasError)
+          return Scaffold(
+              body: Center(child: Text('Error: ${snapshot.error}')));
+        if (!snapshot.hasData)
+          return const Scaffold(
+              body: Center(child: CircularProgressIndicator()));
         final session = snapshot.data!;
-        
+
         return Scaffold(
           appBar: AppBar(
-            title: Text('Pedro: ${session.currentRound.phase.name.toUpperCase()}'),
+            title:
+                Text('Pedro: ${session.currentRound.phase.name.toUpperCase()}'),
             actions: [
               Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('Target: ${session.targetScore}', style: const TextStyle(fontSize: 10, color: Colors.grey)),
-                  Text('Bid: ${session.currentRound.bidValue}', style: const TextStyle(fontSize: 14)),
-                  if (session.currentRound.trumpSuit != null) 
+                  Text('Target: ${session.targetScore}',
+                      style: const TextStyle(fontSize: 10, color: Colors.grey)),
+                  Text('Bid: ${session.currentRound.bidValue}',
+                      style: const TextStyle(fontSize: 14)),
+                  if (session.currentRound.trumpSuit != null)
                     Icon(_suitIcon(session.currentRound.trumpSuit!), size: 16),
                 ],
               ),
@@ -93,9 +103,11 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                 child: Stack(
                   children: [
                     Center(
-                      child: _buildLiftArea(session.currentRound.currentLift, session.playerStates),
+                      child: _buildLiftArea(session.currentRound.currentLift,
+                          session.playerStates),
                     ),
                     ..._buildPlayerPositions(session),
+                    FloatingReactionsOverlay(gameId: widget.gameId),
                   ],
                 ),
               ),
@@ -109,7 +121,9 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
   }
 
   Widget _buildLiftArea(Lift? lift, List<PlayerGameState> states) {
-    if (lift == null || lift.plays.isEmpty) return const Text('Waiting for plays...', style: TextStyle(color: Colors.grey));
+    if (lift == null || lift.plays.isEmpty)
+      return const Text('Waiting for plays...',
+          style: TextStyle(color: Colors.grey));
     return Wrap(
       spacing: 12,
       runSpacing: 12,
@@ -121,7 +135,8 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
             const SizedBox(height: 4),
             FutureBuilder<Player?>(
               future: _playerRepo.getPlayer(entry.key),
-              builder: (context, snap) => Text(snap.data?.screenName ?? '...', style: const TextStyle(fontSize: 10)),
+              builder: (context, snap) => Text(snap.data?.screenName ?? '...',
+                  style: const TextStyle(fontSize: 10)),
             ),
           ],
         );
@@ -140,10 +155,36 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
 
     final Map<int, List<Alignment>> layouts = {
       4: [Alignment.centerRight, Alignment.topCenter, Alignment.centerLeft],
-      5: [Alignment.centerRight, Alignment.topRight, Alignment.topLeft, Alignment.centerLeft],
-      6: [Alignment.centerRight, Alignment.topRight, Alignment.topCenter, Alignment.topLeft, Alignment.centerLeft],
-      7: [Alignment.bottomRight, Alignment.centerRight, Alignment.topRight, Alignment.topLeft, Alignment.centerLeft, Alignment.bottomLeft],
-      8: [Alignment.bottomRight, Alignment.centerRight, Alignment.topRight, Alignment.topCenter, Alignment.topLeft, Alignment.centerLeft, Alignment.bottomLeft],
+      5: [
+        Alignment.centerRight,
+        Alignment.topRight,
+        Alignment.topLeft,
+        Alignment.centerLeft
+      ],
+      6: [
+        Alignment.centerRight,
+        Alignment.topRight,
+        Alignment.topCenter,
+        Alignment.topLeft,
+        Alignment.centerLeft
+      ],
+      7: [
+        Alignment.bottomRight,
+        Alignment.centerRight,
+        Alignment.topRight,
+        Alignment.topLeft,
+        Alignment.centerLeft,
+        Alignment.bottomLeft
+      ],
+      8: [
+        Alignment.bottomRight,
+        Alignment.centerRight,
+        Alignment.topRight,
+        Alignment.topCenter,
+        Alignment.topLeft,
+        Alignment.centerLeft,
+        Alignment.bottomLeft
+      ],
     };
 
     final playerPositions = layouts[numPlayers] ?? layouts[4]!;
@@ -166,9 +207,13 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                 return Container(
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: isHisTurn ? Colors.green.withValues(alpha: 0.1) : Colors.white.withValues(alpha: 0.8),
+                    color: isHisTurn
+                        ? Colors.green.withValues(alpha: 0.1)
+                        : Colors.white.withValues(alpha: 0.8),
                     borderRadius: BorderRadius.circular(12),
-                    border: isHisTurn ? Border.all(color: Colors.green, width: 2) : Border.all(color: Colors.grey.shade300),
+                    border: isHisTurn
+                        ? Border.all(color: Colors.green, width: 2)
+                        : Border.all(color: Colors.grey.shade300),
                     boxShadow: const [
                       BoxShadow(color: Colors.black12, blurRadius: 4),
                     ],
@@ -178,11 +223,14 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                     children: [
                       AvatarWidget(avatarUrl: player?.avatarUrl, radius: 20),
                       Text(
-                        player?.screenName ?? '...', 
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
+                        player?.screenName ?? '...',
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 11),
                         overflow: TextOverflow.ellipsis,
                       ),
-                      Text('Score: ${playerState.totalScore}', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                      Text('Score: ${playerState.totalScore}',
+                          style: const TextStyle(
+                              fontSize: 10, fontWeight: FontWeight.bold)),
                       if (playerState.earnedPoints.isNotEmpty)
                         _buildPointsChips(playerState.earnedPoints),
                     ],
@@ -222,8 +270,9 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
             borderRadius: BorderRadius.circular(4),
           ),
           child: Text(
-            p, 
-            style: TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: textColor),
+            p,
+            style: TextStyle(
+                fontSize: 8, fontWeight: FontWeight.bold, color: textColor),
           ),
         );
       }).toList(),
@@ -252,7 +301,9 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: isMyTurn ? Colors.green[50] : Colors.grey[100],
-        border: Border(top: BorderSide(color: isMyTurn ? Colors.green : Colors.grey, width: 2)),
+        border: Border(
+            top: BorderSide(
+                color: isMyTurn ? Colors.green : Colors.grey, width: 2)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -260,52 +311,75 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-               Column(
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Points: ${localState.currentRoundPoints}', style: const TextStyle(fontSize: 11, color: Colors.blue)),
+                  Text('Points: ${localState.currentRoundPoints}',
+                      style: const TextStyle(fontSize: 11, color: Colors.blue)),
                   _buildPointsChips(localState.earnedPoints),
-                  Text('Total: ${localState.totalScore}', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                  Text('Total: ${localState.totalScore}',
+                      style: const TextStyle(
+                          fontSize: 11, fontWeight: FontWeight.bold)),
                 ],
               ),
-              if (isMyTurn) 
-                const Text('YOUR TURN', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 14))
+              if (isMyTurn)
+                const Text('YOUR TURN',
+                    style: TextStyle(
+                        color: Colors.green,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14))
               else
-                const Text('Waiting...', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                const Text('Waiting...',
+                    style: TextStyle(color: Colors.grey, fontSize: 12)),
             ],
           ),
           const SizedBox(height: 8),
           if (round.phase == RoundPhase.wadger && isMyTurn) ...[
             if (_isAnalyzingHand) const LinearProgressIndicator(),
-            if (_bidSuggestion != null) 
+            if (_bidSuggestion != null)
               Padding(
                 padding: const EdgeInsets.only(bottom: 6.0),
-                child: Text('Coach: $_bidSuggestion', style: const TextStyle(fontStyle: FontStyle.italic, color: Colors.blueGrey, fontSize: 11)),
+                child: Text('Coach: $_bidSuggestion',
+                    style: const TextStyle(
+                        fontStyle: FontStyle.italic,
+                        color: Colors.blueGrey,
+                        fontSize: 11)),
               ),
             _buildBidControls(session),
           ],
           if (round.phase == RoundPhase.playing && isMyTurn) ...[
             if (_isAnalyzingMove) const LinearProgressIndicator(),
             if (_moveSuggestion != null)
-               Padding(
+              Padding(
                 padding: const EdgeInsets.only(bottom: 6.0),
-                child: Text('Coach: $_moveSuggestion', style: const TextStyle(fontStyle: FontStyle.italic, color: Colors.blueGrey, fontSize: 11)),
+                child: Text('Coach: $_moveSuggestion',
+                    style: const TextStyle(
+                        fontStyle: FontStyle.italic,
+                        color: Colors.blueGrey,
+                        fontSize: 11)),
               ),
             ElevatedButton.icon(
-              onPressed: _isAnalyzingMove ? null : () => _analyzeMove(localState.hand, round.currentLift, round.trumpSuit, round.playedCards),
+              onPressed: _isAnalyzingMove
+                  ? null
+                  : () => _analyzeMove(localState.hand, round.currentLift,
+                      round.trumpSuit, round.playedCards),
               icon: const Icon(Icons.lightbulb, size: 16),
               label: const Text('Get Hint'),
-              style: ElevatedButton.styleFrom(visualDensity: VisualDensity.compact),
+              style: ElevatedButton.styleFrom(
+                  visualDensity: VisualDensity.compact),
             ),
           ],
-          if (round.phase == RoundPhase.discarding && isMyTurn && round.bidWinnerId == _uid)
+          if (round.phase == RoundPhase.discarding &&
+              isMyTurn &&
+              round.bidWinnerId == _uid)
             _buildTrumpSelector(session),
           if (_isSubmittingCard) ...[
             const SizedBox(height: 4),
             const LinearProgressIndicator(),
           ],
           const SizedBox(height: 8),
-          const Text('Your Hand', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+          const Text('Your Hand',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
           const SizedBox(height: 4),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
@@ -315,19 +389,21 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                   padding: const EdgeInsets.only(right: 6),
                   child: CardWidget(
                     card: card,
-                    onTap: (round.phase == RoundPhase.playing && isMyTurn) 
+                    onTap: (round.phase == RoundPhase.playing && isMyTurn)
                         ? () => _playCard(
-                            card: card,
-                            hand: localState.hand,
-                            round: round,
-                            isMyTurn: isMyTurn,
-                          )
+                              card: card,
+                              hand: localState.hand,
+                              round: round,
+                              isMyTurn: isMyTurn,
+                            )
                         : null,
                   ),
                 );
               }).toList(),
             ),
           ),
+          const SizedBox(height: 6),
+          ReactionBar(gameId: widget.gameId),
         ],
       ),
     );
@@ -387,7 +463,8 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
     final currentBid = session.currentRound.bidValue;
     return Column(
       children: [
-        const Text('Place your bid (1-20) or Pass', style: TextStyle(fontSize: 11)),
+        const Text('Place your bid (1-20) or Pass',
+            style: TextStyle(fontSize: 11)),
         const SizedBox(height: 6),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
@@ -425,7 +502,8 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
   Widget _buildTrumpSelector(GameSession session) {
     return Column(
       children: [
-        const Text('Choose Trump Suit', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+        const Text('Choose Trump Suit',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
         const SizedBox(height: 6),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -435,7 +513,9 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
               child: IconButton.filled(
                 icon: Icon(_suitIcon(suit), color: _suitColor(suit), size: 20),
                 onPressed: () => _gameRepo.setTrumpSuit(widget.gameId, suit),
-                style: IconButton.styleFrom(backgroundColor: Colors.white, visualDensity: VisualDensity.compact),
+                style: IconButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    visualDensity: VisualDensity.compact),
               ),
             );
           }).toList(),
@@ -446,14 +526,20 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
 
   IconData _suitIcon(pedro.Suit suit) {
     switch (suit) {
-      case pedro.Suit.clubs: return Icons.circle;
-      case pedro.Suit.diamonds: return Icons.diamond;
-      case pedro.Suit.hearts: return Icons.favorite;
-      case pedro.Suit.spades: return Icons.architecture;
+      case pedro.Suit.clubs:
+        return Icons.circle;
+      case pedro.Suit.diamonds:
+        return Icons.diamond;
+      case pedro.Suit.hearts:
+        return Icons.favorite;
+      case pedro.Suit.spades:
+        return Icons.architecture;
     }
   }
-  
+
   Color _suitColor(pedro.Suit suit) {
-    return (suit == pedro.Suit.hearts || suit == pedro.Suit.diamonds) ? Colors.red : Colors.black;
+    return (suit == pedro.Suit.hearts || suit == pedro.Suit.diamonds)
+        ? Colors.red
+        : Colors.black;
   }
 }

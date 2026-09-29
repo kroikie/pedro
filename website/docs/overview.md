@@ -12,14 +12,18 @@
 - **Direct Player Invites:** Send game invitations straight to your friends' in-app inbox.
 
 ### 2. Interactive AI Companions
-- **Global AI Narrator:** An in-game announcer observes key moments—such as aggressive bids, key trumps played, and clutch scoring—delivering live commentary and humorous banter directly in the game chat.
+- **Global AI Narrator (Trinidad & Tobago Voice):** An in-game announcer observes key moments—such as aggressive bids, key trumps played, and clutch scoring—delivering live commentary and banter with an authentic, witty Trinidadian accent and cadence (featuring iconic expressions like *"Dat is ah brave bid!"*, *"Lardits!"*, *"Jah!"*, and *"Oh gosh! Arthur does play card for gramoxone!"*).
 - **Personal AI Coach:** 
   - **Bid Assistant:** Analyzes your hand during the Wadger phase and suggests competitive bid ranges with strategy tips.
   - **Tactical Insights:** Recommends optimal moves and highlights key remaining cards during gameplay to elevate your skills.
 
-### 3. User Profiles & Customization
+### 3. In-Game Social Interactions & Live Reactions
+- **Transient Chat Notifications:** When comments are posted by the AI Narrator or fellow players, a floating notification banner appears over the board for a few seconds before smoothly fading down into the collapsed Game Chat bar. Players never have to keep the chat open to stay connected with the banter.
+- **Quick Emoji Reactions:** Located directly beneath the player's card hand, a row of reaction emojis (`👏`, `🔥`, `😂`, `😱`, `🎉`, `👍`, `🤦‍♂️`) enables one-tap expressive reactions. Triggered emojis float gracefully up the game table in real time for all players to see, without cluttering the persistent chat log.
+
+### 4. User Profiles & Customization
 - **Quick Sign-In:** Sign in easily and jump straight into the action.
 - **Personalized Avatars:** Choose your player nickname and upload custom avatar images to represent yourself at the table.
 
-### 4. Adaptive & Accessible Design
+### 5. Adaptive & Accessible Design
 - Clean, intuitive interface with smooth animations, clear card visuals, and adaptive layouts tailored for phones, tablets, and web browsers.
