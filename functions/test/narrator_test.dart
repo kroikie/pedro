@@ -6,7 +6,7 @@ void main() {
     const testPlayer = 'arthur thompson';
 
     group('Point Events', () {
-      test('snatching the 9 of trumps matches exact Trinidadian phrasing with player name', () {
+      test('snatching the 9 matches exact Trinidadian phrasing with player name without trump suffix', () {
         final context = formatPointEventContext(
           playerName: testPlayer,
           pointType: '9',
@@ -14,7 +14,7 @@ void main() {
         );
         expect(
           context,
-          'Lardits! arthur thompson just snatch de 9 ah trump! arthur thompson does play card for gramoxone!',
+          'Lardits! arthur thompson just snatch de 9! arthur thompson does play card for gramoxone!',
         );
       });
 
@@ -40,7 +40,7 @@ void main() {
         );
       });
 
-      test('grabbing 5 of trumps includes player name', () {
+      test('grabbing 5 includes player name without trump suffix', () {
         final context = formatPointEventContext(
           playerName: testPlayer,
           pointType: '5',
@@ -48,17 +48,17 @@ void main() {
         );
         expect(
           context,
-          'arthur thompson grab de 5 ah trumps! 5 big points in de bag!',
+          'arthur thompson grab de 5! 5 big points in de bag!',
         );
       });
 
-      test('holding High and dropping Low trump includes player name', () {
+      test('holding High and dropping Low includes player name without trump suffixes', () {
         final high = formatPointEventContext(
           playerName: testPlayer,
           pointType: 'High',
           isStolen: false,
         );
-        expect(high, 'arthur thompson holding High trump point.');
+        expect(high, 'arthur thompson holding High.');
 
         final low = formatPointEventContext(
           playerName: testPlayer,
@@ -67,7 +67,7 @@ void main() {
         );
         expect(
           low,
-          'arthur thompson drop de lowest trump. 1 point safe even if lift lost!',
+          'arthur thompson drop low. 1 point safe even if lift lost!',
         );
       });
 
