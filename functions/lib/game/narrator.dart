@@ -117,13 +117,13 @@ String formatPointEventContext({
         ? 'Oh gosh! $playerName just hang de man Jack! Massive robbery on de table... $playerName does play card for gramoxone!'
         : '$playerName play and save dey own Jack for 1 point. Safe play.';
   } else if (pointType == '5') {
-    return '$playerName grab de 5 ah trumps! 5 big points in de bag!';
+    return '$playerName grab de 5! 5 big points in de bag!';
   } else if (pointType == '9') {
-    return 'Lardits! $playerName just snatch de 9 ah trump! $playerName does play card for gramoxone!';
+    return 'Lardits! $playerName just snatch de 9! $playerName does play card for gramoxone!';
   } else if (pointType == 'High') {
-    return '$playerName holding High trump point.';
+    return '$playerName holding High.';
   } else if (pointType == 'Low') {
-    return '$playerName drop de lowest trump. 1 point safe even if lift lost!';
+    return '$playerName drop low. 1 point safe even if lift lost!';
   }
   return '';
 }
@@ -150,8 +150,9 @@ Future<void> narratePointEvent(
           'Provide a short, 1-sentence witty reaction to this specific card game event. '
           'Key rules: '
           '- ALWAYS include the player\'s name ($playerName) in your comment. NEVER say "A player". '
-          '- When a player makes a clutch, fierce, or ruthless play (hanging a Jack, winning a crucial lift, taking the 9 of trumps, or scoring big points): ALWAYS comment that "Oh gosh! $playerName does play card for gramoxone!" or use "Lardits!" / "Jah!". '
+          '- When a player makes a clutch, fierce, or ruthless play (hanging a Jack, winning a crucial lift, taking the 9, or scoring big points): ALWAYS comment that "Oh gosh! $playerName does play card for gramoxone!" or use "Lardits!" / "Jah!". '
           '- If it is a "Hang Jack" event, treat it as a dramatic robbery on the table. '
+          '- Omit "trump point" or "trump" suffixes when referring to point cards (e.g. say "holding High", "drop low", "snatch de 9", or "grab de 5", NOT "High trump point", "lowest trump", or "9 ah trump"). '
           'Keep it spirited, humorous, and strictly 1 sentence.';
 
       final response = await ai.generate(
