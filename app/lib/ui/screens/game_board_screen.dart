@@ -24,6 +24,7 @@ class GameBoardScreen extends StatefulWidget {
   const GameBoardScreen({
     super.key,
     required this.gameId,
+    this.gameName,
     this.gameRepository,
     this.playerRepository,
     this.reactionRepository,
@@ -33,6 +34,7 @@ class GameBoardScreen extends StatefulWidget {
     this.currentUserId,
   });
   final String gameId;
+  final String? gameName;
   final GameRepository? gameRepository;
   final PlayerRepository? playerRepository;
   final ReactionRepository? reactionRepository;
@@ -157,13 +159,18 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
       mainAxisSize: MainAxisSize.min,
       children: [
         if (activeUid != null)
-          FutureBuilder<Player?>(
-            future: _getPlayer(activeUid),
-            builder: (context, snap) {
-              final name = snap.data?.screenName ?? 'player';
-              return Text('Waiting for $name...',
-                  style: const TextStyle(color: Colors.grey, fontSize: 12));
-            },
+          Flexible(
+            child: FutureBuilder<Player?>(
+              future: _getPlayer(activeUid),
+              builder: (context, snap) {
+                final name = snap.data?.screenName ?? 'player';
+                return Text(
+                  'Waiting for $name...',
+                  style: const TextStyle(color: Colors.grey, fontSize: 12),
+                  overflow: TextOverflow.ellipsis,
+                );
+              },
+            ),
           )
         else
           const Text('Waiting...',
@@ -294,10 +301,19 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
         _checkLiftCompletion(session.currentRound.currentLift);
         _checkSubmissionCompletion(session);
 
+        final gameTitle =
+            (session.name != null && session.name!.trim().isNotEmpty)
+                ? session.name!
+                : (widget.gameName != null && widget.gameName!.trim().isNotEmpty)
+                    ? widget.gameName!
+                    : 'Pedro';
+
         return Scaffold(
           appBar: AppBar(
-            title:
-                Text('Pedro: ${session.currentRound.phase.name.toUpperCase()}'),
+            title: Text(
+              gameTitle,
+              overflow: TextOverflow.ellipsis,
+            ),
             actions: [
               Builder(builder: (context) {
                 final round = session.currentRound;
@@ -381,46 +397,49 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
     Lift? lastLift,
   }) {
     if (lift == null || lift.plays.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: 0.03),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.grey.shade200),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'Waiting for plays...',
-              style: TextStyle(color: Colors.grey, fontSize: 12),
-            ),
-            if (lastLift != null && lastLift.plays.isNotEmpty) ...[
-              const SizedBox(height: 4),
-              InkWell(
-                onTap: () => _showPreviousLiftModal(context, lastLift, states),
-                borderRadius: BorderRadius.circular(8),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.history, size: 12, color: Colors.blueGrey.shade600),
-                      const SizedBox(width: 4),
-                      Text(
-                        'View Previous Trick',
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: Colors.blueGrey.shade700,
-                          fontWeight: FontWeight.w600,
+      return FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.03),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.grey.shade200),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Waiting for plays...',
+                style: TextStyle(color: Colors.grey, fontSize: 12),
+              ),
+              if (lastLift != null && lastLift.plays.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                InkWell(
+                  onTap: () => _showPreviousLiftModal(context, lastLift, states),
+                  borderRadius: BorderRadius.circular(8),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.history, size: 12, color: Colors.blueGrey.shade600),
+                        const SizedBox(width: 4),
+                        Text(
+                          'View Previous Trick',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: Colors.blueGrey.shade700,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
+              ],
             ],
-          ],
+          ),
         ),
       );
     }
@@ -430,8 +449,10 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
     final leadSuit = leadCard.suit;
     final isLiftComplete = lift.winnerId != null;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: isLiftComplete
             ? Colors.amber.withValues(alpha: 0.06)
@@ -675,6 +696,7 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
               ),
           ],
         ],
+        ),
       ),
     );
   }
@@ -831,8 +853,11 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
               initialData: _playerCache[playerState.uid],
               builder: (context, snap) {
                 final player = snap.data;
-                return Container(
-                  constraints: const BoxConstraints(maxWidth: 82),
+                return FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.center,
+                  child: Container(
+                    constraints: const BoxConstraints(maxWidth: 82),
                   padding:
                       const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
                   decoration: BoxDecoration(
@@ -912,8 +937,9 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                         _buildPointsChips(playerState.earnedPoints),
                     ],
                   ),
-                );
-              },
+                ),
+              );
+            },
             ),
           ),
         ),
@@ -990,62 +1016,68 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (isLocalBidder) ...[
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 4, vertical: 1),
-                          decoration: BoxDecoration(
-                            color: Colors.amber.shade100,
-                            borderRadius: BorderRadius.circular(4),
-                            border: Border.all(
-                                color: Colors.amber.shade800, width: 0.8),
-                          ),
-                          child: Text(
-                            'YOU BID ${round.bidValue}',
-                            style: TextStyle(
-                              fontSize: 8,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.amber.shade900,
+              Flexible(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (isLocalBidder) ...[
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 4, vertical: 1),
+                              decoration: BoxDecoration(
+                                color: Colors.amber.shade100,
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(
+                                    color: Colors.amber.shade800, width: 0.8),
+                              ),
+                              child: Text(
+                                'YOU BID ${round.bidValue}',
+                                style: TextStyle(
+                                  fontSize: 8,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.amber.shade900,
+                                ),
+                              ),
                             ),
-                          ),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Target: ${localState.currentRoundPoints} / ${round.bidValue} pts',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: localState.currentRoundPoints >=
+                                        round.bidValue
+                                    ? Colors.green.shade800
+                                    : Colors.orange.shade900,
+                              ),
+                            ),
+                            if (localState.currentRoundPoints >=
+                                round.bidValue) ...[
+                              const SizedBox(width: 2),
+                              Icon(Icons.check_circle,
+                                  size: 12, color: Colors.green.shade800),
+                            ],
+                          ],
                         ),
-                        const SizedBox(width: 4),
-                        Text(
-                          'Target: ${localState.currentRoundPoints} / ${round.bidValue} pts',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: localState.currentRoundPoints >=
-                                    round.bidValue
-                                ? Colors.green.shade800
-                                : Colors.orange.shade900,
-                          ),
-                        ),
-                        if (localState.currentRoundPoints >=
-                            round.bidValue) ...[
-                          const SizedBox(width: 2),
-                          Icon(Icons.check_circle,
-                              size: 12, color: Colors.green.shade800),
-                        ],
-                      ],
-                    ),
-                  ] else ...[
-                    Text('Points: ${localState.currentRoundPoints}',
-                        style:
-                            const TextStyle(fontSize: 11, color: Colors.blue)),
+                      ),
+                    ] else ...[
+                      Text('Points: ${localState.currentRoundPoints}',
+                          style:
+                              const TextStyle(fontSize: 11, color: Colors.blue)),
+                    ],
+                    _buildPointsChips(localState.earnedPoints),
+                    Text('Total: ${localState.totalScore}',
+                        style: const TextStyle(
+                            fontSize: 11, fontWeight: FontWeight.bold)),
                   ],
-                  _buildPointsChips(localState.earnedPoints),
-                  Text('Total: ${localState.totalScore}',
-                      style: const TextStyle(
-                          fontSize: 11, fontWeight: FontWeight.bold)),
-                ],
+                ),
               ),
+              const SizedBox(width: 8),
               if (isMyTurn)
                 Text(
                   _isReviewCooldownActive
@@ -1062,7 +1094,9 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                   ),
                 )
               else
-                _buildWaitingAndCallArea(session),
+                Flexible(
+                  child: _buildWaitingAndCallArea(session),
+                ),
             ],
           ),
           const SizedBox(height: 8),

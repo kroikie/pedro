@@ -64,7 +64,12 @@ class _GameRoomScreenState extends State<GameRoomScreen> {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => GameBoardScreen(gameId: widget.gameId)),
+              MaterialPageRoute(
+                builder: (context) => GameBoardScreen(
+                  gameId: widget.gameId,
+                  gameName: room.name,
+                ),
+              ),
             );
           });
         }

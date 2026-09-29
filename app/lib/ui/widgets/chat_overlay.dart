@@ -12,11 +12,13 @@ class ChatOverlay extends StatefulWidget {
     required this.gameId,
     this.chatRepository,
     this.playerRepository,
+    this.expandedHeight,
   });
 
   final String gameId;
   final ChatRepository? chatRepository;
   final PlayerRepository? playerRepository;
+  final double? expandedHeight;
 
   @override
   State<ChatOverlay> createState() => _ChatOverlayState();
@@ -207,11 +209,17 @@ class _ChatOverlayState extends State<ChatOverlay>
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.sizeOf(context).height;
+    final defaultExpandedHeight =
+        (screenHeight * 0.28).clamp(200.0, 260.0);
+    final effectiveExpandedHeight =
+        widget.expandedHeight ?? defaultExpandedHeight;
+
     return OverlayPortal(
       controller: _overlayPortalController,
       overlayChildBuilder: (context) {
         if (_activeToastMessage == null) return const SizedBox.shrink();
-        final bottomOffset = (_isExpanded ? 400.0 : 60.0) +
+        final bottomOffset = (_isExpanded ? effectiveExpandedHeight : 60.0) +
             12.0 +
             MediaQuery.paddingOf(context).bottom;
         return Positioned(
@@ -233,7 +241,7 @@ class _ChatOverlayState extends State<ChatOverlay>
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
-        height: _isExpanded ? 400 : 60,
+        height: _isExpanded ? effectiveExpandedHeight : 60,
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.9),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
@@ -289,7 +297,7 @@ class _ChatOverlayState extends State<ChatOverlay>
               Expanded(
                 child: LayoutBuilder(
                   builder: (context, constraints) {
-                    if (constraints.maxHeight < 60) {
+                    if (constraints.maxHeight < 100) {
                       return const SizedBox.shrink();
                     }
                     return Column(
