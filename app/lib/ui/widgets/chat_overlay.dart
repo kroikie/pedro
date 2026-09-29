@@ -298,9 +298,10 @@ class _ChatOverlayState extends State<ChatOverlay>
                           child: StreamBuilder<List<ChatMessage>>(
                             stream: _chatRepo.watchMessages(widget.gameId),
                             builder: (context, snapshot) {
-                              if (!snapshot.hasData)
+                              if (!snapshot.hasData) {
                                 return const Center(
                                     child: CircularProgressIndicator());
+                              }
                               final messages = snapshot.data!;
                               return ListView.builder(
                                 controller: _scrollController,

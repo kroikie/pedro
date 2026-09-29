@@ -152,5 +152,20 @@ void main() {
         }
       });
     });
+
+    group('Call Player Events', () {
+      test('fallbacks include both callerName and slowPlayerName with authentic Trini banter', () {
+        final fallbacks = getCallPlayerFallbacks('Alice', 'Bob');
+        expect(fallbacks, isNotEmpty);
+        for (final text in fallbacks) {
+          expect(text, contains('Alice'));
+          expect(text, contains('Bob'));
+        }
+        expect(
+          fallbacks,
+          contains('Aye Bob, yuh could stop eating for 2 seconds to play yuh know! Alice waiting on yuh!'),
+        );
+      });
+    });
   });
 }

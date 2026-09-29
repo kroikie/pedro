@@ -15,10 +15,13 @@ import 'package:google_fonts/google_fonts.dart';
 import 'data/repositories/player_repository.dart';
 import 'data/models/player.dart';
 import 'data/emulator_config.dart';
+import 'data/services/notification_service.dart';
 
 import 'ui/screens/auth_screen.dart';
 import 'ui/screens/profile_screen.dart';
 import 'ui/screens/home_screen.dart';
+
+final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -55,6 +58,8 @@ void main() async {
     GoogleProvider(clientId: '260654198138-u5jt4poqnr78d0sierk6e0r1pcikm8gf.apps.googleusercontent.com'),
   ]);
 
+  await NotificationService.instance.initialize(navigatorKey: rootNavigatorKey);
+
   runApp(const MyApp());
 }
 
@@ -64,6 +69,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: rootNavigatorKey,
       title: 'Pedro',
       theme: ThemeData(
         colorScheme: const ColorScheme(
@@ -226,6 +232,7 @@ class _AuthGateState extends State<AuthGate> {
         if (user == null) {
           _lastUid = null;
           _playerFuture = null;
+          NotificationService.instance.unregisterUserToken();
           return const AuthScreen();
         }
         
@@ -253,6 +260,7 @@ class _AuthGateState extends State<AuthGate> {
   Future<Player?> _initializePlayer(User user) async {
     final repo = PlayerRepository();
     try {
+      NotificationService.instance.registerUserToken(user.uid);
       final player = await repo.getPlayer(user.uid).timeout(const Duration(seconds: 5));
       if (player == null) {
         final newPlayer = Player(

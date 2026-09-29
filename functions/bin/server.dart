@@ -4,6 +4,7 @@ import 'package:firebase_admin_sdk/firebase_admin_sdk.dart';
 import 'package:functions/game/deck.dart';
 import 'package:functions/game/logic.dart';
 import 'package:functions/game/narrator.dart';
+import 'package:functions/game/messaging_helper.dart';
 
 Future<String> _getPlayerName(Firestore firestore, String? uid) async {
   if (uid == null) return 'Player';
@@ -79,6 +80,17 @@ void main(List<String> args) {
       await gameRef.update({
         'invitedPlayerIds': FieldValue.arrayUnion([targetPlayerId]),
       });
+
+      final hostName = await _getPlayerName(firestore, auth.uid);
+      final roomName = (gameData['name'] ?? 'Pedro') as String;
+      sendGameNotification(
+        adminApp: firebase.adminApp,
+        firestore: firestore,
+        recipientUids: [targetPlayerId],
+        title: 'Pedro: Game Invite',
+        body: '$hostName invited you to join $roomName!',
+        data: {'gameId': gameId, 'type': 'invite'},
+      ).catchError((e) => print('FCM error: $e'));
 
       return CallableResult({'success': true});
     });
@@ -232,6 +244,32 @@ void main(List<String> args) {
       };
 
       await gameRef.update(sessionData);
+
+      final roomName = (gameData['name'] ?? 'Pedro') as String;
+      final firstTurnIndex = (playerIds.indexOf(auth.uid) + 1) % playerIds.length;
+      final firstTurnPlayerId = playerIds[firstTurnIndex];
+
+      sendGameNotification(
+        adminApp: firebase.adminApp,
+        firestore: firestore,
+        recipientUids: [firstTurnPlayerId],
+        title: 'Pedro: Game Started!',
+        body: "It's your turn to bid in $roomName!",
+        data: {'gameId': gameId, 'type': 'turn'},
+      ).catchError((e) => print('FCM error: $e'));
+
+      final otherPlayerIds = playerIds.where((pid) => pid != firstTurnPlayerId && pid != auth.uid).toList();
+      if (otherPlayerIds.isNotEmpty) {
+        sendGameNotification(
+          adminApp: firebase.adminApp,
+          firestore: firestore,
+          recipientUids: otherPlayerIds,
+          title: 'Pedro: Game Started!',
+          body: '$roomName has started! Wager phase has begun.',
+          data: {'gameId': gameId, 'type': 'turn'},
+        ).catchError((e) => print('FCM error: $e'));
+      }
+
       return CallableResult({'success': true});
     });
 
@@ -318,6 +356,28 @@ void main(List<String> args) {
         ).catchError((e) => print('Narration error: $e'));
       }
 
+      final roomName = (gameData['name'] ?? 'Pedro') as String;
+      if (nextPhase == 'discarding' && newBidWinnerId != null) {
+        sendGameNotification(
+          adminApp: firebase.adminApp,
+          firestore: firestore,
+          recipientUids: [newBidWinnerId],
+          title: 'Pedro: You Won the Bid!',
+          body: 'Choose the trump suit in $roomName.',
+          data: {'gameId': gameId, 'type': 'turn'},
+        ).catchError((e) => print('FCM error: $e'));
+      } else if (nextPhase == 'wadger') {
+        final nextPlayerId = playerIds[nextTurnIndex];
+        sendGameNotification(
+          adminApp: firebase.adminApp,
+          firestore: firestore,
+          recipientUids: [nextPlayerId],
+          title: 'Pedro: Your Turn to Bid',
+          body: "It's your turn to place a bid in $roomName.",
+          data: {'gameId': gameId, 'type': 'turn'},
+        ).catchError((e) => print('FCM error: $e'));
+      }
+
       return CallableResult({'success': true});
     });
 
@@ -381,6 +441,19 @@ void main(List<String> args) {
         'currentRound.highTrumpPlayerId': null,
         'currentRound.lowTrumpPlayerId': null,
       });
+
+      final roomName = (gameData['name'] ?? 'Pedro') as String;
+      final otherPlayerIds = playerIds.where((pid) => pid != auth.uid).toList();
+      if (otherPlayerIds.isNotEmpty) {
+        sendGameNotification(
+          adminApp: firebase.adminApp,
+          firestore: firestore,
+          recipientUids: otherPlayerIds,
+          title: 'Pedro: Trump is ${suit.name.toUpperCase()}',
+          body: 'Play has begun in $roomName!',
+          data: {'gameId': gameId, 'type': 'turn'},
+        ).catchError((e) => print('FCM error: $e'));
+      }
 
       return CallableResult({'success': true});
     });
@@ -613,7 +686,14 @@ void main(List<String> args) {
             'currentRound.playedCards': playedCards,
           });
           await Future.delayed(const Duration(seconds: 4));
-          await finalizeRound(gameRef, gameData, playerStates, round);
+          await finalizeRound(
+            firebase.adminApp,
+            firestore,
+            gameRef,
+            gameData,
+            playerStates,
+            round,
+          );
           return CallableResult({'success': true});
         } else {
           nextTurnIndex = playerIds.indexOf(winnerId!);
@@ -636,12 +716,120 @@ void main(List<String> args) {
 
       await gameRef.update(updateData);
 
+      final roomName = (gameData['name'] ?? 'Pedro') as String;
+      final nextPlayerId = playerIds[nextTurnIndex];
+      if (nextPlayerId != auth.uid) {
+        final isNextTrickLead = plays.length == playerIds.length;
+        sendGameNotification(
+          adminApp: firebase.adminApp,
+          firestore: firestore,
+          recipientUids: [nextPlayerId],
+          title: isNextTrickLead ? 'Pedro: You Won the Trick!' : "Pedro: It's Your Turn",
+          body: isNextTrickLead
+              ? 'Lead the next card in $roomName.'
+              : 'Play a card in $roomName.',
+          data: {'gameId': gameId, 'type': 'turn'},
+        ).catchError((e) => print('FCM error: $e'));
+      }
+
       return CallableResult({'success': true});
+    });
+
+    // 9. call-player
+    firebase.https.onCall(name: 'call-player', (request, response) async {
+      final auth = request.auth;
+      if (auth == null) throw UnauthenticatedError('User must be logged in.');
+
+      final data = request.data as Map<String, dynamic>;
+      final gameId = data['gameId'] as String?;
+      if (gameId == null || gameId.isEmpty) {
+        throw InvalidArgumentError('Game ID is required.');
+      }
+
+      final firestore = firebase.adminApp.firestore();
+      final gameRef = firestore.collection('games').doc(gameId);
+      final gameDoc = await gameRef.get();
+      if (!gameDoc.exists) throw NotFoundError('Game not found.');
+
+      final gameData = gameDoc.data()!;
+      if (gameData['status'] != 'playing') {
+        throw FailedPreconditionError('Game is not currently active.');
+      }
+
+      final playerIds = List<String>.from(gameData['playerIds'] as Iterable);
+      if (!playerIds.contains(auth.uid)) {
+        throw PermissionDeniedError('You are not a player in this game.');
+      }
+
+      final round = gameData['currentRound'] as Map<String, dynamic>?;
+      if (round == null) throw FailedPreconditionError('No active round.');
+
+      final turnIndex = (round['turnIndex'] as num?)?.toInt() ?? 0;
+      if (turnIndex < 0 || turnIndex >= playerIds.length) {
+        throw FailedPreconditionError('Invalid turn state.');
+      }
+
+      final targetPlayerId = playerIds[turnIndex];
+      if (targetPlayerId == auth.uid) {
+        throw FailedPreconditionError('You cannot call yourself.');
+      }
+
+      // Check cooldown (30 seconds)
+      final lastCalledAt = round['lastCalledAt'];
+      if (lastCalledAt != null) {
+        DateTime? lastTime;
+        if (lastCalledAt is Timestamp) {
+          lastTime = lastCalledAt.toDate();
+        } else if (lastCalledAt is DateTime) {
+          lastTime = lastCalledAt;
+        } else if (lastCalledAt is String) {
+          lastTime = DateTime.tryParse(lastCalledAt);
+        }
+        if (lastTime != null) {
+          final diff = DateTime.now().toUtc().difference(lastTime.toUtc());
+          if (diff.inSeconds < 30) {
+            throw FailedPreconditionError(
+              'Please wait ${30 - diff.inSeconds} seconds before calling again.',
+            );
+          }
+        }
+      }
+
+      await gameRef.update({
+        'currentRound.lastCalledAt': FieldValue.serverTimestamp,
+      });
+
+      final callerName = await _getPlayerName(firestore, auth.uid);
+      final slowPlayerName = await _getPlayerName(firestore, targetPlayerId);
+
+      // Trigger AI Narrator in Trini dialect to generate banter & post to chat
+      final banter = await narrateCallPlayer(
+        gameId: gameId,
+        callerName: callerName,
+        slowPlayerName: slowPlayerName,
+      );
+
+      // Send high-priority FCM notification to the slow player
+      await sendGameNotification(
+        adminApp: firebase.adminApp,
+        firestore: firestore,
+        recipientUids: [targetPlayerId],
+        title: '⏰ Pedro: Play yuh card nah!',
+        body: banter,
+        data: {
+          'gameId': gameId,
+          'type': 'call',
+        },
+      );
+
+      return CallableResult({'success': true, 'banter': banter});
     });
   });
 }
 
 Future<void> finalizeRound(
+  FirebaseApp adminApp,
+  Firestore firestore,
   DocumentReference gameRef,
   Map<String, dynamic> gameData,
   List<Map<String, dynamic>> playerStates,
@@ -702,6 +890,20 @@ Future<void> finalizeRound(
       'currentRound.phase': 'finished',
       'winnerId': winner['uid'],
     });
+
+    final winnerUid = winner['uid'] as String;
+    final winnerName = await _getPlayerName(firestore, winnerUid);
+    final winnerScore = winner['totalScore'];
+    final roomName = (gameData['name'] ?? 'Pedro') as String;
+    final playerIds = List<String>.from(gameData['playerIds'] as Iterable);
+    sendGameNotification(
+      adminApp: adminApp,
+      firestore: firestore,
+      recipientUids: playerIds,
+      title: 'Pedro: Game Over!',
+      body: '$winnerName won $roomName with $winnerScore points!',
+      data: {'gameId': gameRef.id, 'type': 'game_over'},
+    ).catchError((e) => print('FCM error: $e'));
   } else {
     final playerIds = List<String>.from(gameData['playerIds'] as Iterable);
     final oldDealerId = round['dealerId'] as String;
@@ -759,5 +961,16 @@ Future<void> finalizeRound(
       'playedCards': [],
     };
     await gameRef.update({'currentRound': nextRound});
+
+    final firstBidderId = playerIds[(playerIds.indexOf(newDealerId) + 1) % playerIds.length];
+    final roomName = (gameData['name'] ?? 'Pedro') as String;
+    sendGameNotification(
+      adminApp: adminApp,
+      firestore: firestore,
+      recipientUids: [firstBidderId],
+      title: 'Pedro: New Round Started',
+      body: "It's your turn to bid in $roomName!",
+      data: {'gameId': gameRef.id, 'type': 'turn'},
+    ).catchError((e) => print('FCM error: $e'));
   }
 }

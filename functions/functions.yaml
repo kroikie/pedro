@@ -77,3 +77,12 @@ endpoints:
     command:
       - ./bin/server
     entryPoint: play-card
+  call-player:
+    platform: gcfv2
+    region:
+      - us-central1
+    callableTrigger: {}
+    baseImageUri: us-central1-docker.pkg.dev/serverless-runtimes/google-24/runtimes/osonly24
+    command:
+      - ./bin/server
+    entryPoint: call-player

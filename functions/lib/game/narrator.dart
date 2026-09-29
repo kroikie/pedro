@@ -199,3 +199,44 @@ Future<void> narratePlay(
 
   await postCommentary(gameId, text);
 }
+
+List<String> getCallPlayerFallbacks(String callerName, String slowPlayerName) => [
+  'Aye $slowPlayerName, yuh could stop eating for 2 seconds to play yuh know! $callerName waiting on yuh!',
+  'Lardits $slowPlayerName, yuh gone to buy doubles or what? Play de card nah, $callerName waiting!',
+  'Aye $slowPlayerName, yuh fall asleep on de table? Make ah move nah man, $callerName getting impatient!',
+  'Look $callerName calling yuh $slowPlayerName! Stop daydreaming and play yuh turn!',
+];
+
+Future<String> narrateCallPlayer({
+  required String gameId,
+  required String callerName,
+  required String slowPlayerName,
+}) async {
+  final fallbacks = getCallPlayerFallbacks(callerName, slowPlayerName);
+  String text =
+      fallbacks[DateTime.now().millisecondsSinceEpoch % fallbacks.length];
+
+  if (_geminiApiKey != null && _geminiApiKey!.isNotEmpty) {
+    try {
+      final ai = _getAi();
+      final prompt =
+          'You are a witty, lively card game narrator for Pedro speaking in an authentic Trinidad and Tobago (Trini) dialect, accent, and cadence. '
+          'Player "$callerName" just nudged/called "$slowPlayerName" because they are taking too long to play their turn. '
+          'Generate a short, 1-sentence witty banter tease addressed to $slowPlayerName in natural Trini dialect, '
+          'teasing them with a humorous suggestion of why they might be late (e.g. eating doubles or food, falling asleep, daydreaming, taking a lime break) '
+          'and telling them $callerName is waiting for them to play. '
+          'Keep it lighthearted, cheeky, and strictly 1 sentence.';
+
+      final response = await ai.generate(
+        model: googleAI.gemini('gemini-2.5-flash'),
+        prompt: prompt,
+      );
+      text = response.text.trim();
+    } catch (e) {
+      print('Gemini call player narration error: $e');
+    }
+  }
+
+  await postCommentary(gameId, text);
+  return text;
+}

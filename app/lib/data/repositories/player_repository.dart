@@ -38,4 +38,23 @@ class PlayerRepository {
   Stream<List<Player>> watchAllPlayers() {
     return _playersRef().snapshots().map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
   }
+
+  Future<void> addFcmToken(String uid, String token, String platform) async {
+    await _firestore.collection('users').doc(uid).set({
+      'fcmTokens': {
+        token: {
+          'platform': platform,
+          'updatedAt': FieldValue.serverTimestamp(),
+        },
+      },
+    }, SetOptions(merge: true));
+  }
+
+  Future<void> removeFcmToken(String uid, String token) async {
+    try {
+      await _firestore.collection('users').doc(uid).update({
+        'fcmTokens.$token': FieldValue.delete(),
+      });
+    } catch (_) {}
+  }
 }
