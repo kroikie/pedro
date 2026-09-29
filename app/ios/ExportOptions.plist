@@ -11,7 +11,7 @@
 		<key>provisioningProfiles</key>
 		<dict>
 			<key>com.ool.pedro</key>
-			<string>com.ool.pedro AdHoc</string>
+			<string>Pedro AdHoc Profile</string>
 		</dict>
 		<key>signingCertificate</key>
 		<string>Apple Distribution</string>
