@@ -20,6 +20,12 @@ service cloud.firestore {
         // User messages are added via repository sendMessage which uses Firestore directly
         allow write: if request.auth != null;
       }
+
+      match /reactions/{reactionId} {
+        allow read: if request.auth != null;
+        // Reactions are created directly by authenticated players
+        allow create: if request.auth != null && request.resource.data.senderId == request.auth.uid;
+      }
     }
   }
 }
