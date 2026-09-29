@@ -66,7 +66,6 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
-<<<<<<< Updated upstream
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
@@ -76,7 +75,5 @@
 		<string>fetch</string>
 		<string>remote-notification</string>
 	</array>
-=======
->>>>>>> Stashed changes
 </dict>
 </plist>
