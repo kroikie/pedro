@@ -19,6 +19,7 @@
 
 ### 3. In-Game Social Interactions & Live Reactions
 - **Transient Chat Notifications:** When comments are posted by the AI Narrator or fellow players, a floating notification banner appears over the board for a few seconds before smoothly fading down into the collapsed Game Chat bar. Players never have to keep the chat open to stay connected with the banter.
+- **Adaptive Game Chat Drawer:** When opened, the Game Chat expands with a screen-proportionate, responsive height that leaves ample room for the live card table. Card lift areas, player avatars, and interaction panels dynamically scale and adapt to prevent pixel overflow across all device viewports.
 - **Quick Emoji Reactions:** Located directly beneath the player's card hand, a row of reaction emojis (`👏`, `🔥`, `😂`, `😱`, `🎉`, `👍`, `🤦‍♂️`) enables one-tap expressive reactions. Triggered emojis float gracefully up the game table in real time for all players to see, without cluttering the persistent chat log.
 
 ### 4. Smart Notifications & "Call Player" (Nudge)
@@ -32,4 +33,5 @@
 
 ### 6. Adaptive & Accessible Design
 - Clean, intuitive interface with smooth animations, clear card visuals, and adaptive layouts tailored for phones, tablets, and web browsers.
+- **Dynamic Game Identification:** The navigation bar clearly presents the active game room's name with graceful text truncation, keeping game context prominent without encroaching on contract status indicators.
 - **Responsive Card Interactions & Debouncing:** Instant visual feedback (dimming and border emphasis) upon card selection, paired with proactive tap debouncing and server-side idempotency to eliminate accidental double-submissions and network race conditions.
