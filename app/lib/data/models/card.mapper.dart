@@ -238,18 +238,19 @@ class _CardCopyWithImpl<$R, $Out> extends ClassCopyWithBase<$R, Card, $Out>
   late final ClassMapperBase<Card> $mapper = CardMapper.ensureInitialized();
   @override
   $R call({Suit? suit, Rank? rank}) => $apply(
-        FieldCopyWithData({
-          if (suit != null) #suit: suit,
-          if (rank != null) #rank: rank,
-        }),
-      );
+    FieldCopyWithData({
+      if (suit != null) #suit: suit,
+      if (rank != null) #rank: rank,
+    }),
+  );
   @override
   Card $make(CopyWithData data) => Card(
-        suit: data.get(#suit, or: $value.suit),
-        rank: data.get(#rank, or: $value.rank),
-      );
+    suit: data.get(#suit, or: $value.suit),
+    rank: data.get(#rank, or: $value.rank),
+  );
 
   @override
   CardCopyWith<$R2, Card, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t) =>
       _CardCopyWithImpl<$R2, $Out2>($value, $cast, t);
 }
+

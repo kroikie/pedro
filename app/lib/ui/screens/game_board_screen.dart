@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart' hide Card;
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../data/repositories/game_repository.dart';
@@ -35,6 +36,37 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
   String? _moveSuggestion;
   bool _isAnalyzingMove = false;
   bool _isSubmittingCard = false;
+
+  String? _lastObservedWinnerId;
+  bool _isReviewCooldownActive = false;
+  Timer? _reviewCooldownTimer;
+
+  @override
+  void dispose() {
+    _reviewCooldownTimer?.cancel();
+    super.dispose();
+  }
+
+  void _checkLiftCompletion(Lift? lift) {
+    if (lift?.winnerId != null) {
+      if (_lastObservedWinnerId != lift!.winnerId) {
+        _lastObservedWinnerId = lift.winnerId;
+        _isReviewCooldownActive = true;
+        _reviewCooldownTimer?.cancel();
+        _reviewCooldownTimer = Timer(const Duration(milliseconds: 2500), () {
+          if (mounted) {
+            setState(() => _isReviewCooldownActive = false);
+          }
+        });
+      }
+    } else {
+      if (_lastObservedWinnerId != null) {
+        _lastObservedWinnerId = null;
+        _isReviewCooldownActive = false;
+        _reviewCooldownTimer?.cancel();
+      }
+    }
+  }
 
   Future<void> _analyzeHand(List<pedro.Card> hand) async {
     if (_bidSuggestion != null || _isAnalyzingHand) return;
@@ -77,6 +109,7 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
           return const Scaffold(
               body: Center(child: CircularProgressIndicator()));
         final session = snapshot.data!;
+        _checkLiftCompletion(session.currentRound.currentLift);
 
         return Scaffold(
           appBar: AppBar(
@@ -106,8 +139,11 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
                       child: Align(
                         alignment: const Alignment(0, 0.08),
-                        child: _buildLiftArea(session.currentRound.currentLift,
-                            session.playerStates),
+                        child: _buildLiftArea(
+                          session.currentRound.currentLift,
+                          session.playerStates,
+                          lastLift: session.currentRound.lastLift,
+                        ),
                       ),
                     ),
                     ..._buildPlayerPositions(session),
@@ -124,7 +160,11 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
     );
   }
 
-  Widget _buildLiftArea(Lift? lift, List<PlayerGameState> states) {
+  Widget _buildLiftArea(
+    Lift? lift,
+    List<PlayerGameState> states, {
+    Lift? lastLift,
+  }) {
     if (lift == null || lift.plays.isEmpty) {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -133,9 +173,39 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: Colors.grey.shade200),
         ),
-        child: const Text(
-          'Waiting for plays...',
-          style: TextStyle(color: Colors.grey, fontSize: 12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Waiting for plays...',
+              style: TextStyle(color: Colors.grey, fontSize: 12),
+            ),
+            if (lastLift != null && lastLift.plays.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              InkWell(
+                onTap: () => _showPreviousLiftModal(context, lastLift, states),
+                borderRadius: BorderRadius.circular(8),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.history, size: 12, color: Colors.blueGrey.shade600),
+                      const SizedBox(width: 4),
+                      Text(
+                        'View Previous Trick',
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: Colors.blueGrey.shade700,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ],
         ),
       );
     }
@@ -143,40 +213,81 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
     final orderedPlays = getOrderedLiftPlays(lift: lift, playerStates: states);
     final leadCard = lift.plays[lift.leadPlayerId] ?? orderedPlays.first.value;
     final leadSuit = leadCard.suit;
+    final isLiftComplete = lift.winnerId != null;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.03),
+        color: isLiftComplete
+            ? Colors.amber.withValues(alpha: 0.06)
+            : Colors.black.withValues(alpha: 0.03),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(
+          color: isLiftComplete ? Colors.amber.shade300 : Colors.grey.shade200,
+          width: isLiftComplete ? 1.5 : 1.0,
+        ),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Lead: ',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.grey.shade700,
+          if (isLiftComplete)
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.emoji_events, size: 14, color: Colors.amber),
+                const SizedBox(width: 4),
+                Text(
+                  'Lift Won by ',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey.shade800,
+                  ),
                 ),
-              ),
-              Icon(_suitIcon(leadSuit), size: 13, color: _suitColor(leadSuit)),
-              const SizedBox(width: 3),
-              Text(
-                leadSuit.name[0].toUpperCase() + leadSuit.name.substring(1),
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                  color: _suitColor(leadSuit),
+                FutureBuilder<Player?>(
+                  future: _playerRepo.getPlayer(lift.winnerId!),
+                  builder: (context, snap) => Text(
+                    snap.data?.screenName ?? '...',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.amber.shade900,
+                    ),
+                  ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            )
+          else
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Lead: ',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey.shade700,
+                  ),
+                ),
+                Icon(_suitIcon(leadSuit), size: 13, color: _suitColor(leadSuit)),
+                const SizedBox(width: 3),
+                Text(
+                  leadSuit.name[0].toUpperCase() + leadSuit.name.substring(1),
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: _suitColor(leadSuit),
+                  ),
+                ),
+                if (lastLift != null && lastLift.plays.isNotEmpty) ...[
+                  const SizedBox(width: 8),
+                  InkWell(
+                    onTap: () => _showPreviousLiftModal(context, lastLift, states),
+                    child: Icon(Icons.history, size: 14, color: Colors.blueGrey.shade400),
+                  ),
+                ],
+              ],
+            ),
           const SizedBox(height: 6),
           FittedBox(
             fit: BoxFit.scaleDown,
@@ -185,6 +296,7 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: orderedPlays.map((entry) {
                 final isLead = entry.key == lift.leadPlayerId;
+                final isWinner = entry.key == lift.winnerId;
                 return Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4.0),
                   child: Column(
@@ -194,12 +306,61 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                         clipBehavior: Clip.none,
                         alignment: Alignment.topCenter,
                         children: [
-                          CardWidget(
-                            card: entry.value,
-                            width: 52,
-                            height: 78,
+                          Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(6),
+                              boxShadow: isWinner
+                                  ? [
+                                      BoxShadow(
+                                        color: Colors.amber.withValues(alpha: 0.6),
+                                        blurRadius: 8,
+                                        spreadRadius: 2,
+                                      ),
+                                    ]
+                                  : null,
+                            ),
+                            child: CardWidget(
+                              card: entry.value,
+                              width: 52,
+                              height: 78,
+                            ),
                           ),
-                          if (isLead)
+                          if (isWinner)
+                            Positioned(
+                              top: -8,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 5, vertical: 1),
+                                decoration: BoxDecoration(
+                                  color: Colors.green.shade700,
+                                  borderRadius: BorderRadius.circular(4),
+                                  boxShadow: const [
+                                    BoxShadow(
+                                      color: Colors.black26,
+                                      blurRadius: 2,
+                                      offset: Offset(0, 1),
+                                    ),
+                                  ],
+                                ),
+                                child: const Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.star, size: 8, color: Colors.white),
+                                    SizedBox(width: 2),
+                                    Text(
+                                      'WINNER',
+                                      style: TextStyle(
+                                        fontSize: 8,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            )
+                          else if (isLead)
                             Positioned(
                               top: -8,
                               child: Container(
@@ -239,7 +400,8 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight:
-                                  isLead ? FontWeight.bold : FontWeight.normal,
+                                  (isWinner || isLead) ? FontWeight.bold : FontWeight.normal,
+                              color: isWinner ? Colors.amber.shade900 : null,
                             ),
                             overflow: TextOverflow.ellipsis,
                             textAlign: TextAlign.center,
@@ -252,8 +414,138 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
               }).toList(),
             ),
           ),
+          if (isLiftComplete) ...[
+            const SizedBox(height: 6),
+            if (_isReviewCooldownActive)
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: 10,
+                    height: 10,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.grey.shade600),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Reviewing lift...',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontStyle: FontStyle.italic,
+                      color: Colors.grey.shade700,
+                    ),
+                  ),
+                ],
+              )
+            else
+              FutureBuilder<Player?>(
+                future: _playerRepo.getPlayer(lift.winnerId!),
+                builder: (context, snap) {
+                  final winnerName = snap.data?.screenName ?? 'Winner';
+                  final isLocalWinner = lift.winnerId == _uid;
+                  final text = isLocalWinner
+                      ? 'You won the lift! Play a card to lead next.'
+                      : '$winnerName won the lift and leads next.';
+                  return Text(
+                    text,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: isLocalWinner ? Colors.green.shade800 : Colors.grey.shade700,
+                    ),
+                  );
+                },
+              ),
+          ],
         ],
       ),
+    );
+  }
+
+  void _showPreviousLiftModal(
+    BuildContext context,
+    Lift lastLift,
+    List<PlayerGameState> states,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) {
+        final orderedPlays = getOrderedLiftPlays(lift: lastLift, playerStates: states);
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Previous Trick',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                    ),
+                    if (lastLift.winnerId != null)
+                      FutureBuilder<Player?>(
+                        future: _playerRepo.getPlayer(lastLift.winnerId!),
+                        builder: (context, snap) => Text(
+                          'Won by ${snap.data?.screenName ?? '...'}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.amber.shade900,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: orderedPlays.map((entry) {
+                      final isWinner = entry.key == lastLift.winnerId;
+                      final isLead = entry.key == lastLift.leadPlayerId;
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 6.0),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            CardWidget(
+                              card: entry.value,
+                              width: 52,
+                              height: 78,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              isWinner ? '★ WINNER' : (isLead ? 'LEAD' : ''),
+                              style: TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.bold,
+                                color: isWinner ? Colors.green.shade700 : Colors.amber.shade800,
+                              ),
+                            ),
+                            FutureBuilder<Player?>(
+                              future: _playerRepo.getPlayer(entry.key),
+                              builder: (context, snap) => Text(
+                                snap.data?.screenName ?? '...',
+                                style: const TextStyle(fontSize: 10),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -444,11 +736,20 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                 ],
               ),
               if (isMyTurn)
-                const Text('YOUR TURN',
-                    style: TextStyle(
-                        color: Colors.green,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14))
+                Text(
+                  _isReviewCooldownActive
+                      ? 'REVIEWING LIFT...'
+                      : (round.currentLift?.winnerId != null
+                          ? 'YOUR TURN TO LEAD'
+                          : 'YOUR TURN'),
+                  style: TextStyle(
+                    color: _isReviewCooldownActive
+                        ? Colors.orange.shade800
+                        : Colors.green,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                )
               else
                 const Text('Waiting...',
                     style: TextStyle(color: Colors.grey, fontSize: 12)),
@@ -510,7 +811,9 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                   padding: const EdgeInsets.only(right: 6),
                   child: CardWidget(
                     card: card,
-                    onTap: (round.phase == RoundPhase.playing && isMyTurn)
+                    onTap: (round.phase == RoundPhase.playing &&
+                            isMyTurn &&
+                            !_isReviewCooldownActive)
                         ? () => _playCard(
                               card: card,
                               hand: localState.hand,

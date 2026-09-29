@@ -157,30 +157,29 @@ class _ChatMessageCopyWithImpl<$R, $Out>
     String? text,
     DateTime? timestamp,
     bool? isAi,
-  }) =>
-      $apply(
-        FieldCopyWithData({
-          if (id != null) #id: id,
-          if (senderId != null) #senderId: senderId,
-          if (senderName != null) #senderName: senderName,
-          if (text != null) #text: text,
-          if (timestamp != null) #timestamp: timestamp,
-          if (isAi != null) #isAi: isAi,
-        }),
-      );
+  }) => $apply(
+    FieldCopyWithData({
+      if (id != null) #id: id,
+      if (senderId != null) #senderId: senderId,
+      if (senderName != null) #senderName: senderName,
+      if (text != null) #text: text,
+      if (timestamp != null) #timestamp: timestamp,
+      if (isAi != null) #isAi: isAi,
+    }),
+  );
   @override
   ChatMessage $make(CopyWithData data) => ChatMessage(
-        id: data.get(#id, or: $value.id),
-        senderId: data.get(#senderId, or: $value.senderId),
-        senderName: data.get(#senderName, or: $value.senderName),
-        text: data.get(#text, or: $value.text),
-        timestamp: data.get(#timestamp, or: $value.timestamp),
-        isAi: data.get(#isAi, or: $value.isAi),
-      );
+    id: data.get(#id, or: $value.id),
+    senderId: data.get(#senderId, or: $value.senderId),
+    senderName: data.get(#senderName, or: $value.senderName),
+    text: data.get(#text, or: $value.text),
+    timestamp: data.get(#timestamp, or: $value.timestamp),
+    isAi: data.get(#isAi, or: $value.isAi),
+  );
 
   @override
   ChatMessageCopyWith<$R2, ChatMessage, $Out2> $chain<$R2, $Out2>(
     Then<$Out2, $R2> t,
-  ) =>
-      _ChatMessageCopyWithImpl<$R2, $Out2>($value, $cast, t);
+  ) => _ChatMessageCopyWithImpl<$R2, $Out2>($value, $cast, t);
 }
+

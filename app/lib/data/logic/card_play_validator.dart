@@ -34,7 +34,11 @@ MoveValidationResult validateCardPlay({
     return const MoveValidationResult.illegal('Card not in hand.');
   }
 
-  if (currentLift != null && currentLift.plays.isNotEmpty) {
+  // If the current lift has already been completed, the player is leading a new lift
+  // and can play any card from their hand.
+  final isCompletedLift = currentLift?.winnerId != null;
+
+  if (currentLift != null && currentLift.plays.isNotEmpty && !isCompletedLift) {
     final leadCard = currentLift.plays[currentLift.leadPlayerId] ??
         (currentLift.plays.isNotEmpty ? currentLift.plays.values.first : null);
 
