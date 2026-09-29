@@ -13,7 +13,7 @@ on:
       groups:
         description: 'Tester Groups (comma-separated)'
         required: false
-        default: 'beta-testers'
+        default: 'player-players'
 
 # Required permissions for Workload Identity Federation OIDC token minting and querying runners
 permissions:
@@ -151,7 +151,7 @@ jobs:
         run: |
           firebase appdistribution:distribute app/build/app/outputs/flutter-apk/app-release.apk \
             --app "1:260654198138:android:bd1ed81efcde0ad2527ac3" \
-            --groups "${{ github.event.inputs.groups || 'beta-testers' }}" \
+            --groups "${{ github.event.inputs.groups || 'player-players' }}" \
             --release-notes "${{ github.event.inputs.release_notes || github.event.head_commit.message || 'Beta Release' }}"
 
   distribute-ios:
@@ -297,7 +297,7 @@ jobs:
             echo "Running Fastlane iOS distribution with automated UDID & profile management..."
             cd app/ios
             bundle exec fastlane distribute_beta \
-              groups:"${{ github.event.inputs.groups || 'beta-testers' }}" \
+              groups:"${{ github.event.inputs.groups || 'player-players' }}" \
               release_notes:"${{ github.event.inputs.release_notes || github.event.head_commit.message || 'Beta Release' }}"
           else
             echo "Building iOS IPA..."
@@ -310,7 +310,7 @@ jobs:
             echo "Distributing directly via Firebase CLI..."
             firebase appdistribution:distribute build/ios/ipa/*.ipa \
               --app "1:260654198138:ios:605e1e7955b0fb52527ac3" \
-              --groups "${{ github.event.inputs.groups || 'beta-testers' }}" \
+              --groups "${{ github.event.inputs.groups || 'player-players' }}" \
               --release-notes "${{ github.event.inputs.release_notes || github.event.head_commit.message || 'Beta Release' }}"
           fi
 

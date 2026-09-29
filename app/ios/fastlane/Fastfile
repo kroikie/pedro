@@ -5,7 +5,7 @@ platform :ios do
   lane :distribute_beta do |options|
     app_id = "com.ool.pedro"
     firebase_app_id = "1:260654198138:ios:605e1e7955b0fb52527ac3"
-    target_groups = options[:groups] || "beta-testers"
+    target_groups = options[:groups] || "player-players"
     release_notes = options[:release_notes] || "Automated Fastlane Beta Build"
 
     # 1. Setup App Store Connect API Key if provided in environment
