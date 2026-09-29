@@ -15,7 +15,9 @@ class TacticalCoachService {
   }) async {
     try {
       final handStr = hand.map((c) => c.toString()).join(', ');
-      final liftStr = currentLift?.plays.values.map((c) => c.toString()).join(', ') ?? 'No cards played yet';
+      final liftStr = (currentLift?.winnerId != null)
+          ? 'No cards played yet (you are leading the lift)'
+          : (currentLift?.plays.values.map((c) => c.toString()).join(', ') ?? 'No cards played yet');
       final playedStr = playedCards.isEmpty ? 'None' : playedCards.map((c) => c.toString()).join(', ');
       final trumpStr = trumpSuit?.name ?? 'None';
 

@@ -88,5 +88,19 @@ void main() {
       );
       expect(winner, 'p1');
     });
+
+    test('ace of trumps beats nine and five of trumps', () {
+      final winner = evaluateLiftWinner(
+        plays: {
+          'p1': Card(suit: Suit.diamonds, rank: Rank.ace),
+          'p2': Card(suit: Suit.diamonds, rank: Rank.five),
+          'p3': Card(suit: Suit.diamonds, rank: Rank.nine),
+          'p4': Card(suit: Suit.diamonds, rank: Rank.king),
+        },
+        leadSuit: Suit.diamonds,
+        trumpSuit: Suit.diamonds,
+      );
+      expect(winner, 'p1');
+    });
   });
 }

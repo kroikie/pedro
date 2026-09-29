@@ -118,12 +118,13 @@ class _PlayerCopyWithImpl<$R, $Out> extends ClassCopyWithBase<$R, Player, $Out>
       );
   @override
   Player $make(CopyWithData data) => Player(
-        id: data.get(#id, or: $value.id),
-        screenName: data.get(#screenName, or: $value.screenName),
-        avatarUrl: data.get(#avatarUrl, or: $value.avatarUrl),
-      );
+    id: data.get(#id, or: $value.id),
+    screenName: data.get(#screenName, or: $value.screenName),
+    avatarUrl: data.get(#avatarUrl, or: $value.avatarUrl),
+  );
 
   @override
   PlayerCopyWith<$R2, Player, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t) =>
       _PlayerCopyWithImpl<$R2, $Out2>($value, $cast, t);
 }
+

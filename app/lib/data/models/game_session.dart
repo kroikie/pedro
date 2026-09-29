@@ -53,6 +53,7 @@ class RoundState with RoundStateMappable {
   final Suit? trumpSuit;
   final RoundPhase phase;
   final Lift? currentLift;
+  final Lift? lastLift;
   final List<Card> discardedCards;
   final List<Card> playedCards;
   final int turnIndex;
@@ -64,6 +65,7 @@ class RoundState with RoundStateMappable {
     this.trumpSuit,
     this.phase = RoundPhase.wadger,
     this.currentLift,
+    this.lastLift,
     this.discardedCards = const [],
     this.playedCards = const [],
     this.turnIndex = 0,

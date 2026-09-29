@@ -199,7 +199,7 @@ abstract class GameRoomCopyWith<$R, $In extends GameRoom, $Out>
     implements ClassCopyWith<$R, $In, $Out> {
   ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>> get playerIds;
   ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>>
-      get invitedPlayerIds;
+  get invitedPlayerIds;
   $R call({
     String? id,
     String? hostId,
@@ -230,11 +230,11 @@ class _GameRoomCopyWithImpl<$R, $Out>
       );
   @override
   ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>>
-      get invitedPlayerIds => ListCopyWith(
-            $value.invitedPlayerIds,
-            (v, t) => ObjectCopyWith(v, $identity, t),
-            (v) => call(invitedPlayerIds: v),
-          );
+  get invitedPlayerIds => ListCopyWith(
+    $value.invitedPlayerIds,
+    (v, t) => ObjectCopyWith(v, $identity, t),
+    (v) => call(invitedPlayerIds: v),
+  );
   @override
   $R call({
     String? id,
@@ -245,35 +245,33 @@ class _GameRoomCopyWithImpl<$R, $Out>
     List<String>? invitedPlayerIds,
     GameStatus? status,
     DateTime? createdAt,
-  }) =>
-      $apply(
-        FieldCopyWithData({
-          if (id != null) #id: id,
-          if (hostId != null) #hostId: hostId,
-          if (name != null) #name: name,
-          if (targetScore != null) #targetScore: targetScore,
-          if (playerIds != null) #playerIds: playerIds,
-          if (invitedPlayerIds != null) #invitedPlayerIds: invitedPlayerIds,
-          if (status != null) #status: status,
-          if (createdAt != null) #createdAt: createdAt,
-        }),
-      );
+  }) => $apply(
+    FieldCopyWithData({
+      if (id != null) #id: id,
+      if (hostId != null) #hostId: hostId,
+      if (name != null) #name: name,
+      if (targetScore != null) #targetScore: targetScore,
+      if (playerIds != null) #playerIds: playerIds,
+      if (invitedPlayerIds != null) #invitedPlayerIds: invitedPlayerIds,
+      if (status != null) #status: status,
+      if (createdAt != null) #createdAt: createdAt,
+    }),
+  );
   @override
   GameRoom $make(CopyWithData data) => GameRoom(
-        id: data.get(#id, or: $value.id),
-        hostId: data.get(#hostId, or: $value.hostId),
-        name: data.get(#name, or: $value.name),
-        targetScore: data.get(#targetScore, or: $value.targetScore),
-        playerIds: data.get(#playerIds, or: $value.playerIds),
-        invitedPlayerIds:
-            data.get(#invitedPlayerIds, or: $value.invitedPlayerIds),
-        status: data.get(#status, or: $value.status),
-        createdAt: data.get(#createdAt, or: $value.createdAt),
-      );
+    id: data.get(#id, or: $value.id),
+    hostId: data.get(#hostId, or: $value.hostId),
+    name: data.get(#name, or: $value.name),
+    targetScore: data.get(#targetScore, or: $value.targetScore),
+    playerIds: data.get(#playerIds, or: $value.playerIds),
+    invitedPlayerIds: data.get(#invitedPlayerIds, or: $value.invitedPlayerIds),
+    status: data.get(#status, or: $value.status),
+    createdAt: data.get(#createdAt, or: $value.createdAt),
+  );
 
   @override
   GameRoomCopyWith<$R2, GameRoom, $Out2> $chain<$R2, $Out2>(
     Then<$Out2, $R2> t,
-  ) =>
-      _GameRoomCopyWithImpl<$R2, $Out2>($value, $cast, t);
+  ) => _GameRoomCopyWithImpl<$R2, $Out2>($value, $cast, t);
 }
+

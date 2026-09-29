@@ -144,6 +144,30 @@ void main() {
       expect(result.isLegal, isTrue);
       expect(result.reason, isNull);
     });
+
+    test(
+        'allows leading any card in hand when current lift has winnerId (completed lift)',
+        () {
+      // Even though heartsAce was played in the completed lift, the winner can lead any card (e.g. spades)
+      const completedLift = Lift(
+        leadPlayerId: 'p1',
+        plays: {
+          'p1': cardHeartsAce,
+          'p2': cardHeartsTen,
+        },
+        winnerId: 'p1',
+      );
+      final result = validateCardPlay(
+        card: cardSpadesFive, // Leading a new trick with spades
+        hand: handWithHeartsAndTrump,
+        currentLift: completedLift,
+        trumpSuit: trumpSuit,
+        phase: RoundPhase.playing,
+        isMyTurn: true,
+      );
+      expect(result.isLegal, isTrue);
+      expect(result.reason, isNull);
+    });
   });
 
   group('getOrderedLiftPlays', () {

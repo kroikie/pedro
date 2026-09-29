@@ -148,28 +148,27 @@ class _GameReactionCopyWithImpl<$R, $Out>
     String? senderName,
     String? emoji,
     DateTime? timestamp,
-  }) =>
-      $apply(
-        FieldCopyWithData({
-          if (id != null) #id: id,
-          if (senderId != null) #senderId: senderId,
-          if (senderName != null) #senderName: senderName,
-          if (emoji != null) #emoji: emoji,
-          if (timestamp != null) #timestamp: timestamp,
-        }),
-      );
+  }) => $apply(
+    FieldCopyWithData({
+      if (id != null) #id: id,
+      if (senderId != null) #senderId: senderId,
+      if (senderName != null) #senderName: senderName,
+      if (emoji != null) #emoji: emoji,
+      if (timestamp != null) #timestamp: timestamp,
+    }),
+  );
   @override
   GameReaction $make(CopyWithData data) => GameReaction(
-        id: data.get(#id, or: $value.id),
-        senderId: data.get(#senderId, or: $value.senderId),
-        senderName: data.get(#senderName, or: $value.senderName),
-        emoji: data.get(#emoji, or: $value.emoji),
-        timestamp: data.get(#timestamp, or: $value.timestamp),
-      );
+    id: data.get(#id, or: $value.id),
+    senderId: data.get(#senderId, or: $value.senderId),
+    senderName: data.get(#senderName, or: $value.senderName),
+    emoji: data.get(#emoji, or: $value.emoji),
+    timestamp: data.get(#timestamp, or: $value.timestamp),
+  );
 
   @override
   GameReactionCopyWith<$R2, GameReaction, $Out2> $chain<$R2, $Out2>(
     Then<$Out2, $R2> t,
-  ) =>
-      _GameReactionCopyWithImpl<$R2, $Out2>($value, $cast, t);
+  ) => _GameReactionCopyWithImpl<$R2, $Out2>($value, $cast, t);
 }
+

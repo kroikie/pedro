@@ -419,9 +419,23 @@ void main(List<String> args) {
       final cardIndex = hand.indexWhere((c) => c.suit == card.suit && c.rank == card.rank);
       if (cardIndex == -1) throw InvalidArgumentError('Card not in hand.');
 
-      final currentLift = round['currentLift'] as Map<String, dynamic>;
-      final plays = Map<String, dynamic>.from(currentLift['plays'] as Map);
+      final currentLift = Map<String, dynamic>.from(round['currentLift'] as Map? ?? {});
+      var plays = Map<String, dynamic>.from(currentLift['plays'] as Map? ?? {});
       final trumpSuit = Suit.values.byName(round['trumpSuit'] as String);
+
+      // Check if previous lift completed and this play is the winner leading a new lift
+      final isNewLiftAfterCompletion = currentLift['winnerId'] != null ||
+          (plays.length == playerIds.length);
+
+      if (isNewLiftAfterCompletion) {
+        // Archive the completed lift to lastLift
+        round['lastLift'] = Map<String, dynamic>.from(currentLift);
+        // Reset currentLift for the new trick
+        currentLift['leadPlayerId'] = auth.uid;
+        currentLift['plays'] = <String, dynamic>{};
+        currentLift['winnerId'] = null;
+        plays = <String, dynamic>{};
+      }
 
       final isLeader = plays.isEmpty;
       if (!isLeader) {
@@ -440,6 +454,7 @@ void main(List<String> args) {
       playerState['hand'] = hand.map((c) => c.toJson()).toList();
       plays[auth.uid] = card.toJson();
       currentLift['plays'] = plays;
+      currentLift['leadPlayerId'] = currentLift['leadPlayerId'] ?? auth.uid;
 
       final playedCards = List<dynamic>.from(round['playedCards'] ?? []);
       playedCards.add(card.toJson());
@@ -587,17 +602,25 @@ void main(List<String> args) {
 
         final allHandsEmpty = playerStates.every((p) => (p['hand'] as Iterable).isEmpty);
         if (allHandsEmpty) {
+          await gameRef.update({
+            'currentRound.playerStates': playerStates,
+            'currentRound.currentLift': currentLift,
+            'currentRound.turnIndex': playerIds.indexOf(winnerId!),
+            'currentRound.highTrumpPlayerId': round['highTrumpPlayerId'],
+            'currentRound.highTrumpPlayedCard': round['highTrumpPlayedCard'],
+            'currentRound.lowTrumpPlayerId': round['lowTrumpPlayerId'],
+            'currentRound.lowTrumpPlayedCard': round['lowTrumpPlayedCard'],
+            'currentRound.playedCards': playedCards,
+          });
+          await Future.delayed(const Duration(seconds: 4));
           await finalizeRound(gameRef, gameData, playerStates, round);
           return CallableResult({'success': true});
         } else {
-          currentLift['leadPlayerId'] = winnerId;
-          currentLift['plays'] = {};
-          currentLift['winnerId'] = null;
           nextTurnIndex = playerIds.indexOf(winnerId!);
         }
       }
 
-      await gameRef.update({
+      final updateData = <String, dynamic>{
         'currentRound.playerStates': playerStates,
         'currentRound.currentLift': currentLift,
         'currentRound.turnIndex': nextTurnIndex,
@@ -606,7 +629,12 @@ void main(List<String> args) {
         'currentRound.lowTrumpPlayerId': round['lowTrumpPlayerId'],
         'currentRound.lowTrumpPlayedCard': round['lowTrumpPlayedCard'],
         'currentRound.playedCards': playedCards,
-      });
+      };
+      if (round['lastLift'] != null) {
+        updateData['currentRound.lastLift'] = round['lastLift'];
+      }
+
+      await gameRef.update(updateData);
 
       return CallableResult({'success': true});
     });
