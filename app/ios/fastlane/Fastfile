@@ -1,0 +1,109 @@
+default_platform(:ios)
+
+platform :ios do
+  desc "Sync UDIDs from Firebase, regenerate Ad-Hoc profile, build IPA, and distribute"
+  lane :distribute_beta do |options|
+    app_id = "com.ool.pedro"
+    firebase_app_id = "1:260654198138:ios:605e1e7955b0fb52527ac3"
+    target_groups = options[:groups] || "beta-testers"
+    release_notes = options[:release_notes] || "Automated Fastlane Beta Build"
+
+    # 1. Setup App Store Connect API Key if provided in environment
+    api_key = nil
+    if ENV["APP_STORE_CONNECT_API_KEY_ID"] && ENV["APP_STORE_CONNECT_API_ISSUER_ID"] && ENV["APP_STORE_CONNECT_API_KEY_CONTENT"]
+      UI.message("Authenticating with App Store Connect API Key...")
+      api_key = app_store_connect_api_key(
+        key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
+        issuer_id: ENV["APP_STORE_CONNECT_API_ISSUER_ID"],
+        key_content: ENV["APP_STORE_CONNECT_API_KEY_CONTENT"],
+        is_key_content_base64: false,
+        in_house: false
+      )
+    end
+
+    # 2. Automatically download tester UDIDs from Firebase and sync to Apple Developer Portal
+    if api_key
+      begin
+        downloaded_testers_file = File.expand_path("../downloaded_testers.txt", __dir__)
+        UI.message("Fetching latest tester UDIDs from Firebase App Distribution...")
+        get_udids_args = {
+          app: firebase_app_id,
+          output_file: downloaded_testers_file
+        }
+        if ENV["GOOGLE_APPLICATION_CREDENTIALS"] && File.exist?(ENV["GOOGLE_APPLICATION_CREDENTIALS"])
+          get_udids_args[:service_credentials_file] = ENV["GOOGLE_APPLICATION_CREDENTIALS"]
+        end
+
+        firebase_app_distribution_get_udids(get_udids_args)
+
+        if File.exist?(downloaded_testers_file) && File.size(downloaded_testers_file) > 0
+          UI.message("Syncing downloaded tester UDIDs to Apple Developer Portal...")
+          register_devices(
+            api_key: api_key,
+            devices_file: downloaded_testers_file
+          )
+        end
+      rescue => e
+        UI.important("Notice: Could not auto-download Firebase UDIDs: #{e.message}. Continuing with existing registered devices.")
+      end
+    end
+
+    # 3. Always fetch latest devices and regenerate the Ad-Hoc Provisioning Profile
+    if api_key
+      UI.message("Fetching latest devices and regenerating Ad-Hoc Profile for #{app_id}...")
+      sigh(
+        api_key: api_key,
+        app_identifier: app_id,
+        provisioning_name: "com.ool.pedro AdHoc",
+        adhoc: true,
+        force: true
+      )
+    end
+
+    # 4. Build the Flutter iOS App and create the signed Ad-Hoc IPA
+    UI.message("Building iOS IPA via Flutter...")
+    build_args = []
+    build_args << "--build-name=#{ENV['VERSION_NAME']}" if ENV['VERSION_NAME']
+    build_args << "--build-number=#{ENV['BUILD_NUMBER']}" if ENV['BUILD_NUMBER']
+
+    flutter_app_dir = File.expand_path("../..", __dir__)
+
+    sh("cd '#{flutter_app_dir}' && flutter pub get && flutter build ipa --release --export-options-plist=ios/ExportOptions.plist #{build_args.join(' ')}")
+
+    ipa_path = Dir.glob(File.expand_path("../../build/ios/ipa/*.ipa", __dir__)).first ||
+               Dir.glob(File.expand_path("../../../build/ios/ipa/*.ipa", __dir__)).first ||
+               Dir.glob(File.expand_path("../build/ios/ipa/*.ipa", __dir__)).first
+
+    UI.user_error!("No IPA file found after build") unless ipa_path && File.exist?(ipa_path)
+
+    # 5. Distribute to Firebase App Distribution
+    UI.message("Distributing #{ipa_path} to Firebase App Distribution...")
+    xdg_env = ENV["RUNNER_TEMP"] ? "XDG_CONFIG_HOME='#{ENV['RUNNER_TEMP']}' " : ""
+    if ENV["GOOGLE_APPLICATION_CREDENTIALS"] && File.exist?(ENV["GOOGLE_APPLICATION_CREDENTIALS"])
+      max_attempts = 3
+      attempts = 0
+      begin
+        attempts += 1
+        firebase_app_distribution(
+          app: firebase_app_id,
+          groups: target_groups,
+          release_notes: release_notes,
+          ipa_path: ipa_path,
+          service_credentials_file: ENV["GOOGLE_APPLICATION_CREDENTIALS"]
+        )
+      rescue => e
+        if attempts < max_attempts && (e.message.include?("timed out") || e.message.include?("SSL") || e.message.include?("timeout") || e.message.include?("Connection"))
+          UI.important("Notice: Fastlane plugin encountered network issue (#{e.message}). Retrying upload (attempt #{attempts + 1}/#{max_attempts})...")
+          sleep(5)
+          retry
+        end
+        UI.important("Notice: Fastlane plugin failed (#{e.message}). Falling back to Firebase CLI...")
+        sh("#{xdg_env}firebase appdistribution:distribute '#{ipa_path}' --app #{firebase_app_id} --groups '#{target_groups}' --release-notes '#{release_notes}'")
+      end
+    else
+      sh("#{xdg_env}firebase appdistribution:distribute '#{ipa_path}' --app #{firebase_app_id} --groups '#{target_groups}' --release-notes '#{release_notes}'")
+    end
+
+    UI.success("✅ Successfully built and distributed iOS Beta via Fastlane!")
+  end
+end
