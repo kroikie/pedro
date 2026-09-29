@@ -5,6 +5,17 @@ import 'package:functions/game/deck.dart';
 import 'package:functions/game/logic.dart';
 import 'package:functions/game/narrator.dart';
 
+Future<String> _getPlayerName(Firestore firestore, String? uid) async {
+  if (uid == null) return 'Player';
+  try {
+    final userDoc = await firestore.collection('users').doc(uid).get();
+    final userData = userDoc.data();
+    return (userData?['screenName'] ?? userData?['displayName'] ?? 'Player') as String;
+  } catch (_) {
+    return 'Player';
+  }
+}
+
 void main(List<String> args) {
   FirebaseApp.initializeApp();
 
@@ -295,10 +306,7 @@ void main(List<String> args) {
         'currentRound.playerStates': playerStates,
       });
 
-      final userDoc = await firestore.collection('users').doc(auth.uid).get();
-      final userData = userDoc.data();
-      final playerName =
-          (userData?['screenName'] ?? userData?['displayName'] ?? "A player") as String;
+      final playerName = await _getPlayerName(firestore, auth.uid);
 
       final shouldNarrate = bid != null || (newConsecutivePasses == 1 || nextPhase != 'wadger');
       if (shouldNarrate) {
@@ -459,12 +467,14 @@ void main(List<String> args) {
           )..add('High');
           round['highTrumpPlayerId'] = auth.uid;
           round['highTrumpPlayedCard'] = card.toJson();
-          narratePointEvent(
-            gameId,
-            "A player",
-            "High",
-            false,
-          ).catchError((e) => print('Narration error: $e'));
+          _getPlayerName(firestore, auth.uid).then((name) {
+            narratePointEvent(
+              gameId,
+              name,
+              "High",
+              false,
+            ).catchError((e) => print('Narration error: $e'));
+          });
         }
 
         // Low Trump logic
@@ -488,12 +498,14 @@ void main(List<String> args) {
           )..add('Low');
           round['lowTrumpPlayerId'] = auth.uid;
           round['lowTrumpPlayedCard'] = card.toJson();
-          narratePointEvent(
-            gameId,
-            "A player",
-            "Low",
-            false,
-          ).catchError((e) => print('Narration error: $e'));
+          _getPlayerName(firestore, auth.uid).then((name) {
+            narratePointEvent(
+              gameId,
+              name,
+              "Low",
+              false,
+            ).catchError((e) => print('Narration error: $e'));
+          });
         }
       }
 
@@ -516,6 +528,8 @@ void main(List<String> args) {
         final winnerState = playerStates.firstWhere((p) => p['uid'] == winnerId);
         int liftPoints = 0;
 
+        final winnerName = await _getPlayerName(firestore, winnerId);
+
         for (final entry in typedPlays.entries) {
           final pId = entry.key;
           final playedCard = entry.value;
@@ -528,7 +542,7 @@ void main(List<String> args) {
               )..add('5');
               narratePointEvent(
                 gameId,
-                "A player",
+                winnerName,
                 "5",
                 false,
               ).catchError((e) => print('Narration error: $e'));
@@ -540,7 +554,7 @@ void main(List<String> args) {
               )..add('9');
               narratePointEvent(
                 gameId,
-                "A player",
+                winnerName,
                 "9",
                 false,
               ).catchError((e) => print('Narration error: $e'));
@@ -553,7 +567,7 @@ void main(List<String> args) {
               )..add(isStolen ? 'Hang Jack' : 'Jack');
               narratePointEvent(
                 gameId,
-                "A player",
+                winnerName,
                 "Jack",
                 isStolen,
               ).catchError((e) => print('Narration error: $e'));
