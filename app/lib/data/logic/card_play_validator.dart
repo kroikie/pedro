@@ -53,3 +53,40 @@ MoveValidationResult validateCardPlay({
 
   return const MoveValidationResult.legal();
 }
+
+/// Returns the cards played in the [lift] ordered chronologically according to the
+/// table seating order in [playerStates], starting with the [Lift.leadPlayerId].
+List<MapEntry<String, Card>> getOrderedLiftPlays({
+  required Lift lift,
+  required List<PlayerGameState> playerStates,
+}) {
+  if (lift.plays.isEmpty) return const [];
+
+  final leadIndex = playerStates.indexWhere((p) => p.uid == lift.leadPlayerId);
+  if (leadIndex != -1) {
+    final ordered = <MapEntry<String, Card>>[];
+    for (int i = 0; i < playerStates.length; i++) {
+      final uid = playerStates[(leadIndex + i) % playerStates.length].uid;
+      if (lift.plays.containsKey(uid)) {
+        ordered.add(MapEntry(uid, lift.plays[uid]!));
+      }
+    }
+    // Append any extra plays if they weren't in playerStates
+    for (final entry in lift.plays.entries) {
+      if (!ordered.any((e) => e.key == entry.key)) {
+        ordered.add(entry);
+      }
+    }
+    return ordered;
+  }
+
+  // Fallback: put lead player first if present
+  final entries = lift.plays.entries.toList();
+  if (lift.plays.containsKey(lift.leadPlayerId)) {
+    final leadEntry =
+        MapEntry(lift.leadPlayerId, lift.plays[lift.leadPlayerId]!);
+    entries.removeWhere((e) => e.key == lift.leadPlayerId);
+    entries.insert(0, leadEntry);
+  }
+  return entries;
+}

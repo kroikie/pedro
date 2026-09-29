@@ -102,9 +102,13 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
               Expanded(
                 child: Stack(
                   children: [
-                    Center(
-                      child: _buildLiftArea(session.currentRound.currentLift,
-                          session.playerStates),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Align(
+                        alignment: const Alignment(0, 0.08),
+                        child: _buildLiftArea(session.currentRound.currentLift,
+                            session.playerStates),
+                      ),
                     ),
                     ..._buildPlayerPositions(session),
                     FloatingReactionsOverlay(gameId: widget.gameId),
@@ -121,26 +125,135 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
   }
 
   Widget _buildLiftArea(Lift? lift, List<PlayerGameState> states) {
-    if (lift == null || lift.plays.isEmpty)
-      return const Text('Waiting for plays...',
-          style: TextStyle(color: Colors.grey));
-    return Wrap(
-      spacing: 12,
-      runSpacing: 12,
-      children: lift.plays.entries.map((entry) {
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            CardWidget(card: entry.value),
-            const SizedBox(height: 4),
-            FutureBuilder<Player?>(
-              future: _playerRepo.getPlayer(entry.key),
-              builder: (context, snap) => Text(snap.data?.screenName ?? '...',
-                  style: const TextStyle(fontSize: 10)),
+    if (lift == null || lift.plays.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.03),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey.shade200),
+        ),
+        child: const Text(
+          'Waiting for plays...',
+          style: TextStyle(color: Colors.grey, fontSize: 12),
+        ),
+      );
+    }
+
+    final orderedPlays = getOrderedLiftPlays(lift: lift, playerStates: states);
+    final leadCard = lift.plays[lift.leadPlayerId] ?? orderedPlays.first.value;
+    final leadSuit = leadCard.suit;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Lead: ',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey.shade700,
+                ),
+              ),
+              Icon(_suitIcon(leadSuit), size: 13, color: _suitColor(leadSuit)),
+              const SizedBox(width: 3),
+              Text(
+                leadSuit.name[0].toUpperCase() + leadSuit.name.substring(1),
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: _suitColor(leadSuit),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: orderedPlays.map((entry) {
+                final isLead = entry.key == lift.leadPlayerId;
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Stack(
+                        clipBehavior: Clip.none,
+                        alignment: Alignment.topCenter,
+                        children: [
+                          CardWidget(
+                            card: entry.value,
+                            width: 52,
+                            height: 78,
+                          ),
+                          if (isLead)
+                            Positioned(
+                              top: -8,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 5, vertical: 1),
+                                decoration: BoxDecoration(
+                                  color: Colors.amber.shade800,
+                                  borderRadius: BorderRadius.circular(4),
+                                  boxShadow: const [
+                                    BoxShadow(
+                                      color: Colors.black26,
+                                      blurRadius: 2,
+                                      offset: Offset(0, 1),
+                                    ),
+                                  ],
+                                ),
+                                child: const Text(
+                                  'LEAD',
+                                  style: TextStyle(
+                                    fontSize: 8,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 60),
+                        child: FutureBuilder<Player?>(
+                          future: _playerRepo.getPlayer(entry.key),
+                          builder: (context, snap) => Text(
+                            snap.data?.screenName ?? '...',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight:
+                                  isLead ? FontWeight.bold : FontWeight.normal,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
             ),
-          ],
-        );
-      }).toList(),
+          ),
+        ],
+      ),
     );
   }
 
@@ -154,36 +267,40 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
     final numPlayers = states.length;
 
     final Map<int, List<Alignment>> layouts = {
-      4: [Alignment.centerRight, Alignment.topCenter, Alignment.centerLeft],
+      4: [
+        const Alignment(0.92, -0.3),
+        const Alignment(0.0, -0.92),
+        const Alignment(-0.92, -0.3),
+      ],
       5: [
-        Alignment.centerRight,
-        Alignment.topRight,
-        Alignment.topLeft,
-        Alignment.centerLeft
+        const Alignment(0.92, -0.15),
+        const Alignment(0.65, -0.88),
+        const Alignment(-0.65, -0.88),
+        const Alignment(-0.92, -0.15),
       ],
       6: [
-        Alignment.centerRight,
-        Alignment.topRight,
-        Alignment.topCenter,
-        Alignment.topLeft,
-        Alignment.centerLeft
+        const Alignment(0.92, -0.15),
+        const Alignment(0.65, -0.88),
+        const Alignment(0.0, -0.92),
+        const Alignment(-0.65, -0.88),
+        const Alignment(-0.92, -0.15),
       ],
       7: [
-        Alignment.bottomRight,
-        Alignment.centerRight,
-        Alignment.topRight,
-        Alignment.topLeft,
-        Alignment.centerLeft,
-        Alignment.bottomLeft
+        const Alignment(0.92, 0.3),
+        const Alignment(0.92, -0.35),
+        const Alignment(0.55, -0.88),
+        const Alignment(-0.55, -0.88),
+        const Alignment(-0.92, -0.35),
+        const Alignment(-0.92, 0.3),
       ],
       8: [
-        Alignment.bottomRight,
-        Alignment.centerRight,
-        Alignment.topRight,
-        Alignment.topCenter,
-        Alignment.topLeft,
-        Alignment.centerLeft,
-        Alignment.bottomLeft
+        const Alignment(0.92, 0.3),
+        const Alignment(0.92, -0.35),
+        const Alignment(0.55, -0.88),
+        const Alignment(0.0, -0.92),
+        const Alignment(-0.55, -0.88),
+        const Alignment(-0.92, -0.35),
+        const Alignment(-0.92, 0.3),
       ],
     };
 
@@ -199,13 +316,15 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
         Align(
           alignment: alignment,
           child: Padding(
-            padding: const EdgeInsets.all(12.0),
+            padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 8.0),
             child: FutureBuilder<Player?>(
               future: _playerRepo.getPlayer(playerState.uid),
               builder: (context, snap) {
                 final player = snap.data;
                 return Container(
-                  padding: const EdgeInsets.all(6),
+                  constraints: const BoxConstraints(maxWidth: 82),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
                   decoration: BoxDecoration(
                     color: isHisTurn
                         ? Colors.green.withValues(alpha: 0.1)
@@ -221,12 +340,14 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      AvatarWidget(avatarUrl: player?.avatarUrl, radius: 20),
+                      AvatarWidget(avatarUrl: player?.avatarUrl, radius: 18),
+                      const SizedBox(height: 2),
                       Text(
                         player?.screenName ?? '...',
                         style: const TextStyle(
                             fontWeight: FontWeight.bold, fontSize: 11),
                         overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
                       ),
                       Text('Score: ${playerState.totalScore}',
                           style: const TextStyle(
