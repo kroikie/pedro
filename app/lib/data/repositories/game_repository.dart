@@ -17,12 +17,16 @@ class GameRepository {
     return _firestore.collection('games').doc(gameId).snapshots().map((doc) {
       if (!doc.exists) return null;
       final data = doc.data()!;
+      final roundData = Map<String, dynamic>.from(data['currentRound'] as Map);
+      if (roundData['lastCalledAt'] != null && roundData['lastCalledAt'] is Timestamp) {
+        roundData['lastCalledAt'] = (roundData['lastCalledAt'] as Timestamp).toDate().toIso8601String();
+      }
       
       return GameSession.fromMap({
         'gameId': doc.id,
         ...data,
-        'playerStates': data['currentRound']['playerStates'],
-        'currentRound': data['currentRound'],
+        'playerStates': roundData['playerStates'],
+        'currentRound': roundData,
       });
     });
   }
@@ -49,6 +53,12 @@ class GameRepository {
     await _functions.httpsCallable('play-card').call({
       'gameId': gameId,
       'card': card.toMap(),
+    });
+  }
+
+  Future<void> callPlayer(String gameId) async {
+    await _functions.httpsCallable('call-player').call({
+      'gameId': gameId,
     });
   }
 }

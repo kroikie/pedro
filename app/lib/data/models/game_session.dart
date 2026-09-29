@@ -57,6 +57,7 @@ class RoundState with RoundStateMappable {
   final List<Card> discardedCards;
   final List<Card> playedCards;
   final int turnIndex;
+  final DateTime? lastCalledAt;
 
   const RoundState({
     required this.dealerId,
@@ -69,6 +70,7 @@ class RoundState with RoundStateMappable {
     this.discardedCards = const [],
     this.playedCards = const [],
     this.turnIndex = 0,
+    this.lastCalledAt,
   });
 
   static const fromMap = RoundStateMapper.fromMap;

@@ -14,6 +14,7 @@ import '../widgets/floating_reactions_overlay.dart';
 import '../widgets/bid_status_widget.dart';
 import '../../data/services/bid_assistant_service.dart';
 import '../../data/services/tactical_coach_service.dart';
+import '../../data/services/notification_service.dart';
 import '../../data/logic/card_play_validator.dart';
 
 class GameBoardScreen extends StatefulWidget {
@@ -55,10 +56,121 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
   bool _isReviewCooldownActive = false;
   Timer? _reviewCooldownTimer;
 
+  bool _isCallingPlayer = false;
+  Timer? _callCooldownTicker;
+
+  @override
+  void initState() {
+    super.initState();
+    NotificationService.instance.setActiveGame(widget.gameId);
+  }
+
   @override
   void dispose() {
+    NotificationService.instance.setActiveGame(null);
     _reviewCooldownTimer?.cancel();
+    _callCooldownTicker?.cancel();
     super.dispose();
+  }
+
+  void _ensureCooldownTicker() {
+    if (_callCooldownTicker != null && _callCooldownTicker!.isActive) return;
+    _callCooldownTicker = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (mounted) {
+        setState(() {});
+      } else {
+        timer.cancel();
+      }
+    });
+  }
+
+  Future<void> _callCurrentPlayer(GameSession session) async {
+    if (_isCallingPlayer) return;
+    setState(() => _isCallingPlayer = true);
+    try {
+      await _gameRepo.callPlayer(widget.gameId);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Nudge sent! AI Narrator is calling the player.'),
+            duration: Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Could not call player: $e'),
+            duration: const Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isCallingPlayer = false);
+      }
+    }
+  }
+
+  Widget _buildWaitingAndCallArea(GameSession session) {
+    final round = session.currentRound;
+    final activeIndex = round.turnIndex;
+    final activeUid = (activeIndex >= 0 && activeIndex < session.playerStates.length)
+        ? session.playerStates[activeIndex].uid
+        : null;
+
+    int cooldownRemaining = 0;
+    if (round.lastCalledAt != null) {
+      final diff = DateTime.now().toUtc().difference(round.lastCalledAt!.toUtc());
+      if (diff.inSeconds < 30) {
+        cooldownRemaining = 30 - diff.inSeconds;
+        _ensureCooldownTicker();
+      }
+    }
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (activeUid != null)
+          FutureBuilder<Player?>(
+            future: _getPlayer(activeUid),
+            builder: (context, snap) {
+              final name = snap.data?.screenName ?? 'player';
+              return Text('Waiting for $name...',
+                  style: const TextStyle(color: Colors.grey, fontSize: 12));
+            },
+          )
+        else
+          const Text('Waiting...',
+              style: TextStyle(color: Colors.grey, fontSize: 12)),
+        const SizedBox(width: 8),
+        if (session.currentRound.phase != RoundPhase.finished && activeUid != null && activeUid != _uid)
+          cooldownRemaining > 0
+              ? OutlinedButton.icon(
+                  onPressed: null,
+                  icon: const Icon(Icons.notifications_paused, size: 13),
+                  label: Text('Called (${cooldownRemaining}s)',
+                      style: const TextStyle(fontSize: 10)),
+                  style: OutlinedButton.styleFrom(
+                    visualDensity: VisualDensity.compact,
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 0),
+                  ),
+                )
+              : OutlinedButton.icon(
+                  onPressed: _isCallingPlayer ? null : () => _callCurrentPlayer(session),
+                  icon: const Icon(Icons.notifications_active, size: 13, color: Color(0xFF00694B)),
+                  label: const Text('Call Player',
+                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF00694B))),
+                  style: OutlinedButton.styleFrom(
+                    visualDensity: VisualDensity.compact,
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 0),
+                  ),
+                ),
+      ],
+    );
   }
 
   void _checkLiftCompletion(Lift? lift) {
@@ -116,12 +228,14 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
     return StreamBuilder<GameSession?>(
       stream: _gameRepo.watchGameSession(widget.gameId),
       builder: (context, snapshot) {
-        if (snapshot.hasError)
+        if (snapshot.hasError) {
           return Scaffold(
               body: Center(child: Text('Error: ${snapshot.error}')));
-        if (!snapshot.hasData)
+        }
+        if (!snapshot.hasData) {
           return const Scaffold(
               body: Center(child: CircularProgressIndicator()));
+        }
         final session = snapshot.data!;
         _checkLiftCompletion(session.currentRound.currentLift);
 
@@ -886,8 +1000,7 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                   ),
                 )
               else
-                const Text('Waiting...',
-                    style: TextStyle(color: Colors.grey, fontSize: 12)),
+                _buildWaitingAndCallArea(session),
             ],
           ),
           const SizedBox(height: 8),

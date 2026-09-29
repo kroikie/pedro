@@ -473,6 +473,12 @@ class RoundStateMapper extends ClassMapperBase<RoundState> {
     opt: true,
     def: 0,
   );
+  static DateTime? _$lastCalledAt(RoundState v) => v.lastCalledAt;
+  static const Field<RoundState, DateTime> _f$lastCalledAt = Field(
+    'lastCalledAt',
+    _$lastCalledAt,
+    opt: true,
+  );
 
   @override
   final MappableFields<RoundState> fields = const {
@@ -486,6 +492,7 @@ class RoundStateMapper extends ClassMapperBase<RoundState> {
     #discardedCards: _f$discardedCards,
     #playedCards: _f$playedCards,
     #turnIndex: _f$turnIndex,
+    #lastCalledAt: _f$lastCalledAt,
   };
 
   static RoundState _instantiate(DecodingData data) {
@@ -500,6 +507,7 @@ class RoundStateMapper extends ClassMapperBase<RoundState> {
       discardedCards: data.dec(_f$discardedCards),
       playedCards: data.dec(_f$playedCards),
       turnIndex: data.dec(_f$turnIndex),
+      lastCalledAt: data.dec(_f$lastCalledAt),
     );
   }
 
@@ -578,6 +586,7 @@ abstract class RoundStateCopyWith<$R, $In extends RoundState, $Out>
     List<Card>? discardedCards,
     List<Card>? playedCards,
     int? turnIndex,
+    DateTime? lastCalledAt,
   });
   RoundStateCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
 }
@@ -622,6 +631,7 @@ class _RoundStateCopyWithImpl<$R, $Out>
     List<Card>? discardedCards,
     List<Card>? playedCards,
     int? turnIndex,
+    Object? lastCalledAt = $none,
   }) => $apply(
     FieldCopyWithData({
       if (dealerId != null) #dealerId: dealerId,
@@ -634,6 +644,7 @@ class _RoundStateCopyWithImpl<$R, $Out>
       if (discardedCards != null) #discardedCards: discardedCards,
       if (playedCards != null) #playedCards: playedCards,
       if (turnIndex != null) #turnIndex: turnIndex,
+      if (lastCalledAt != $none) #lastCalledAt: lastCalledAt,
     }),
   );
   @override
@@ -648,6 +659,7 @@ class _RoundStateCopyWithImpl<$R, $Out>
     discardedCards: data.get(#discardedCards, or: $value.discardedCards),
     playedCards: data.get(#playedCards, or: $value.playedCards),
     turnIndex: data.get(#turnIndex, or: $value.turnIndex),
+    lastCalledAt: data.get(#lastCalledAt, or: $value.lastCalledAt),
   );
 
   @override
