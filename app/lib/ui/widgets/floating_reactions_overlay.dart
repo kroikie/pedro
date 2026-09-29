@@ -50,27 +50,32 @@ class _FloatingReactionsOverlayState extends State<FloatingReactionsOverlay> {
 
   void _subscribeToReactions() {
     _reactionSubscription =
-        _reactionRepo.watchRecentReactions(widget.gameId).listen((reactions) {
-      if (_isInitialLoad) {
-        _seenReactionIds.addAll(reactions.map((r) => r.id));
-        _isInitialLoad = false;
-        return;
-      }
-
-      final newReactions =
-          reactions.where((r) => !_seenReactionIds.contains(r.id)).toList();
-      if (newReactions.isNotEmpty) {
-        for (final r in newReactions) {
-          _seenReactionIds.add(r.id);
+        _reactionRepo.watchRecentReactions(widget.gameId).listen(
+      (reactions) {
+        if (_isInitialLoad) {
+          _seenReactionIds.addAll(reactions.map((r) => r.id));
+          _isInitialLoad = false;
+          return;
         }
 
-        if (mounted) {
-          setState(() {
-            _activeReactions.addAll(newReactions);
-          });
+        final newReactions =
+            reactions.where((r) => !_seenReactionIds.contains(r.id)).toList();
+        if (newReactions.isNotEmpty) {
+          for (final r in newReactions) {
+            _seenReactionIds.add(r.id);
+          }
+
+          if (mounted) {
+            setState(() {
+              _activeReactions.addAll(newReactions);
+            });
+          }
         }
-      }
-    });
+      },
+      onError: (error) {
+        debugPrint('FloatingReactionsOverlay subscription error: $error');
+      },
+    );
   }
 
   void _removeReaction(GameReaction reaction) {

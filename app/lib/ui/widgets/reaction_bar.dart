@@ -67,7 +67,7 @@ class _ReactionBarState extends State<ReactionBar> {
     }
     _lastSentTime = now;
 
-    String userId = 'test_user';
+    String? userId;
     String senderName = _cachedScreenName ?? 'Player';
     try {
       final user = FirebaseAuth.instance.currentUser;
@@ -77,6 +77,15 @@ class _ReactionBarState extends State<ReactionBar> {
       }
     } catch (_) {
       // Firebase not initialized in test environment
+    }
+
+    if (userId == null) {
+      if (widget.reactionRepository != null) {
+        userId = 'test_user';
+      } else {
+        debugPrint('Cannot send reaction: user is not authenticated.');
+        return;
+      }
     }
 
     try {

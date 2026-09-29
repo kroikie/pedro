@@ -73,28 +73,33 @@ class _ChatOverlayState extends State<ChatOverlay>
 
   void _subscribeToMessages() {
     _messageSubscription =
-        _chatRepo.watchMessages(widget.gameId).listen((messages) {
-      if (_isInitialLoad) {
-        _seenMessageIds.addAll(messages.map((m) => m.id));
-        _isInitialLoad = false;
-        return;
-      }
-
-      final newMessages =
-          messages.where((m) => !_seenMessageIds.contains(m.id)).toList();
-      if (newMessages.isNotEmpty) {
-        for (final m in newMessages) {
-          _seenMessageIds.add(m.id);
+        _chatRepo.watchMessages(widget.gameId).listen(
+      (messages) {
+        if (_isInitialLoad) {
+          _seenMessageIds.addAll(messages.map((m) => m.id));
+          _isInitialLoad = false;
+          return;
         }
 
-        if (!_isExpanded) {
-          setState(() {
-            _unreadCount += newMessages.length;
-          });
-          _showToast(newMessages.first);
+        final newMessages =
+            messages.where((m) => !_seenMessageIds.contains(m.id)).toList();
+        if (newMessages.isNotEmpty) {
+          for (final m in newMessages) {
+            _seenMessageIds.add(m.id);
+          }
+
+          if (!_isExpanded) {
+            setState(() {
+              _unreadCount += newMessages.length;
+            });
+            _showToast(newMessages.first);
+          }
         }
-      }
-    });
+      },
+      onError: (error) {
+        debugPrint('ChatOverlay messages subscription error: $error');
+      },
+    );
   }
 
   void _showToast(ChatMessage message) {
