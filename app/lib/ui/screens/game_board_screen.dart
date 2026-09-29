@@ -11,6 +11,7 @@ import '../widgets/avatar_widget.dart';
 import '../widgets/chat_overlay.dart';
 import '../widgets/reaction_bar.dart';
 import '../widgets/floating_reactions_overlay.dart';
+import '../widgets/bid_status_widget.dart';
 import '../../data/services/bid_assistant_service.dart';
 import '../../data/services/tactical_coach_service.dart';
 import '../../data/logic/card_play_validator.dart';
@@ -29,6 +30,19 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
   final _bidAssistant = BidAssistantService();
   final _tacticalCoach = TacticalCoachService();
   final _uid = FirebaseAuth.instance.currentUser?.uid;
+
+  final Map<String, Player> _playerCache = {};
+  final Map<String, Future<Player?>> _playerFutureCache = {};
+
+  Future<Player?> _getPlayer(String uid) {
+    return _playerFutureCache.putIfAbsent(uid, () async {
+      final player = await _playerRepo.getPlayer(uid);
+      if (player != null && mounted) {
+        _playerCache[uid] = player;
+      }
+      return player;
+    });
+  }
 
   String? _bidSuggestion;
   bool _isAnalyzingHand = false;
@@ -116,18 +130,43 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
             title:
                 Text('Pedro: ${session.currentRound.phase.name.toUpperCase()}'),
             actions: [
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('Target: ${session.targetScore}',
-                      style: const TextStyle(fontSize: 10, color: Colors.grey)),
-                  Text('Bid: ${session.currentRound.bidValue}',
-                      style: const TextStyle(fontSize: 14)),
-                  if (session.currentRound.trumpSuit != null)
-                    Icon(_suitIcon(session.currentRound.trumpSuit!), size: 16),
-                ],
-              ),
-              const SizedBox(width: 16),
+              Builder(builder: (context) {
+                final round = session.currentRound;
+                final bidWinnerId = round.bidWinnerId;
+                final isLocalBidWinner =
+                    bidWinnerId != null && bidWinnerId == _uid;
+                final bidWinnerState = bidWinnerId != null
+                    ? session.playerStates
+                        .where((p) => p.uid == bidWinnerId)
+                        .firstOrNull
+                    : null;
+                final bidWinnerPoints = bidWinnerState?.currentRoundPoints;
+
+                if (bidWinnerId != null && !isLocalBidWinner) {
+                  return FutureBuilder<Player?>(
+                    future: _getPlayer(bidWinnerId),
+                    initialData: _playerCache[bidWinnerId],
+                    builder: (context, snap) {
+                      return BidStatusWidget(
+                        round: round,
+                        targetScore: session.targetScore,
+                        bidWinnerName: snap.data?.screenName,
+                        bidWinnerPoints: bidWinnerPoints,
+                        isLocalBidWinner: false,
+                      );
+                    },
+                  );
+                }
+
+                return BidStatusWidget(
+                  round: round,
+                  targetScore: session.targetScore,
+                  bidWinnerName: isLocalBidWinner ? 'You' : null,
+                  bidWinnerPoints: bidWinnerPoints,
+                  isLocalBidWinner: isLocalBidWinner,
+                );
+              }),
+              const SizedBox(width: 12),
             ],
           ),
           body: Column(
@@ -602,6 +641,8 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
       final index = (localIndex + i) % numPlayers;
       final playerState = states[index];
       final isHisTurn = round.turnIndex == index;
+      final isBidder = round.bidWinnerId == playerState.uid &&
+          round.phase != RoundPhase.wadger;
       final alignment = playerPositions[i - 1];
 
       otherPlayers.add(
@@ -610,7 +651,8 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 8.0),
             child: FutureBuilder<Player?>(
-              future: _playerRepo.getPlayer(playerState.uid),
+              future: _getPlayer(playerState.uid),
+              initialData: _playerCache[playerState.uid],
               builder: (context, snap) {
                 final player = snap.data;
                 return Container(
@@ -620,11 +662,16 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                   decoration: BoxDecoration(
                     color: isHisTurn
                         ? Colors.green.withValues(alpha: 0.1)
-                        : Colors.white.withValues(alpha: 0.8),
+                        : (isBidder
+                            ? Colors.amber.shade50.withValues(alpha: 0.9)
+                            : Colors.white.withValues(alpha: 0.8)),
                     borderRadius: BorderRadius.circular(12),
                     border: isHisTurn
                         ? Border.all(color: Colors.green, width: 2)
-                        : Border.all(color: Colors.grey.shade300),
+                        : (isBidder
+                            ? Border.all(
+                                color: Colors.amber.shade600, width: 1.5)
+                            : Border.all(color: Colors.grey.shade300)),
                     boxShadow: const [
                       BoxShadow(color: Colors.black12, blurRadius: 4),
                     ],
@@ -632,6 +679,26 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      if (isBidder)
+                        Container(
+                          margin: const EdgeInsets.only(bottom: 2),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 4, vertical: 1),
+                          decoration: BoxDecoration(
+                            color: Colors.amber.shade200,
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(
+                                color: Colors.amber.shade800, width: 0.8),
+                          ),
+                          child: Text(
+                            'BIDDER: ${round.bidValue}',
+                            style: TextStyle(
+                              fontSize: 8,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.amber.shade900,
+                            ),
+                          ),
+                        ),
                       AvatarWidget(avatarUrl: player?.avatarUrl, radius: 18),
                       const SizedBox(height: 2),
                       Text(
@@ -644,6 +711,27 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                       Text('Score: ${playerState.totalScore}',
                           style: const TextStyle(
                               fontSize: 10, fontWeight: FontWeight.bold)),
+                      if (isBidder)
+                        Text(
+                          'Pts: ${playerState.currentRoundPoints} / ${round.bidValue}',
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                            color:
+                                playerState.currentRoundPoints >= round.bidValue
+                                    ? Colors.green.shade800
+                                    : Colors.orange.shade900,
+                          ),
+                        )
+                      else if (playerState.currentRoundPoints > 0)
+                        Text(
+                          'Round: ${playerState.currentRoundPoints}',
+                          style: TextStyle(
+                            fontSize: 9,
+                            color: Colors.blue.shade800,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       if (playerState.earnedPoints.isNotEmpty)
                         _buildPointsChips(playerState.earnedPoints),
                     ],
@@ -697,6 +785,8 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
     final localIndex = session.playerStates.indexWhere((p) => p.uid == _uid);
     final localState = session.playerStates[localIndex];
     final isMyTurn = round.turnIndex == localIndex;
+    final isLocalBidder =
+        round.bidWinnerId == _uid && round.phase != RoundPhase.wadger;
 
     if (round.phase == RoundPhase.wadger && isMyTurn) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -727,8 +817,53 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Points: ${localState.currentRoundPoints}',
-                      style: const TextStyle(fontSize: 11, color: Colors.blue)),
+                  if (isLocalBidder) ...[
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 4, vertical: 1),
+                          decoration: BoxDecoration(
+                            color: Colors.amber.shade100,
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(
+                                color: Colors.amber.shade800, width: 0.8),
+                          ),
+                          child: Text(
+                            'YOU BID ${round.bidValue}',
+                            style: TextStyle(
+                              fontSize: 8,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.amber.shade900,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Target: ${localState.currentRoundPoints} / ${round.bidValue} pts',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: localState.currentRoundPoints >=
+                                    round.bidValue
+                                ? Colors.green.shade800
+                                : Colors.orange.shade900,
+                          ),
+                        ),
+                        if (localState.currentRoundPoints >=
+                            round.bidValue) ...[
+                          const SizedBox(width: 2),
+                          Icon(Icons.check_circle,
+                              size: 12, color: Colors.green.shade800),
+                        ],
+                      ],
+                    ),
+                  ] else ...[
+                    Text('Points: ${localState.currentRoundPoints}',
+                        style:
+                            const TextStyle(fontSize: 11, color: Colors.blue)),
+                  ],
                   _buildPointsChips(localState.earnedPoints),
                   Text('Total: ${localState.totalScore}',
                       style: const TextStyle(

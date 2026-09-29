@@ -37,6 +37,10 @@ The goal of Pedro is to be the first player (or team) to reach the target winnin
 - The highest trump card played wins the lift. If no trump is played, the highest card of the lead suit wins.
 - **Lift Review & Board Clearing:** At the end of each lift, all played cards remain on the board with a prominent **WINNER** badge on the winning card, allowing all players a review window to inspect the final card and outcome. The cards stay on the board until the player who won the trick plays their lead card for the next lift, at which point the table clears automatically.
 - **Previous Trick History:** Players can tap "View Previous Trick" at any time during gameplay to review the cards played and the winner of the previous trick.
+- **Bid Winner & Point Contract Tracking:** 
+  - The top-right game header displays the winning bid value, who is responsible for achieving it, and their live point progress (e.g. `Bid: 10 by Alice • 4 / 10 pts`).
+  - When the bid winner accumulates enough points to satisfy the contract (`currentRoundPoints >= bidValue`), the indicator highlights in green with a checkmark (`10 / 10 pts ✓`).
+  - On the table, the bidder's seat displays a distinct `BIDDER` badge and round progress tracker (`Pts: 4 / 10`), allowing all players to monitor whether the bidder will achieve their contract or suffer a set penalty.
 - The winner of the lift leads the next trick.
 
 ---
