@@ -7,25 +7,30 @@ class CardWidget extends StatelessWidget {
     required this.card,
     this.onTap,
     this.isFaceUp = true,
+    this.width = 60,
+    this.height = 90,
   });
 
   final pedro.Card card;
   final VoidCallback? onTap;
   final bool isFaceUp;
+  final double width;
+  final double height;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 60,
-        height: 90,
+        width: width,
+        height: height,
         decoration: BoxDecoration(
           color: isFaceUp ? Colors.white : Colors.blue[900],
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: Colors.black, width: 1),
           boxShadow: const [
-            BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(2, 2)),
+            BoxShadow(
+                color: Colors.black26, blurRadius: 4, offset: Offset(2, 2)),
           ],
         ),
         child: isFaceUp
@@ -36,7 +41,7 @@ class CardWidget extends StatelessWidget {
                   Text(
                     _rankLabel(card.rank),
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: (width * 0.27).clamp(10.0, 18.0),
                       fontWeight: FontWeight.bold,
                       color: _suitColor(card.suit),
                     ),
@@ -44,7 +49,8 @@ class CardWidget extends StatelessWidget {
                 ],
               )
             : Center(
-                child: Icon(Icons.apps, color: Colors.white.withValues(alpha: 0.5)),
+                child: Icon(Icons.apps,
+                    color: Colors.white.withValues(alpha: 0.5)),
               ),
       ),
     );
@@ -54,12 +60,20 @@ class CardWidget extends StatelessWidget {
     IconData icon;
     Color color = _suitColor(suit);
     switch (suit) {
-      case pedro.Suit.clubs: icon = Icons.circle; break;
-      case pedro.Suit.diamonds: icon = Icons.diamond; break;
-      case pedro.Suit.hearts: icon = Icons.favorite; break;
-      case pedro.Suit.spades: icon = Icons.architecture; break; // Placeholder for spade
+      case pedro.Suit.clubs:
+        icon = Icons.circle;
+        break;
+      case pedro.Suit.diamonds:
+        icon = Icons.diamond;
+        break;
+      case pedro.Suit.hearts:
+        icon = Icons.favorite;
+        break;
+      case pedro.Suit.spades:
+        icon = Icons.architecture;
+        break; // Placeholder for spade
     }
-    return Icon(icon, color: color, size: 24);
+    return Icon(icon, color: color, size: (width * 0.4).clamp(14.0, 26.0));
   }
 
   Color _suitColor(pedro.Suit suit) {
