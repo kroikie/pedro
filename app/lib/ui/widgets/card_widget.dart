@@ -7,6 +7,7 @@ class CardWidget extends StatelessWidget {
     required this.card,
     this.onTap,
     this.isFaceUp = true,
+    this.isSubmitting = false,
     this.width = 60,
     this.height = 90,
   });
@@ -14,44 +15,53 @@ class CardWidget extends StatelessWidget {
   final pedro.Card card;
   final VoidCallback? onTap;
   final bool isFaceUp;
+  final bool isSubmitting;
   final double width;
   final double height;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: width,
-        height: height,
-        decoration: BoxDecoration(
-          color: isFaceUp ? Colors.white : Colors.blue[900],
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.black, width: 1),
-          boxShadow: const [
-            BoxShadow(
-                color: Colors.black26, blurRadius: 4, offset: Offset(2, 2)),
-          ],
-        ),
-        child: isFaceUp
-            ? Column(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _suitIcon(card.suit),
-                  Text(
-                    _rankLabel(card.rank),
-                    style: TextStyle(
-                      fontSize: (width * 0.27).clamp(10.0, 18.0),
-                      fontWeight: FontWeight.bold,
-                      color: _suitColor(card.suit),
+      behavior: HitTestBehavior.opaque,
+      onTap: isSubmitting ? null : onTap,
+      child: AnimatedOpacity(
+        duration: const Duration(milliseconds: 150),
+        opacity: isSubmitting ? 0.45 : 1.0,
+        child: Container(
+          width: width,
+          height: height,
+          decoration: BoxDecoration(
+            color: isFaceUp ? Colors.white : Colors.blue[900],
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: isSubmitting ? Colors.blue.shade700 : Colors.black,
+              width: isSubmitting ? 2 : 1,
+            ),
+            boxShadow: const [
+              BoxShadow(
+                  color: Colors.black26, blurRadius: 4, offset: Offset(2, 2)),
+            ],
+          ),
+          child: isFaceUp
+              ? Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _suitIcon(card.suit),
+                    Text(
+                      _rankLabel(card.rank),
+                      style: TextStyle(
+                        fontSize: (width * 0.27).clamp(10.0, 18.0),
+                        fontWeight: FontWeight.bold,
+                        color: _suitColor(card.suit),
+                      ),
                     ),
-                  ),
-                ],
-              )
-            : Center(
-                child: Icon(Icons.apps,
-                    color: Colors.white.withValues(alpha: 0.5)),
-              ),
+                  ],
+                )
+              : Center(
+                  child: Icon(Icons.apps,
+                      color: Colors.white.withValues(alpha: 0.5)),
+                ),
+        ),
       ),
     );
   }

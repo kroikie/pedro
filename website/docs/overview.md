@@ -32,3 +32,4 @@
 
 ### 6. Adaptive & Accessible Design
 - Clean, intuitive interface with smooth animations, clear card visuals, and adaptive layouts tailored for phones, tablets, and web browsers.
+- **Responsive Card Interactions & Debouncing:** Instant visual feedback (dimming and border emphasis) upon card selection, paired with proactive tap debouncing and server-side idempotency to eliminate accidental double-submissions and network race conditions.

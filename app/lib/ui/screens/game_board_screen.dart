@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:clock/clock.dart';
 import 'package:flutter/material.dart' hide Card;
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../data/repositories/game_repository.dart';
@@ -16,21 +17,38 @@ import '../../data/services/bid_assistant_service.dart';
 import '../../data/services/tactical_coach_service.dart';
 import '../../data/services/notification_service.dart';
 import '../../data/logic/card_play_validator.dart';
+import '../../data/repositories/reaction_repository.dart';
+import '../../data/repositories/chat_repository.dart';
 
 class GameBoardScreen extends StatefulWidget {
-  const GameBoardScreen({super.key, required this.gameId});
+  const GameBoardScreen({
+    super.key,
+    required this.gameId,
+    this.gameRepository,
+    this.playerRepository,
+    this.reactionRepository,
+    this.chatRepository,
+    this.bidAssistantService,
+    this.tacticalCoachService,
+    this.currentUserId,
+  });
   final String gameId;
+  final GameRepository? gameRepository;
+  final PlayerRepository? playerRepository;
+  final ReactionRepository? reactionRepository;
+  final ChatRepository? chatRepository;
+  final BidAssistantService? bidAssistantService;
+  final TacticalCoachService? tacticalCoachService;
+  final String? currentUserId;
 
   @override
   State<GameBoardScreen> createState() => _GameBoardScreenState();
 }
 
 class _GameBoardScreenState extends State<GameBoardScreen> {
-  final _gameRepo = GameRepository();
-  final _playerRepo = PlayerRepository();
-  final _bidAssistant = BidAssistantService();
-  final _tacticalCoach = TacticalCoachService();
-  final _uid = FirebaseAuth.instance.currentUser?.uid;
+  late final GameRepository _gameRepo = widget.gameRepository ?? GameRepository();
+  late final PlayerRepository _playerRepo = widget.playerRepository ?? PlayerRepository();
+  late final String? _uid = widget.currentUserId ?? FirebaseAuth.instance.currentUser?.uid;
 
   final Map<String, Player> _playerCache = {};
   final Map<String, Future<Player?>> _playerFutureCache = {};
@@ -51,6 +69,9 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
   String? _moveSuggestion;
   bool _isAnalyzingMove = false;
   bool _isSubmittingCard = false;
+  pedro.Card? _submittedCard;
+  DateTime? _lastCardSubmitTime;
+  Timer? _cardSubmissionSafetyTimer;
 
   String? _lastObservedWinnerId;
   bool _isReviewCooldownActive = false;
@@ -70,6 +91,7 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
     NotificationService.instance.setActiveGame(null);
     _reviewCooldownTimer?.cancel();
     _callCooldownTicker?.cancel();
+    _cardSubmissionSafetyTimer?.cancel();
     super.dispose();
   }
 
@@ -194,32 +216,64 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
     }
   }
 
+  void _checkSubmissionCompletion(GameSession session) {
+    if (_submittedCard != null) {
+      final round = session.currentRound;
+      final localIndex = session.playerStates.indexWhere((p) => p.uid == _uid);
+      if (localIndex == -1) return;
+      final localState = session.playerStates[localIndex];
+      final isMyTurn = round.turnIndex == localIndex;
+      final cardStillInHand = localState.hand.any(
+        (c) => c.suit == _submittedCard!.suit && c.rank == _submittedCard!.rank,
+      );
+      if (!cardStillInHand || !isMyTurn) {
+        _submittedCard = null;
+        _isSubmittingCard = false;
+        _cardSubmissionSafetyTimer?.cancel();
+      }
+    }
+  }
+
   Future<void> _analyzeHand(List<pedro.Card> hand) async {
     if (_bidSuggestion != null || _isAnalyzingHand) return;
     setState(() => _isAnalyzingHand = true);
-    final suggestion = await _bidAssistant.getBidSuggestion(hand);
-    if (mounted) {
-      setState(() {
-        _bidSuggestion = suggestion;
-        _isAnalyzingHand = false;
-      });
+    try {
+      final assistant = widget.bidAssistantService ?? BidAssistantService();
+      final suggestion = await assistant.getBidSuggestion(hand);
+      if (mounted) {
+        setState(() {
+          _bidSuggestion = suggestion;
+          _isAnalyzingHand = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _isAnalyzingHand = false);
+      }
     }
   }
 
   Future<void> _analyzeMove(List<pedro.Card> hand, Lift? lift,
       pedro.Suit? trump, List<pedro.Card> playedCards) async {
     setState(() => _isAnalyzingMove = true);
-    final suggestion = await _tacticalCoach.getMoveSuggestion(
-      hand: hand,
-      currentLift: lift,
-      trumpSuit: trump,
-      playedCards: playedCards,
-    );
-    if (mounted) {
-      setState(() {
-        _moveSuggestion = suggestion;
-        _isAnalyzingMove = false;
-      });
+    try {
+      final coach = widget.tacticalCoachService ?? TacticalCoachService();
+      final suggestion = await coach.getMoveSuggestion(
+        hand: hand,
+        currentLift: lift,
+        trumpSuit: trump,
+        playedCards: playedCards,
+      );
+      if (mounted) {
+        setState(() {
+          _moveSuggestion = suggestion;
+          _isAnalyzingMove = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _isAnalyzingMove = false);
+      }
     }
   }
 
@@ -238,6 +292,7 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
         }
         final session = snapshot.data!;
         _checkLiftCompletion(session.currentRound.currentLift);
+        _checkSubmissionCompletion(session);
 
         return Scaffold(
           appBar: AppBar(
@@ -300,12 +355,19 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                       ),
                     ),
                     ..._buildPlayerPositions(session),
-                    FloatingReactionsOverlay(gameId: widget.gameId),
+                    FloatingReactionsOverlay(
+                      gameId: widget.gameId,
+                      reactionRepository: widget.reactionRepository,
+                    ),
                   ],
                 ),
               ),
               _buildInteractionArea(session),
-              ChatOverlay(gameId: widget.gameId),
+              ChatOverlay(
+                gameId: widget.gameId,
+                chatRepository: widget.chatRepository,
+                playerRepository: _playerRepo,
+              ),
             ],
           ),
         );
@@ -1055,13 +1117,17 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
             scrollDirection: Axis.horizontal,
             child: Row(
               children: localState.hand.map((card) {
+                final isSubmittingThisCard =
+                    _isSubmittingCard && _submittedCard == card;
                 return Padding(
                   padding: const EdgeInsets.only(right: 6),
                   child: CardWidget(
                     card: card,
+                    isSubmitting: isSubmittingThisCard,
                     onTap: (round.phase == RoundPhase.playing &&
                             isMyTurn &&
-                            !_isReviewCooldownActive)
+                            !_isReviewCooldownActive &&
+                            !_isSubmittingCard)
                         ? () => _playCard(
                               card: card,
                               hand: localState.hand,
@@ -1075,7 +1141,11 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
             ),
           ),
           const SizedBox(height: 6),
-          ReactionBar(gameId: widget.gameId),
+          ReactionBar(
+            gameId: widget.gameId,
+            reactionRepository: widget.reactionRepository,
+            playerRepository: _playerRepo,
+          ),
         ],
       ),
     );
@@ -1087,6 +1157,13 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
     required RoundState round,
     required bool isMyTurn,
   }) async {
+    final now = clock.now();
+    if (_lastCardSubmitTime != null &&
+        now.difference(_lastCardSubmitTime!).inMilliseconds < 500) {
+      return;
+    }
+    _lastCardSubmitTime = now;
+
     if (_isSubmittingCard) return;
 
     final validation = validateCardPlay(
@@ -1110,12 +1187,31 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
       return;
     }
 
-    setState(() => _isSubmittingCard = true);
+    setState(() {
+      _isSubmittingCard = true;
+      _submittedCard = card;
+    });
+
+    _cardSubmissionSafetyTimer?.cancel();
+    _cardSubmissionSafetyTimer = Timer(const Duration(seconds: 8), () {
+      if (mounted && _isSubmittingCard) {
+        setState(() {
+          _isSubmittingCard = false;
+          _submittedCard = null;
+        });
+      }
+    });
+
     try {
       await _gameRepo.playCard(widget.gameId, card);
       if (mounted) setState(() => _moveSuggestion = null);
     } catch (e) {
+      _cardSubmissionSafetyTimer?.cancel();
       if (mounted) {
+        setState(() {
+          _isSubmittingCard = false;
+          _submittedCard = null;
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Server Error: $e'),
@@ -1123,10 +1219,6 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
             behavior: SnackBarBehavior.floating,
           ),
         );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isSubmittingCard = false);
       }
     }
   }
