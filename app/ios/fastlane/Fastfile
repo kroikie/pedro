@@ -54,7 +54,7 @@ platform :ios do
       sigh(
         api_key: api_key,
         app_identifier: app_id,
-        provisioning_name: "com.ool.pedro AdHoc",
+        provisioning_name: "Pedro AdHoc Profile",
         adhoc: true,
         force: true
       )

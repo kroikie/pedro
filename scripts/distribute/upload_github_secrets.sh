@@ -59,7 +59,7 @@ if [[ "$UPLOAD_IOS" =~ ^[Yy]$ ]]; then
     echo "Encoding and setting IOS_PROVISION_PROFILE_BASE64..."
     base64 -i "$PROVISION_PATH" | tr -d '\n' | gh secret set IOS_PROVISION_PROFILE_BASE64 --repo "$REPO"
   else
-    echo "Notice: Skipping static profile upload. Fastlane will automatically generate and download 'com.ool.pedro AdHoc'."
+    echo "Notice: Skipping static profile upload. Fastlane will automatically generate and download 'Pedro AdHoc Profile'."
   fi
 
   KEYCHAIN_PASS=$(openssl rand -hex 16)
