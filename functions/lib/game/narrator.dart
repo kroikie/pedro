@@ -52,25 +52,33 @@ Future<void> narrateWelcome(String gameId, String roomName) async {
   await postCommentary(gameId, text);
 }
 
+String formatBidContext({
+  required String playerName,
+  required int? bid,
+  required int previousBid,
+}) {
+  if (bid == null) {
+    return '$playerName pass. Dey playing it cool (or dey holding ah real bad hand). High bid still on $previousBid.';
+  } else if (bid == 20) {
+    return 'Jah! $playerName gone ALL IN with 20! Dat is ah brave bid de $playerName, leh we see if dey could back it up!';
+  } else if (bid > previousBid + 5) {
+    return 'Lardits! $playerName jump de bid from $previousBid straight to $bid! Look pressure on de table!';
+  } else {
+    return 'Dat is ah brave bid de $playerName! Bid raised to $bid.';
+  }
+}
+
 Future<void> narrateBid(
   String gameId,
   String playerName,
   int? bid,
   int previousBid,
 ) async {
-  String context = '';
-  if (bid == null) {
-    context =
-        "$playerName pass. Dey playing it cool (or dey holding ah real bad hand). High bid still on $previousBid.";
-  } else if (bid == 20) {
-    context =
-        "Jah! $playerName gone ALL IN with 20! Dat is ah brave bid de $playerName, leh we see if dey could back it up!";
-  } else if (bid > previousBid + 5) {
-    context =
-        "Lardits! $playerName jump de bid from $previousBid straight to $bid! Look pressure on de table!";
-  } else {
-    context = "Dat is ah brave bid de $playerName! Bid raised to $bid.";
-  }
+  final context = formatBidContext(
+    playerName: playerName,
+    bid: bid,
+    previousBid: previousBid,
+  );
 
   String text = context;
   if (_geminiApiKey != null && _geminiApiKey!.isNotEmpty) {
@@ -99,29 +107,38 @@ Future<void> narrateBid(
   await postCommentary(gameId, text);
 }
 
+String formatPointEventContext({
+  required String playerName,
+  required String pointType,
+  required bool isStolen,
+}) {
+  if (pointType == 'Jack') {
+    return isStolen
+        ? 'Oh gosh! $playerName just hang de man Jack! Massive robbery on de table... $playerName does play card for gramoxone!'
+        : '$playerName play and save dey own Jack for 1 point. Safe play.';
+  } else if (pointType == '5') {
+    return '$playerName grab de 5 ah trumps! 5 big points in de bag!';
+  } else if (pointType == '9') {
+    return 'Lardits! $playerName just snatch de 9 ah trump! $playerName does play card for gramoxone!';
+  } else if (pointType == 'High') {
+    return '$playerName holding High trump point.';
+  } else if (pointType == 'Low') {
+    return '$playerName drop de lowest trump. 1 point safe even if lift lost!';
+  }
+  return '';
+}
+
 Future<void> narratePointEvent(
   String gameId,
   String playerName,
   String pointType,
   bool isStolen,
 ) async {
-  String context = '';
-  if (pointType == 'Jack') {
-    context =
-        isStolen
-            ? 'Oh gosh! $playerName just hang de man Jack! Massive robbery on de table... $playerName does play card for gramoxone!'
-            : '$playerName play and save dey own Jack for 1 point. Safe play.';
-  } else if (pointType == '5') {
-    context = "$playerName grab de 5 ah trumps! 5 big points in de bag!";
-  } else if (pointType == '9') {
-    context =
-        "Lardits! $playerName snatch de 9 ah trumps! $playerName does play card for gramoxone!";
-  } else if (pointType == 'High') {
-    context = '$playerName holding High trump point.';
-  } else if (pointType == 'Low') {
-    context =
-        '$playerName drop de lowest trump. 1 point safe even if lift lost!';
-  }
+  final context = formatPointEventContext(
+    playerName: playerName,
+    pointType: pointType,
+    isStolen: isStolen,
+  );
 
   String text = context;
   if (_geminiApiKey != null && _geminiApiKey!.isNotEmpty) {
@@ -132,7 +149,7 @@ Future<void> narratePointEvent(
           'Event: $context '
           'Provide a short, 1-sentence witty reaction to this specific card game event. '
           'Key rules: '
-          '- ALWAYS include the player\'s name ($playerName) in your comment. '
+          '- ALWAYS include the player\'s name ($playerName) in your comment. NEVER say "A player". '
           '- When a player makes a clutch, fierce, or ruthless play (hanging a Jack, winning a crucial lift, taking the 9 of trumps, or scoring big points): ALWAYS comment that "Oh gosh! $playerName does play card for gramoxone!" or use "Lardits!" / "Jah!". '
           '- If it is a "Hang Jack" event, treat it as a dramatic robbery on the table. '
           'Keep it spirited, humorous, and strictly 1 sentence.';
@@ -152,21 +169,23 @@ Future<void> narratePointEvent(
 
 Future<void> narratePlay(
   String gameId,
-  String playerId,
+  String playerName,
   Card card,
   bool isSpecial,
 ) async {
   if (!isSpecial) return;
   String text =
-      'Look trump flying! A player just drop de ${card.rank.name} ah ${card.suit.name}!';
+      'Look trump flying! $playerName just drop de ${card.rank.name} ah ${card.suit.name}!';
 
   if (_geminiApiKey != null && _geminiApiKey!.isNotEmpty) {
     try {
       final ai = _getAi();
       final prompt =
           'You are a witty card game narrator for Pedro speaking in an authentic Trinidad and Tobago (Trini) dialect. '
-          'A player just played a high-value card: ${card.rank.name} of ${card.suit.name}. '
-          'Provide a short, 1-sentence witty reaction in Trini vernacular.';
+          '$playerName just played a high-value card: ${card.rank.name} of ${card.suit.name}. '
+          'Provide a short, 1-sentence witty reaction in Trini vernacular. '
+          'Key rules: '
+          '- ALWAYS include the player\'s name ($playerName) in your comment. NEVER say "A player".';
       final response = await ai.generate(
         model: googleAI.gemini('gemini-2.5-flash'),
         prompt: prompt,
