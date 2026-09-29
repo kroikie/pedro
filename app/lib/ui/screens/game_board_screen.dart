@@ -155,50 +155,87 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
       }
     }
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (activeUid != null)
-          Flexible(
-            child: FutureBuilder<Player?>(
-              future: _getPlayer(activeUid),
-              builder: (context, snap) {
-                final name = snap.data?.screenName ?? 'player';
-                return Text(
-                  'Waiting for $name...',
-                  style: const TextStyle(color: Colors.grey, fontSize: 12),
-                  overflow: TextOverflow.ellipsis,
-                );
-              },
+    final showCallButton =
+        session.currentRound.phase != RoundPhase.finished &&
+            activeUid != null &&
+            activeUid != _uid;
+
+    final waitingTextWidget = (activeUid != null)
+        ? FutureBuilder<Player?>(
+            future: _getPlayer(activeUid),
+            builder: (context, snap) {
+              final name = snap.data?.screenName ?? 'player';
+              return Text(
+                'Waiting for $name...',
+                style: const TextStyle(color: Colors.grey, fontSize: 12),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              );
+            },
+          )
+        : const Text(
+            'Waiting...',
+            style: TextStyle(color: Colors.grey, fontSize: 12),
+          );
+
+    if (!showCallButton) {
+      return waitingTextWidget;
+    }
+
+    final callButton = cooldownRemaining > 0
+        ? OutlinedButton.icon(
+            onPressed: null,
+            icon: const Icon(Icons.notifications_paused, size: 13),
+            label: Text('Called (${cooldownRemaining}s)',
+                style: const TextStyle(fontSize: 10)),
+            style: OutlinedButton.styleFrom(
+              visualDensity: VisualDensity.compact,
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 0),
             ),
           )
-        else
-          const Text('Waiting...',
-              style: TextStyle(color: Colors.grey, fontSize: 12)),
-        const SizedBox(width: 8),
-        if (session.currentRound.phase != RoundPhase.finished && activeUid != null && activeUid != _uid)
-          cooldownRemaining > 0
-              ? OutlinedButton.icon(
-                  onPressed: null,
-                  icon: const Icon(Icons.notifications_paused, size: 13),
-                  label: Text('Called (${cooldownRemaining}s)',
-                      style: const TextStyle(fontSize: 10)),
-                  style: OutlinedButton.styleFrom(
-                    visualDensity: VisualDensity.compact,
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 0),
-                  ),
-                )
-              : OutlinedButton.icon(
-                  onPressed: _isCallingPlayer ? null : () => _callCurrentPlayer(session),
-                  icon: const Icon(Icons.notifications_active, size: 13, color: Color(0xFF00694B)),
-                  label: const Text('Call Player',
-                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF00694B))),
-                  style: OutlinedButton.styleFrom(
-                    visualDensity: VisualDensity.compact,
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 0),
-                  ),
-                ),
-      ],
+        : OutlinedButton.icon(
+            onPressed:
+                _isCallingPlayer ? null : () => _callCurrentPlayer(session),
+            icon: const Icon(Icons.notifications_active,
+                size: 13, color: Color(0xFF00694B)),
+            label: const Text('Call Player',
+                style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF00694B))),
+            style: OutlinedButton.styleFrom(
+              visualDensity: VisualDensity.compact,
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 0),
+            ),
+          );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth >= 260) {
+          return Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Flexible(child: waitingTextWidget),
+              const SizedBox(width: 8),
+              callButton,
+            ],
+          );
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            waitingTextWidget,
+            const SizedBox(height: 2),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerRight,
+              child: callButton,
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -1079,18 +1116,24 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
               ),
               const SizedBox(width: 8),
               if (isMyTurn)
-                Text(
-                  _isReviewCooldownActive
-                      ? 'REVIEWING LIFT...'
-                      : (round.currentLift?.winnerId != null
-                          ? 'YOUR TURN TO LEAD'
-                          : 'YOUR TURN'),
-                  style: TextStyle(
-                    color: _isReviewCooldownActive
-                        ? Colors.orange.shade800
-                        : Colors.green,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      _isReviewCooldownActive
+                          ? 'REVIEWING LIFT...'
+                          : (round.currentLift?.winnerId != null
+                              ? 'YOUR TURN TO LEAD'
+                              : 'YOUR TURN'),
+                      style: TextStyle(
+                        color: _isReviewCooldownActive
+                            ? Colors.orange.shade800
+                            : Colors.green,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
                   ),
                 )
               else
