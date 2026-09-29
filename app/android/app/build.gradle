@@ -49,7 +49,10 @@ android {
 
     buildTypes {
         release {
-            signingConfig = (keystorePropertiesFile.exists() && keystoreProperties['storeFile'] != null) ? signingConfigs.release : signingConfigs.debug
+            signingConfig = (keystorePropertiesFile.exists() &&
+                             keystoreProperties['storeFile'] != null &&
+                             keystoreProperties['keyAlias'] != null &&
+                             !keystoreProperties['keyAlias'].toString().trim().isEmpty()) ? signingConfigs.release : signingConfigs.debug
         }
     }
 }

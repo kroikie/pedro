@@ -124,7 +124,7 @@ jobs:
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
-          if [ -n "$ANDROID_KEYSTORE_BASE64" ]; then
+          if [ -n "$ANDROID_KEYSTORE_BASE64" ] && [ -n "$ANDROID_KEY_ALIAS" ]; then
             echo "Decoding Android release keystore..."
             echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > app/android/app/pedro-release.jks
             cat <<EOF > app/android/key.properties
@@ -134,7 +134,7 @@ jobs:
           storeFile=pedro-release.jks
           EOF
           else
-            echo "Notice: ANDROID_KEYSTORE_BASE64 secret is not set. Falling back to debug signing."
+            echo "Notice: Android keystore or key alias not provided. Falling back to debug signing."
           fi
 
       - name: Build Android Release APK
