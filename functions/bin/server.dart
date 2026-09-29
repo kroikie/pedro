@@ -480,7 +480,27 @@ void main(List<String> args) {
 
       final playerIds = List<String>.from(gameData['playerIds'] as Iterable);
       final turnIndex = (round['turnIndex'] as num).toInt();
-      if (auth.uid != playerIds[turnIndex]) throw FailedPreconditionError('Not your turn.');
+      if (auth.uid != playerIds[turnIndex]) {
+        final currentLift = Map<String, dynamic>.from(round['currentLift'] as Map? ?? {});
+        final plays = Map<String, dynamic>.from(currentLift['plays'] as Map? ?? {});
+        final existingPlay = plays[auth.uid];
+        if (existingPlay != null) {
+          final playedCard = Card.fromJson(Map<String, dynamic>.from(existingPlay as Map));
+          if (playedCard.suit == card.suit && playedCard.rank == card.rank) {
+            return {'status': 'already_played', 'success': true};
+          }
+        }
+        final lastLift = Map<String, dynamic>.from(round['lastLift'] as Map? ?? {});
+        final lastPlays = Map<String, dynamic>.from(lastLift['plays'] as Map? ?? {});
+        final lastPlay = lastPlays[auth.uid];
+        if (lastPlay != null) {
+          final lastPlayedCard = Card.fromJson(Map<String, dynamic>.from(lastPlay as Map));
+          if (lastPlayedCard.suit == card.suit && lastPlayedCard.rank == card.rank) {
+            return {'status': 'already_played', 'success': true};
+          }
+        }
+        throw FailedPreconditionError('Not your turn.');
+      }
 
       final playerStates = List<Map<String, dynamic>>.from(round['playerStates'] as Iterable);
       final playerState = playerStates.firstWhere((p) => p['uid'] == auth.uid);
