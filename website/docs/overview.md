@@ -36,3 +36,7 @@
 - **Dynamic Game Identification:** The navigation bar clearly presents the active game room's name with graceful text truncation, keeping game context prominent without encroaching on contract status indicators.
 - **Adaptive Turn & Action Indicators:** The player interaction bar dynamically reorganizes turn status, bidder targets, and "Call Player" actions into responsive multi-axis layouts across varying screen dimensions and text scales, eliminating RenderFlex pixel clipping while preserving player name legibility.
 - **Responsive Card Interactions & Debouncing:** Instant visual feedback (dimming and border emphasis) upon card selection, paired with proactive tap debouncing and server-side idempotency to eliminate accidental double-submissions and network race conditions.
+
+### 7. Signature Branding & Visual Identity
+- **Iconic Mobile & Web Presence:** Features a custom luxury emblem centered on a polished gold capital 'P' adorned with a playing card spade on a deep emerald green felt background, evoking the timeless atmosphere of classic card tables across iOS, Android, and Web platforms.
+
