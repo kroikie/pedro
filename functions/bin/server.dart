@@ -487,7 +487,7 @@ void main(List<String> args) {
         if (existingPlay != null) {
           final playedCard = Card.fromJson(Map<String, dynamic>.from(existingPlay as Map));
           if (playedCard.suit == card.suit && playedCard.rank == card.rank) {
-            return {'status': 'already_played', 'success': true};
+            return CallableResult({'status': 'already_played', 'success': true});
           }
         }
         final lastLift = Map<String, dynamic>.from(round['lastLift'] as Map? ?? {});
@@ -496,7 +496,7 @@ void main(List<String> args) {
         if (lastPlay != null) {
           final lastPlayedCard = Card.fromJson(Map<String, dynamic>.from(lastPlay as Map));
           if (lastPlayedCard.suit == card.suit && lastPlayedCard.rank == card.rank) {
-            return {'status': 'already_played', 'success': true};
+            return CallableResult({'status': 'already_played', 'success': true});
           }
         }
         throw FailedPreconditionError('Not your turn.');
