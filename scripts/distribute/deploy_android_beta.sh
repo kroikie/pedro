@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Configuration
 FIREBASE_ANDROID_APP_ID="1:260654198138:android:bd1ed81efcde0ad2527ac3"
-DEFAULT_GROUPS="beta-testers"
+DEFAULT_GROUPS="player-players"
 GROUPS="${1:-$DEFAULT_GROUPS}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

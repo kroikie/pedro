@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Configuration
 FIREBASE_IOS_APP_ID="1:260654198138:ios:605e1e7955b0fb52527ac3"
-DEFAULT_GROUPS="beta-testers"
+DEFAULT_GROUPS="player-players"
 GROUPS="${1:-$DEFAULT_GROUPS}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
