@@ -31,6 +31,7 @@ jobs:
     name: Select Build Runners
     runs-on: ubuntu-latest
     outputs:
+      backend_runner: ${{ steps.check.outputs.backend_runner }}
       android_runner: ${{ steps.check.outputs.android_runner }}
       ios_runner: ${{ steps.check.outputs.ios_runner }}
     steps:
@@ -40,13 +41,14 @@ jobs:
           GH_TOKEN: ${{ secrets.RUNNER_PAT || github.token }}
         run: |
           # Default fallbacks to cloud runners
+          BACKEND_RUNNER='["ubuntu-latest"]'
           ANDROID_RUNNER='["ubuntu-latest"]'
           IOS_RUNNER='["macos-15"]'
 
           # Query GitHub Actions API for registered runners
           RUNNERS_JSON=$(gh api "repos/${{ github.repository }}/actions/runners" 2>/dev/null || echo '{"runners":[]}')
 
-          # Check for online self-hosted Linux runner (for Android)
+          # Check for online self-hosted Linux runner (for Android & Backend)
           HAS_LINUX_RUNNER=$(echo "$RUNNERS_JSON" | jq -r '
             [ .runners[]? | select(.status == "online" and ((.os | ascii_downcase) == "linux" or ([.labels[]?.name | ascii_downcase] | (index("linux") != null or index("android") != null))) and ([.labels[]?.name | ascii_downcase] | index("self-hosted") != null)) ] | length > 0
           ')
@@ -57,7 +59,8 @@ jobs:
           ')
 
           if [ "$HAS_LINUX_RUNNER" = "true" ]; then
-            echo "Self-hosted Linux runner is online -> Using self-hosted runner for Android."
+            echo "Self-hosted Linux runner is online -> Using self-hosted runner for Backend and Android."
+            BACKEND_RUNNER='["self-hosted", "linux"]'
             ANDROID_RUNNER='["self-hosted", "linux"]'
           else
             echo "No online self-hosted Linux runner found -> Falling back to ubuntu-latest."
@@ -70,13 +73,15 @@ jobs:
             echo "No online self-hosted macOS runner found -> Falling back to macos-15."
           fi
 
+          echo "backend_runner=$BACKEND_RUNNER" >> "$GITHUB_OUTPUT"
           echo "android_runner=$ANDROID_RUNNER" >> "$GITHUB_OUTPUT"
           echo "ios_runner=$IOS_RUNNER" >> "$GITHUB_OUTPUT"
 
   deploy-functions:
     name: Build & Deploy Cloud Functions
+    needs: resolve-runners
     if: github.event_name == 'push' || inputs.deploy_functions != false
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(needs.resolve-runners.outputs.backend_runner) }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
