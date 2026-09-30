@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
-import 'package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart';
+import '../../data/auth_config.dart';
 
 class AuthScreen extends StatelessWidget {
   const AuthScreen({super.key});
@@ -39,10 +39,7 @@ class AuthScreen extends StatelessWidget {
     return Scaffold(
       body: SignInScreen(
         headerMaxExtent: 200,
-        providers: [
-          EmailAuthProvider(),
-          GoogleProvider(clientId: '260654198138-u5jt4poqnr78d0sierk6e0r1pcikm8gf.apps.googleusercontent.com'),
-        ],
+        providers: buildAppAuthProviders(),
         headerBuilder: (context, constraints, shrinkOffset) {
           return Padding(
             padding: const EdgeInsets.all(12.0),

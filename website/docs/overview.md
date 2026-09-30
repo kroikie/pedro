@@ -28,7 +28,7 @@
 - **AI Narrator "Call Player" Nudge:** If a player is taking too long to play, waiting players can tap the **"Call Player"** button on the board. This prompts the AI Narrator to poke the slow player with witty Trinidadian banter (e.g., *"Aye Bob, yuh could stop eating for 2 seconds to play yuh know! Alice waiting on yuh!"*), broadcasting live to the room chat and delivering a high-priority push notification directly to their device. A 30-second cooldown protects players from notification spam.
 
 ### 5. User Profiles & Customization
-- **Flexible & Secure Sign-In:** Sign in easily and jump straight into the action with support for Email/Password and one-tap Google Sign-In across Web, Android, and iOS release environments.
+- **Flexible & Secure Sign-In:** Sign in easily and jump straight into the action with support for Email/Password and native one-tap Google Sign-In across Web, Android, and iOS release environments (configured with native iOS URL schemes, GID client descriptors, and seamless presentation lifecycle).
 - **Personalized Avatars:** Choose your player nickname and upload custom avatar images to represent yourself at the table.
 
 ### 6. Adaptive & Accessible Design
