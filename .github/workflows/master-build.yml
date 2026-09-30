@@ -93,6 +93,9 @@ jobs:
         with:
           channel: stable
           cache: true
+      - name: Clean up stale pub credentials
+        run: |
+          rm -f "$HOME/.config/dart/pub-tokens.json" "$HOME/.pub-cache/tokens.json"
       - name: Build Web
         working-directory: ./app
         run: |
@@ -114,6 +117,9 @@ jobs:
         with:
           channel: stable
           cache: true
+      - name: Clean up stale pub credentials
+        run: |
+          rm -f "$HOME/.config/dart/pub-tokens.json" "$HOME/.pub-cache/tokens.json"
       - name: Build Android APK
         working-directory: ./app
         run: |
@@ -131,6 +137,9 @@ jobs:
         with:
           channel: stable
           cache: true
+      - name: Clean up stale pub credentials
+        run: |
+          rm -f "$HOME/.config/dart/pub-tokens.json" "$HOME/.pub-cache/tokens.json"
       - name: Pre-create build directories & install CocoaPods
         run: |
           cd app
