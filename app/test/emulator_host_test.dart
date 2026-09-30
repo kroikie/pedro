@@ -42,4 +42,30 @@ void main() {
       expect(webIosHost, 'localhost');
     });
   });
+
+  group('shouldConnectToFirebaseEmulator', () {
+    test('enables emulators during debug mode when not in release mode', () {
+      final shouldUse = shouldConnectToFirebaseEmulator(
+        isDebugMode: true,
+        isReleaseMode: false,
+      );
+      expect(shouldUse, isTrue);
+    });
+
+    test('disables emulators during release mode even if debug flag is true', () {
+      final shouldUse = shouldConnectToFirebaseEmulator(
+        isDebugMode: true,
+        isReleaseMode: true,
+      );
+      expect(shouldUse, isFalse);
+    });
+
+    test('disables emulators when both debug and release flags are false', () {
+      final shouldUse = shouldConnectToFirebaseEmulator(
+        isDebugMode: false,
+        isReleaseMode: false,
+      );
+      expect(shouldUse, isFalse);
+    });
+  });
 }

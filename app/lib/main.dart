@@ -38,8 +38,8 @@ void main() async {
     };
   }
 
-  // Connect to the local emulator suite
-  const bool useEmulator = true;
+  // Connect to the local emulator suite if configured (defaults to debug mode only)
+  final bool useEmulator = shouldConnectToFirebaseEmulator();
   if (useEmulator) {
     try {
       final String host = resolveEmulatorHost();
