@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import '../models/game_session.dart';
 import '../models/card.dart';
+import '../functions_config.dart';
 
 class GameRepository {
   GameRepository({
@@ -32,32 +33,32 @@ class GameRepository {
   }
 
   Future<void> startGame(String gameId) async {
-    await _functions.httpsCallable('start-game').call({'gameId': gameId});
+    await _functions.callable('start-game').call({'gameId': gameId});
   }
 
   Future<void> submitBid(String gameId, int? bid) async {
-    await _functions.httpsCallable('submit-bid').call({
+    await _functions.callable('submit-bid').call({
       'gameId': gameId,
       'bid': bid,
     });
   }
 
   Future<void> setTrumpSuit(String gameId, Suit suit) async {
-    await _functions.httpsCallable('set-trump-suit').call({
+    await _functions.callable('set-trump-suit').call({
       'gameId': gameId,
       'suit': suit.name,
     });
   }
 
   Future<void> playCard(String gameId, Card card) async {
-    await _functions.httpsCallable('play-card').call({
+    await _functions.callable('play-card').call({
       'gameId': gameId,
       'card': card.toMap(),
     });
   }
 
   Future<void> callPlayer(String gameId) async {
-    await _functions.httpsCallable('call-player').call({
+    await _functions.callable('call-player').call({
       'gameId': gameId,
     });
   }

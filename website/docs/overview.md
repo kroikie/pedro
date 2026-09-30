@@ -40,3 +40,9 @@
 ### 7. Signature Branding & Visual Identity
 - **Iconic Mobile & Web Presence:** Features a custom luxury emblem centered on a polished gold capital 'P' adorned with a playing card spade on a deep emerald green felt background, evoking the timeless atmosphere of classic card tables across iOS, Android, and Web platforms.
 
+### 8. Backend Architecture & Cloud Functions Endpoints
+- **Server-Side Authoritative Game Logic:** All game state transitions (game creation, player invitations, bidding, trump selection, card play, scoring, and player nudges) are orchestrated server-side in Cloud Functions to guarantee game state integrity.
+- **Dart Cloud Functions & Cloud Run Deployment:** Cloud functions are authored in Dart using `firebase_functions` and deployed directly as Google Cloud Run services (`https://<function-name>-260654198138.us-central1.run.app`).
+- **Dynamic Callable Routing:** The Flutter client seamlessly routes callable invocations through `PedroFunctionsExtension.callable`:
+  - In local development and automated testing, functions automatically target the local Firebase Functions Emulator suite (`localhost:5001` or `10.0.2.2:5001`).
+  - In production release builds across Android, iOS, and Web, functions target deterministic Cloud Run endpoints (`https://<function-name>-260654198138.us-central1.run.app`).

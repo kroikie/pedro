@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/game_room.dart';
+import '../functions_config.dart';
 
 class LobbyRepository {
   LobbyRepository({
@@ -60,7 +61,7 @@ class LobbyRepository {
   }
 
   Future<String> createGame(String roomName, {int targetScore = 35}) async {
-    final result = await _functions.httpsCallable('create-game').call({
+    final result = await _functions.callable('create-game').call({
       'roomName': roomName,
       'targetScore': targetScore,
     });
@@ -68,20 +69,20 @@ class LobbyRepository {
   }
 
   Future<void> joinGame(String gameId) async {
-    await _functions.httpsCallable('join-game').call({
+    await _functions.callable('join-game').call({
       'gameId': gameId,
     });
   }
 
   Future<void> invitePlayer(String gameId, String targetPlayerId) async {
-    await _functions.httpsCallable('invite-player').call({
+    await _functions.callable('invite-player').call({
       'gameId': gameId,
       'targetPlayerId': targetPlayerId,
     });
   }
 
   Future<void> uninvitePlayer(String gameId, String targetPlayerId) async {
-    await _functions.httpsCallable('uninvite-player').call({
+    await _functions.callable('uninvite-player').call({
       'gameId': gameId,
       'targetPlayerId': targetPlayerId,
     });
