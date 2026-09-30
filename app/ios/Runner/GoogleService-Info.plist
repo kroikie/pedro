@@ -8,6 +8,8 @@
 	<string>com.googleusercontent.apps.260654198138-tr8fhmvb09r33tef7278c3l3il9aa615</string>
 	<key>ANDROID_CLIENT_ID</key>
 	<string>260654198138-tcjr0mhikksjd517apgpsljdk8s87j94.apps.googleusercontent.com</string>
+	<key>SERVER_CLIENT_ID</key>
+	<string>260654198138-u5jt4poqnr78d0sierk6e0r1pcikm8gf.apps.googleusercontent.com</string>
 	<key>API_KEY</key>
 	<string>AIzaSyDp6mhShMWc-lvwa-sw4Y_VBlitP18kvAo</string>
 	<key>GCM_SENDER_ID</key>

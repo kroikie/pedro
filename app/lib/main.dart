@@ -15,6 +15,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'data/repositories/player_repository.dart';
 import 'data/models/player.dart';
 import 'data/emulator_config.dart';
+import 'data/auth_config.dart';
 import 'data/services/notification_service.dart';
 
 import 'ui/screens/auth_screen.dart';
@@ -53,10 +54,7 @@ void main() async {
     }
   }
 
-  FirebaseUIAuth.configureProviders([
-    EmailAuthProvider(),
-    GoogleProvider(clientId: '260654198138-u5jt4poqnr78d0sierk6e0r1pcikm8gf.apps.googleusercontent.com'),
-  ]);
+  FirebaseUIAuth.configureProviders(buildAppAuthProviders());
 
   await NotificationService.instance.initialize(navigatorKey: rootNavigatorKey);
 
