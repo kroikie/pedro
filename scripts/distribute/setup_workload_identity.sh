@@ -18,7 +18,14 @@ echo " Repo:    ${REPO}                                         "
 echo "=========================================================="
 
 echo "1. Enabling required Google Cloud APIs..."
-gcloud services enable iamcredentials.googleapis.com sts.googleapis.com \
+gcloud services enable \
+  iamcredentials.googleapis.com \
+  sts.googleapis.com \
+  cloudfunctions.googleapis.com \
+  run.googleapis.com \
+  cloudbuild.googleapis.com \
+  artifactregistry.googleapis.com \
+  eventarc.googleapis.com \
   --project="${PROJECT_ID}"
 
 echo "2. Resolving Service Account..."
@@ -44,18 +51,29 @@ if [[ -z "${SERVICE_ACCOUNT}" ]]; then
   else
     echo "Service account ${SERVICE_ACCOUNT} already exists."
   fi
-
-  echo "Granting Firebase App Distribution Admin role..."
-  gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
-    --member="serviceAccount:${SERVICE_ACCOUNT}" \
-    --role="roles/firebaseappdistro.admin" --condition=None
-
-  gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
-    --member="serviceAccount:${SERVICE_ACCOUNT}" \
-    --role="roles/serviceusage.serviceUsageConsumer" --condition=None
 fi
 
 echo "Selected Service Account: ${SERVICE_ACCOUNT}"
+
+echo "Granting required distribution and Cloud Functions deployment roles..."
+REQUIRED_ROLES=(
+  "roles/firebaseappdistro.admin"
+  "roles/serviceusage.serviceUsageConsumer"
+  "roles/cloudfunctions.admin"
+  "roles/run.admin"
+  "roles/cloudbuild.builds.editor"
+  "roles/artifactregistry.writer"
+  "roles/storage.admin"
+  "roles/firebase.admin"
+  "roles/iam.serviceAccountUser"
+)
+
+for role in "${REQUIRED_ROLES[@]}"; do
+  echo "  - Granting $role..."
+  gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
+    --member="serviceAccount:${SERVICE_ACCOUNT}" \
+    --role="$role" --condition=None --quiet >/dev/null
+done
 
 echo "3. Creating Workload Identity Pool: ${POOL_NAME}..."
 if ! gcloud iam workload-identity-pools describe "${POOL_NAME}" --location="global" --project="${PROJECT_ID}" >/dev/null 2>&1; then
