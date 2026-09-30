@@ -118,6 +118,11 @@ jobs:
         with:
           sdk: stable
 
+      - name: Clear pub token configuration
+        run: |
+          dart pub token remove https://pub.dev 2>/dev/null || true
+          rm -f "$HOME/.config/dart/pub-tokens.json" "$HOME/.pub-cache/tokens.json"
+
       - name: Set up Node.js for Firebase CLI
         uses: actions/setup-node@v4
         with:
@@ -143,6 +148,12 @@ jobs:
         run: |
           chmod +x deploy_functions.sh
           ./deploy_functions.sh pedro-f65a6
+
+      - name: Post-deploy pub token cleanup
+        if: always()
+        run: |
+          dart pub token remove https://pub.dev 2>/dev/null || true
+          rm -f "$HOME/.config/dart/pub-tokens.json" "$HOME/.pub-cache/tokens.json"
 
   distribute-android:
     name: Build & Distribute Android
@@ -185,6 +196,10 @@ jobs:
         with:
           channel: 'stable'
           cache: true
+
+      - name: Clean up stale pub credentials
+        run: |
+          rm -f "$HOME/.config/dart/pub-tokens.json" "$HOME/.pub-cache/tokens.json"
 
       - name: Set up Node.js for Firebase CLI
         uses: actions/setup-node@v4
@@ -275,6 +290,10 @@ jobs:
         with:
           channel: 'stable'
           cache: true
+
+      - name: Clean up stale pub credentials
+        run: |
+          rm -f "$HOME/.config/dart/pub-tokens.json" "$HOME/.pub-cache/tokens.json"
 
       - name: Install FlutterFire CLI
         run: |
