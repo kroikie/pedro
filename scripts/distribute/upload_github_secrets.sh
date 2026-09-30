@@ -95,6 +95,20 @@ if [[ "$UPLOAD_ANDROID" =~ ^[Yy]$ ]]; then
   echo "✅ Android secrets uploaded successfully!"
 fi
 
+echo ""
+echo "--- GitHub Actions Self-Hosted Runner PAT ---"
+read -rp "Upload GitHub Runner PAT (for dynamic self-hosted runner detection)? (y/n): " UPLOAD_RUNNER_PAT
+if [[ "$UPLOAD_RUNNER_PAT" =~ ^[Yy]$ ]]; then
+  read -rsp "Enter Personal Access Token (or leave blank to use current gh auth token): " PAT_INPUT
+  echo ""
+  if [[ -z "$PAT_INPUT" ]]; then
+    gh auth token | gh secret set RUNNER_PAT --repo "$REPO"
+  else
+    echo -n "$PAT_INPUT" | gh secret set RUNNER_PAT --repo "$REPO"
+  fi
+  echo "✅ RUNNER_PAT secret uploaded successfully!"
+fi
+
 echo "=========================================================="
 echo "✅ Secrets configuration completed!"
 echo "=========================================================="

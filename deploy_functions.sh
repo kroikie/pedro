@@ -6,6 +6,10 @@ MAX_RETRIES=10
 
 echo "=== Starting Firebase Functions Deployment for $PROJECT_ID ==="
 
+# Ensure dartfunctions experiment is enabled for Dart-based Cloud Functions
+echo "Enabling Firebase CLI dartfunctions experiment..."
+firebase experiments:enable dartfunctions >/dev/null 2>&1 || true
+
 attempt=1
 targets="functions"
 
