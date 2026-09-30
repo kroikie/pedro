@@ -59,11 +59,11 @@ jobs:
 
           HAS_LINUX_RUNNER=$(echo "$RUNNERS_JSON" | jq -r '
             [ .runners[]? | select(.status == "online" and ((.os | ascii_downcase) == "linux" or ([.labels[]?.name | ascii_downcase] | (index("linux") != null or index("android") != null))) and ([.labels[]?.name | ascii_downcase] | index("self-hosted") != null)) ] | length > 0
-          ')
+          ' 2>/dev/null || echo 'false')
 
           HAS_MACOS_RUNNER=$(echo "$RUNNERS_JSON" | jq -r '
             [ .runners[]? | select(.status == "online" and ((.os | ascii_downcase) == "macos" or ([.labels[]?.name | ascii_downcase] | (index("macos") != null or index("ios") != null))) and ([.labels[]?.name | ascii_downcase] | index("self-hosted") != null)) ] | length > 0
-          ')
+          ' 2>/dev/null || echo 'false')
 
           if [ "$HAS_LINUX_RUNNER" = "true" ]; then
             echo "Self-hosted Linux runner is online -> Using self-hosted runner for Android."

@@ -19,6 +19,14 @@ on:
         type: boolean
         required: false
         default: true
+      runner_preference:
+        description: 'Runner preference for Linux (backend & android)'
+        type: choice
+        options:
+          - 'self-hosted'
+          - 'auto'
+          - 'cloud'
+        default: 'self-hosted'
 
 # Required permissions for Workload Identity Federation OIDC token minting and querying runners
 permissions:
@@ -40,31 +48,42 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.RUNNER_PAT || github.token }}
         run: |
+          PREFERENCE="${{ inputs.runner_preference || 'self-hosted' }}"
+          echo "Runner preference for Linux builds: $PREFERENCE"
+
           # Default fallbacks to cloud runners
           BACKEND_RUNNER='["ubuntu-latest"]'
           ANDROID_RUNNER='["ubuntu-latest"]'
           IOS_RUNNER='["macos-15"]'
 
-          # Query GitHub Actions API for registered runners
-          RUNNERS_JSON=$(gh api "repos/${{ github.repository }}/actions/runners" 2>/dev/null || echo '{"runners":[]}')
-
-          # Check for online self-hosted Linux runner (for Android & Backend)
-          HAS_LINUX_RUNNER=$(echo "$RUNNERS_JSON" | jq -r '
-            [ .runners[]? | select(.status == "online" and ((.os | ascii_downcase) == "linux" or ([.labels[]?.name | ascii_downcase] | (index("linux") != null or index("android") != null))) and ([.labels[]?.name | ascii_downcase] | index("self-hosted") != null)) ] | length > 0
-          ')
-
-          # Check for online self-hosted macOS runner (for iOS)
-          HAS_MACOS_RUNNER=$(echo "$RUNNERS_JSON" | jq -r '
-            [ .runners[]? | select(.status == "online" and ((.os | ascii_downcase) == "macos" or ([.labels[]?.name | ascii_downcase] | (index("macos") != null or index("ios") != null))) and ([.labels[]?.name | ascii_downcase] | index("self-hosted") != null)) ] | length > 0
-          ')
-
-          if [ "$HAS_LINUX_RUNNER" = "true" ]; then
-            echo "Self-hosted Linux runner is online -> Using self-hosted runner for Backend and Android."
+          if [ "$PREFERENCE" = "cloud" ]; then
+            echo "Explicit preference: cloud runners for Linux."
+          elif [ "$PREFERENCE" = "self-hosted" ]; then
+            echo "Explicit preference: self-hosted runners -> Targeting [self-hosted, linux]."
             BACKEND_RUNNER='["self-hosted", "linux"]'
             ANDROID_RUNNER='["self-hosted", "linux"]'
           else
-            echo "No online self-hosted Linux runner found -> Falling back to ubuntu-latest."
+            echo "Auto mode: detecting online self-hosted runners via GitHub API..."
+            RUNNERS_JSON=$(gh api "repos/${{ github.repository }}/actions/runners" 2>/dev/null || echo '{"runners":[]}')
+
+            HAS_LINUX_RUNNER=$(echo "$RUNNERS_JSON" | jq -r '
+              [ .runners[]? | select(.status == "online" and ((.os | ascii_downcase) == "linux" or ([.labels[]?.name | ascii_downcase] | (index("linux") != null or index("android") != null))) and ([.labels[]?.name | ascii_downcase] | index("self-hosted") != null)) ] | length > 0
+            ' 2>/dev/null || echo 'false')
+
+            if [ "$HAS_LINUX_RUNNER" = "true" ]; then
+              echo "Self-hosted Linux runner is online -> Using self-hosted runner for Backend and Android."
+              BACKEND_RUNNER='["self-hosted", "linux"]'
+              ANDROID_RUNNER='["self-hosted", "linux"]'
+            else
+              echo "No online self-hosted Linux runner found -> Falling back to ubuntu-latest."
+            fi
           fi
+
+          # Check for online self-hosted macOS runner (for iOS)
+          RUNNERS_JSON=${RUNNERS_JSON:-$(gh api "repos/${{ github.repository }}/actions/runners" 2>/dev/null || echo '{"runners":[]}')}
+          HAS_MACOS_RUNNER=$(echo "$RUNNERS_JSON" | jq -r '
+            [ .runners[]? | select(.status == "online" and ((.os | ascii_downcase) == "macos" or ([.labels[]?.name | ascii_downcase] | (index("macos") != null or index("ios") != null))) and ([.labels[]?.name | ascii_downcase] | index("self-hosted") != null)) ] | length > 0
+          ' 2>/dev/null || echo 'false')
 
           if [ "$HAS_MACOS_RUNNER" = "true" ]; then
             echo "Self-hosted macOS runner is online -> Using self-hosted runner for iOS."
@@ -106,6 +125,9 @@ jobs:
 
       - name: Install Firebase CLI
         run: npm install -g firebase-tools
+
+      - name: Enable Dart Functions experiment
+        run: firebase experiments:enable dartfunctions
 
       - name: Verify functions code generation & tests
         working-directory: ./functions
