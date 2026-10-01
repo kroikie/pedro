@@ -38,6 +38,7 @@ class _ChatOverlayState extends State<ChatOverlay>
   final _overlayPortalController = OverlayPortalController();
 
   late final AnimationController _toastAnimController;
+  late Stream<List<ChatMessage>> _messagesStream;
   StreamSubscription<List<ChatMessage>>? _messageSubscription;
   Timer? _toastTimer;
 
@@ -55,6 +56,7 @@ class _ChatOverlayState extends State<ChatOverlay>
       vsync: this,
       duration: const Duration(milliseconds: 300),
     );
+    _messagesStream = _chatRepo.watchMessages(widget.gameId);
     _loadPlayerName();
     _subscribeToMessages();
   }
@@ -62,7 +64,9 @@ class _ChatOverlayState extends State<ChatOverlay>
   @override
   void didUpdateWidget(covariant ChatOverlay oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.gameId != widget.gameId) {
+    if (oldWidget.gameId != widget.gameId ||
+        oldWidget.chatRepository != widget.chatRepository) {
+      _messagesStream = _chatRepo.watchMessages(widget.gameId);
       _messageSubscription?.cancel();
       _toastTimer?.cancel();
       if (_overlayPortalController.isShowing) {
@@ -319,7 +323,7 @@ class _ChatOverlayState extends State<ChatOverlay>
                       children: [
                         Expanded(
                           child: StreamBuilder<List<ChatMessage>>(
-                            stream: _chatRepo.watchMessages(widget.gameId),
+                            stream: _messagesStream,
                             builder: (context, snapshot) {
                               if (!snapshot.hasData) {
                                 return const Center(
