@@ -2,9 +2,17 @@ import 'package:flutter/foundation.dart';
 import 'package:firebase_ai/firebase_ai.dart';
 
 class GameNameService {
-  final _model = FirebaseAI.googleAI().generativeModel(
-    model: 'gemini-3.1-flash-lite-preview',
-  );
+  GameNameService({
+    FirebaseAI? firebaseAI,
+  }) : _customFirebaseAI = firebaseAI;
+
+  final FirebaseAI? _customFirebaseAI;
+
+  FirebaseAI get _firebaseAI => _customFirebaseAI ?? FirebaseAI.googleAI();
+
+  GenerativeModel get _model => _firebaseAI.generativeModel(
+        model: 'gemini-3.5-flash-lite',
+      );
 
   Future<String> generateRoomName() async {
     try {

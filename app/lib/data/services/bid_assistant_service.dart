@@ -3,9 +3,17 @@ import '../models/card.dart';
 import '../logic/card_sorting.dart';
 
 class BidAssistantService {
-  final _model = FirebaseAI.googleAI().generativeModel(
-    model: 'gemini-1.5-flash',
-  );
+  BidAssistantService({
+    FirebaseAI? firebaseAI,
+  }) : _customFirebaseAI = firebaseAI;
+
+  final FirebaseAI? _customFirebaseAI;
+
+  FirebaseAI get _firebaseAI => _customFirebaseAI ?? FirebaseAI.googleAI();
+
+  GenerativeModel get _model => _firebaseAI.generativeModel(
+        model: 'gemini-3.5-flash-lite',
+      );
 
   Future<String> getBidSuggestion(List<Card> hand) async {
     try {

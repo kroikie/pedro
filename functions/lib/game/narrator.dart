@@ -5,6 +5,8 @@ import 'package:google_cloud_firestore/google_cloud_firestore.dart';
 import 'package:firebase_admin_sdk/firebase_admin_sdk.dart';
 import 'deck.dart';
 
+const String narratorModel = 'gemini-3.5-flash-lite';
+
 String? get _geminiApiKey =>
     Platform.environment['GEMINI_API_KEY'] ??
     Platform.environment['GOOGLE_GENAI_API_KEY'];
@@ -40,7 +42,7 @@ Future<void> narrateWelcome(String gameId, String roomName) async {
           'Use natural Trini expressions (e.g., "Pull up ah chair, lime ah bit, and leh we deal out de cards for Pedro").';
 
       final response = await ai.generate(
-        model: googleAI.gemini('gemini-2.5-flash'),
+        model: googleAI.gemini(narratorModel),
         prompt: prompt.replaceAll('{roomName}', roomName),
       );
       text = response.text.trim();
@@ -95,7 +97,7 @@ Future<void> narrateBid(
           'Keep it lighthearted, competitive, and brief (strictly 1 sentence).';
 
       final response = await ai.generate(
-        model: googleAI.gemini('gemini-2.5-flash'),
+        model: googleAI.gemini(narratorModel),
         prompt: prompt,
       );
       text = response.text.trim();
@@ -175,7 +177,7 @@ Future<void> narratePointEvent(
           'Keep it spirited, humorous, and strictly 1 sentence.';
 
       final response = await ai.generate(
-        model: googleAI.gemini('gemini-2.5-flash'),
+        model: googleAI.gemini(narratorModel),
         prompt: prompt,
       );
       text = response.text.trim();
@@ -207,7 +209,7 @@ Future<void> narratePlay(
           'Key rules: '
           '- ALWAYS include the player\'s name ($playerName) in your comment. NEVER say "A player".';
       final response = await ai.generate(
-        model: googleAI.gemini('gemini-2.5-flash'),
+        model: googleAI.gemini(narratorModel),
         prompt: prompt,
       );
       text = response.text.trim();
@@ -247,7 +249,7 @@ Future<String> narrateCallPlayer({
           'Keep it lighthearted, cheeky, and strictly 1 sentence.';
 
       final response = await ai.generate(
-        model: googleAI.gemini('gemini-2.5-flash'),
+        model: googleAI.gemini(narratorModel),
         prompt: prompt,
       );
       text = response.text.trim();
