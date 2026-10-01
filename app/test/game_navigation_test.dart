@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pedro/data/models/chat_message.dart';
@@ -132,12 +133,19 @@ class FakePlayerRepository implements PlayerRepository {
   final Map<String, Completer<Player?>> completers = {};
 
   @override
-  Future<Player?> getPlayer(String uid) {
+  Future<Player?> getPlayer(
+    String uid, {
+    Source source = Source.serverAndCache,
+    Duration? timeout,
+  }) {
     if (completers.containsKey(uid)) {
       return completers[uid]!.future;
     }
     return Future.value(Player(id: uid, screenName: 'Player $uid'));
   }
+
+  @override
+  Future<Player?> getPlayerFromCache(String uid) async => getPlayer(uid);
 
   @override
   Stream<List<Player>> watchAllPlayers() => Stream.value([]);

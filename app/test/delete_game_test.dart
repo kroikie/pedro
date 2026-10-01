@@ -182,9 +182,16 @@ class MockPlayerRepository implements PlayerRepository {
   };
 
   @override
-  Future<Player?> getPlayer(String uid) async {
+  Future<Player?> getPlayer(
+    String uid, {
+    Source source = Source.serverAndCache,
+    Duration? timeout,
+  }) async {
     return players[uid] ?? Player(id: uid, screenName: 'Player $uid');
   }
+
+  @override
+  Future<Player?> getPlayerFromCache(String uid) async => getPlayer(uid);
 
   @override
   Future<void> updatePlayer(Player player) async {}

@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/player.dart';
 
@@ -26,9 +28,47 @@ class PlayerRepository {
     );
   }
 
-  Future<Player?> getPlayer(String uid) async {
-    final doc = await _playersRef().doc(uid).get();
-    return doc.data();
+  Future<Player?> getPlayer(
+    String uid, {
+    Source source = Source.serverAndCache,
+    Duration? timeout,
+  }) async {
+    try {
+      final getFuture = _playersRef().doc(uid).get(GetOptions(source: source));
+      final doc = timeout != null ? await getFuture.timeout(timeout) : await getFuture;
+      return doc.data();
+    } on FirebaseException catch (e) {
+      debugPrint('FirebaseException in getPlayer ($uid): $e');
+      if (source == Source.serverAndCache) {
+        try {
+          final cachedDoc = await _playersRef().doc(uid).get(const GetOptions(source: Source.cache));
+          return cachedDoc.data();
+        } catch (_) {}
+      }
+      return null;
+    } on TimeoutException catch (e) {
+      debugPrint('TimeoutException in getPlayer ($uid): $e');
+      if (source == Source.serverAndCache) {
+        try {
+          final cachedDoc = await _playersRef().doc(uid).get(const GetOptions(source: Source.cache));
+          return cachedDoc.data();
+        } catch (_) {}
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Unexpected error in getPlayer ($uid): $e');
+      if (source == Source.serverAndCache) {
+        try {
+          final cachedDoc = await _playersRef().doc(uid).get(const GetOptions(source: Source.cache));
+          return cachedDoc.data();
+        } catch (_) {}
+      }
+      return null;
+    }
+  }
+
+  Future<Player?> getPlayerFromCache(String uid) async {
+    return getPlayer(uid, source: Source.cache);
   }
 
   Future<void> updatePlayer(Player player) async {
