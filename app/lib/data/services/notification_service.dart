@@ -103,14 +103,35 @@ class NotificationService {
 
   Future<void> registerUserToken(String uid) async {
     _currentUserId = uid;
+
+    _tokenRefreshSub?.cancel();
+    _tokenRefreshSub = FirebaseMessaging.instance.onTokenRefresh.listen((newToken) async {
+      if (_currentUserId != null) {
+        final oldToken = _currentToken;
+        _currentToken = newToken;
+        final platform = kIsWeb
+            ? 'web'
+            : (defaultTargetPlatform == TargetPlatform.iOS ? 'ios' : 'android');
+        if (oldToken != null && oldToken != newToken) {
+          await _effectivePlayerRepo.removeFcmToken(_currentUserId!, oldToken);
+        }
+        await _effectivePlayerRepo.addFcmToken(_currentUserId!, newToken, platform);
+        debugPrint('Updated refreshed FCM token for $_currentUserId: $newToken ($platform)');
+      }
+    });
+
     try {
-      String? token;
-      if (kIsWeb) {
-        token = await FirebaseMessaging.instance.getToken();
-      } else {
-        token = await FirebaseMessaging.instance.getToken();
+      if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
+        // On iOS, APNs token registration happens asynchronously.
+        // Wait briefly for the APNs token if not yet populated.
+        String? apnsToken = await FirebaseMessaging.instance.getAPNSToken();
+        for (var i = 0; i < 6 && apnsToken == null; i++) {
+          await Future.delayed(const Duration(milliseconds: 500));
+          apnsToken = await FirebaseMessaging.instance.getAPNSToken();
+        }
       }
 
+      final token = await FirebaseMessaging.instance.getToken();
       if (token != null) {
         _currentToken = token;
         final platform = kIsWeb
@@ -119,24 +140,8 @@ class NotificationService {
         await _effectivePlayerRepo.addFcmToken(uid, token, platform);
         debugPrint('Registered FCM token for $uid: $token ($platform)');
       }
-
-      _tokenRefreshSub?.cancel();
-      _tokenRefreshSub = FirebaseMessaging.instance.onTokenRefresh.listen((newToken) async {
-        if (_currentUserId != null) {
-          final oldToken = _currentToken;
-          _currentToken = newToken;
-          final platform = kIsWeb
-              ? 'web'
-              : (defaultTargetPlatform == TargetPlatform.iOS ? 'ios' : 'android');
-          if (oldToken != null && oldToken != newToken) {
-            await _effectivePlayerRepo.removeFcmToken(_currentUserId!, oldToken);
-          }
-          await _effectivePlayerRepo.addFcmToken(_currentUserId!, newToken, platform);
-          debugPrint('Updated refreshed FCM token for $_currentUserId');
-        }
-      });
     } catch (e) {
-      debugPrint('Error registering FCM token: $e');
+      debugPrint('Error registering initial FCM token: $e');
     }
   }
 
