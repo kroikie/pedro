@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import '../../data/repositories/lobby_repository.dart';
 import '../../data/repositories/player_repository.dart';
+import '../../data/repositories/game_repository.dart';
+import '../../data/repositories/chat_repository.dart';
+import '../../data/repositories/reaction_repository.dart';
 import '../../data/models/game_room.dart';
 import '../../data/models/player.dart';
 import 'game_room_screen.dart';
+import 'game_board_screen.dart';
 import '../widgets/avatar_widget.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -12,29 +16,118 @@ class HomeFeedView extends StatefulWidget {
     super.key,
     required this.onCreateGameTap,
     required this.onViewAllGamesTap,
+    this.lobbyRepository,
+    this.playerRepository,
+    this.gameRepository,
+    this.chatRepository,
+    this.reactionRepository,
+    this.currentUserId,
   });
 
   final VoidCallback onCreateGameTap;
   final VoidCallback onViewAllGamesTap;
+  final LobbyRepository? lobbyRepository;
+  final PlayerRepository? playerRepository;
+  final GameRepository? gameRepository;
+  final ChatRepository? chatRepository;
+  final ReactionRepository? reactionRepository;
+  final String? currentUserId;
 
   @override
   State<HomeFeedView> createState() => _HomeFeedViewState();
 }
 
 class _HomeFeedViewState extends State<HomeFeedView> {
-  final _lobbyRepository = LobbyRepository();
-  final _playerRepository = PlayerRepository();
+  late final _lobbyRepository = widget.lobbyRepository ?? LobbyRepository();
+  late final _playerRepository = widget.playerRepository ?? PlayerRepository();
   final Map<String, Player?> _hostCache = {};
+  bool _isNavigating = false;
 
   Future<Player?> _getHostPlayer(String hostId) async {
     if (_hostCache.containsKey(hostId)) {
       return _hostCache[hostId];
     }
     final player = await _playerRepository.getPlayer(hostId);
-    if (mounted) {
-      setState(() => _hostCache[hostId] = player);
+    if (player != null) {
+      _hostCache[hostId] = player;
     }
     return player;
+  }
+
+  Future<void> _navigateToGame(GameRoom game) async {
+    if (_isNavigating) return;
+    setState(() => _isNavigating = true);
+    try {
+      if (game.status == GameStatus.playing) {
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => GameBoardScreen(
+              gameId: game.id,
+              gameName: game.name,
+              gameRepository: widget.gameRepository,
+              playerRepository: _playerRepository,
+              chatRepository: widget.chatRepository,
+              reactionRepository: widget.reactionRepository,
+              currentUserId: widget.currentUserId,
+            ),
+          ),
+        );
+      } else {
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => GameRoomScreen(
+              gameId: game.id,
+              lobbyRepository: _lobbyRepository,
+              playerRepository: _playerRepository,
+              gameRepository: widget.gameRepository,
+              chatRepository: widget.chatRepository,
+              reactionRepository: widget.reactionRepository,
+              currentUserId: widget.currentUserId,
+            ),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isNavigating = false);
+      }
+    }
+  }
+
+  Future<void> _acceptInvitation(GameRoom invite) async {
+    if (_isNavigating) return;
+    setState(() => _isNavigating = true);
+    try {
+      await _lobbyRepository.joinGame(invite.id);
+      if (mounted) {
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => GameRoomScreen(
+              gameId: invite.id,
+              lobbyRepository: _lobbyRepository,
+              playerRepository: _playerRepository,
+              gameRepository: widget.gameRepository,
+              chatRepository: widget.chatRepository,
+              reactionRepository: widget.reactionRepository,
+              currentUserId: widget.currentUserId,
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isNavigating = false);
+      }
+    }
   }
 
   @override
@@ -234,25 +327,9 @@ class _HomeFeedViewState extends State<HomeFeedView> {
                           ),
                           const SizedBox(width: 8),
                           ElevatedButton(
-                            onPressed: () async {
-                              try {
-                                await _lobbyRepository.joinGame(invite.id);
-                                if (context.mounted) {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => GameRoomScreen(gameId: invite.id),
-                                    ),
-                                  );
-                                }
-                              } catch (e) {
-                                if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('Error: $e')),
-                                  );
-                                }
-                              }
-                            },
+                            onPressed: _isNavigating
+                                ? null
+                                : () => _acceptInvitation(invite),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
                               foregroundColor: Theme.of(context).colorScheme.onSecondaryContainer,
@@ -455,14 +532,9 @@ class _HomeFeedViewState extends State<HomeFeedView> {
                               ],
                             ),
                             ElevatedButton(
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => GameRoomScreen(gameId: game.id),
-                                  ),
-                                );
-                              },
+                              onPressed: _isNavigating
+                                  ? null
+                                  : () => _navigateToGame(game),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Theme.of(context).colorScheme.primary,
                                 foregroundColor: Theme.of(context).colorScheme.onPrimary,
