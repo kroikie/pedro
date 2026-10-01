@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart' hide Card;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:pedro/data/models/card.dart' as pedro;
 import 'package:pedro/data/models/chat_message.dart';
 import 'package:pedro/data/models/game_reaction.dart';
@@ -48,9 +49,16 @@ class MockPlayerRepository implements PlayerRepository {
   };
 
   @override
-  Future<Player?> getPlayer(String uid) async {
+  Future<Player?> getPlayer(
+    String uid, {
+    Source source = Source.serverAndCache,
+    Duration? timeout,
+  }) async {
     return players[uid] ?? Player(id: uid, screenName: 'Player $uid');
   }
+
+  @override
+  Future<Player?> getPlayerFromCache(String uid) async => getPlayer(uid);
 
   @override
   Future<void> updatePlayer(Player player) async {}

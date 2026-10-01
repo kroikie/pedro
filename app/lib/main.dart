@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart' hide Card;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart' hide EmailAuthProvider;
@@ -226,20 +227,34 @@ class MyApp extends StatelessWidget {
 }
 
 class AuthGate extends StatefulWidget {
-  const AuthGate({super.key});
+  const AuthGate({
+    super.key,
+    this.playerRepository,
+    this.authStateChanges,
+    this.homeBuilder,
+  });
+
+  final PlayerRepository? playerRepository;
+  final Stream<User?>? authStateChanges;
+  final Widget Function(BuildContext context, Player player)? homeBuilder;
 
   @override
   State<AuthGate> createState() => _AuthGateState();
 }
 
 class _AuthGateState extends State<AuthGate> {
+  PlayerRepository get _effectivePlayerRepo =>
+      widget.playerRepository ?? PlayerRepository();
+  Stream<User?> get _effectiveAuthStream =>
+      widget.authStateChanges ?? FirebaseAuth.instance.authStateChanges();
+
   Future<Player?>? _playerFuture;
   String? _lastUid;
 
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<User?>(
-      stream: FirebaseAuth.instance.authStateChanges(),
+      stream: _effectiveAuthStream,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -265,7 +280,62 @@ class _AuthGateState extends State<AuthGate> {
               return const Scaffold(body: Center(child: CircularProgressIndicator()));
             }
             if (playerSnap.hasError) {
-               return Scaffold(body: Center(child: Text('Error initializing profile: ${playerSnap.error}')));
+              final theme = Theme.of(context);
+              return Scaffold(
+                body: SafeArea(
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.cloud_off_rounded,
+                            size: 64,
+                            color: theme.colorScheme.error,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Unable to Load Profile',
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'There was a problem preparing your profile. Please check your network connection and try again.',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 24),
+                          ElevatedButton.icon(
+                            icon: const Icon(Icons.refresh),
+                            label: const Text('Retry'),
+                            onPressed: () {
+                              setState(() {
+                                _playerFuture = _initializePlayer(user);
+                              });
+                            },
+                          ),
+                          const SizedBox(height: 8),
+                          TextButton(
+                            onPressed: () async {
+                              await FirebaseAuth.instance.signOut();
+                            },
+                            child: const Text('Sign Out'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }
+            if (widget.homeBuilder != null && playerSnap.data != null) {
+              return widget.homeBuilder!(context, playerSnap.data!);
             }
             return const HomeScreen();
           },
@@ -275,17 +345,41 @@ class _AuthGateState extends State<AuthGate> {
   }
 
   Future<Player?> _initializePlayer(User user) async {
-    final repo = PlayerRepository();
+    final repo = _effectivePlayerRepo;
     try {
-      NotificationService.instance.registerUserToken(user.uid);
-      final player = await repo.getPlayer(user.uid).timeout(const Duration(seconds: 5));
+      try {
+        unawaited(NotificationService.instance.registerUserToken(user.uid));
+      } catch (e) {
+        debugPrint('Token registration caught safely: $e');
+      }
+
+      Player? player;
+      try {
+        // Attempt server fetch with a 3-second timeout for server response
+        player = await repo.getPlayer(
+          user.uid,
+          timeout: const Duration(seconds: 3),
+        );
+      } catch (e) {
+        debugPrint('Initial server fetch failed or timed out: $e. Attempting cache read...');
+        try {
+          player = await repo.getPlayer(user.uid, source: Source.cache);
+        } catch (cacheError) {
+          debugPrint('Cache read failed: $cacheError');
+        }
+      }
+
       if (player == null) {
         final newPlayer = Player(
           id: user.uid,
-          screenName: user.displayName ?? 'Anonymous',
+          screenName: (user.displayName != null && user.displayName!.isNotEmpty)
+              ? user.displayName!
+              : 'Anonymous',
           avatarUrl: user.photoURL,
         );
-        await repo.updatePlayer(newPlayer);
+        unawaited(repo.updatePlayer(newPlayer).catchError((e) {
+          debugPrint('Background updatePlayer failed: $e');
+        }));
         return newPlayer;
       } else if ((player.avatarUrl == null || player.avatarUrl!.isEmpty) &&
           user.photoURL != null &&
@@ -295,13 +389,22 @@ class _AuthGateState extends State<AuthGate> {
           screenName: player.screenName,
           avatarUrl: user.photoURL,
         );
-        await repo.updatePlayer(updatedPlayer);
+        unawaited(repo.updatePlayer(updatedPlayer).catchError((e) {
+          debugPrint('Background updatePlayer avatar failed: $e');
+        }));
         return updatedPlayer;
       }
       return player;
-    } catch (e) {
-      debugPrint('Error in _initializePlayer: $e');
-      rethrow;
+    } catch (e, stack) {
+      debugPrint('Error in _initializePlayer: $e\n$stack');
+      // Graceful fallback: never block user startup due to profile initialization failure
+      return Player(
+        id: user.uid,
+        screenName: (user.displayName != null && user.displayName!.isNotEmpty)
+            ? user.displayName!
+            : 'Anonymous',
+        avatarUrl: user.photoURL,
+      );
     }
   }
 }

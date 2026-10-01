@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart' hide Card;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pedro/data/models/card.dart' as pedro;
@@ -57,9 +58,16 @@ class FakeGameRepository implements GameRepository {
 
 class FakePlayerRepository implements PlayerRepository {
   @override
-  Future<Player?> getPlayer(String uid) async {
+  Future<Player?> getPlayer(
+    String uid, {
+    Source source = Source.serverAndCache,
+    Duration? timeout,
+  }) async {
     return Player(id: uid, screenName: 'Player $uid');
   }
+
+  @override
+  Future<Player?> getPlayerFromCache(String uid) async => getPlayer(uid);
 
   @override
   Future<void> updatePlayer(Player player) async {}
