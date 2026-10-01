@@ -1,3 +1,4 @@
+import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:pedro/data/services/app_info_service.dart';
@@ -75,5 +76,77 @@ void main() {
       final formatted = await service.getFormattedVersion();
       expect(formatted, 'Pedro v1.0.0 (1)');
     });
+
+    test('reports active App Check token when available', () async {
+      final mockInfo = PackageInfo(
+        appName: 'Pedro',
+        packageName: 'com.ool.pedro',
+        version: '1.0.0',
+        buildNumber: '1',
+        buildSignature: '',
+        installerStore: null,
+      );
+      final service = AppInfoService(
+        packageInfo: mockInfo,
+        appCheck: _FakeAppCheck(token: 'valid-test-token'),
+      );
+
+      final diag = await service.getDiagnosticsInfo();
+      expect(diag, contains('App Check: Token active'));
+    });
+
+    test('reports missing App Check token when token is null or empty', () async {
+      final mockInfo = PackageInfo(
+        appName: 'Pedro',
+        packageName: 'com.ool.pedro',
+        version: '1.0.0',
+        buildNumber: '1',
+        buildSignature: '',
+        installerStore: null,
+      );
+      final service = AppInfoService(
+        packageInfo: mockInfo,
+        appCheck: _FakeAppCheck(token: null),
+      );
+
+      final diag = await service.getDiagnosticsInfo();
+      expect(diag, contains('App Check: No token returned'));
+    });
+
+    test('reports App Check error message when getToken throws', () async {
+      final mockInfo = PackageInfo(
+        appName: 'Pedro',
+        packageName: 'com.ool.pedro',
+        version: '1.0.0',
+        buildNumber: '1',
+        buildSignature: '',
+        installerStore: null,
+      );
+      final service = AppInfoService(
+        packageInfo: mockInfo,
+        appCheck: _FakeAppCheck(shouldThrow: true),
+      );
+
+      final diag = await service.getDiagnosticsInfo();
+      expect(diag, contains('App Check: Exception: Token error'));
+    });
   });
+}
+
+class _FakeAppCheck implements FirebaseAppCheck {
+  _FakeAppCheck({this.token, this.shouldThrow = false});
+
+  final String? token;
+  final bool shouldThrow;
+
+  @override
+  Future<String?> getToken([bool? forceRefresh]) async {
+    if (shouldThrow) {
+      throw Exception('Token error');
+    }
+    return token;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

@@ -1,10 +1,16 @@
+import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:flutter/foundation.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 class AppInfoService {
-  AppInfoService({PackageInfo? packageInfo}) : _packageInfo = packageInfo;
+  AppInfoService({
+    PackageInfo? packageInfo,
+    FirebaseAppCheck? appCheck,
+  })  : _packageInfo = packageInfo,
+        _appCheck = appCheck;
 
   PackageInfo? _packageInfo;
+  final FirebaseAppCheck? _appCheck;
 
   Future<PackageInfo> getPackageInfo() async {
     if (_packageInfo != null) return _packageInfo!;
@@ -47,6 +53,17 @@ class AppInfoService {
     }
     if (gameId != null && gameId.isNotEmpty) {
       buffer.writeln('Game ID: $gameId');
+    }
+    try {
+      final appCheck = _appCheck ?? FirebaseAppCheck.instance;
+      final token = await appCheck.getToken();
+      if (token != null && token.isNotEmpty) {
+        buffer.writeln('App Check: Token active');
+      } else {
+        buffer.writeln('App Check: No token returned');
+      }
+    } catch (e) {
+      buffer.writeln('App Check: $e');
     }
     return buffer.toString().trim();
   }
