@@ -15,6 +15,10 @@ The goal of Pedro is to be the first player (or team) to reach the target winnin
 1. **Players:** Designed for 4 to 8 players.
 2. **The Deal:** Each player is dealt an initial hand of cards.
 3. **Card Rank:** Standard card ranking applies within suits (Ace is High, 2 is Low).
+4. **Hand Organization:** Player hands are automatically organized matching physical card etiquette:
+   - **Grouped by Suit:** Cards are clustered by suit in alternating colors (♣ Clubs $\rightarrow$ ♦ Diamonds $\rightarrow$ ♠ Spades $\rightarrow$ ♥ Hearts) to prevent confusing adjacent suits of the same color.
+   - **Rank Order:** Within each suit, cards are ordered from lowest rank (2) on the left to highest rank (Ace) on the right.
+   - **Suit Separation:** Subtle visual spacing separates distinct suit clusters for effortless, tactile readability.
 
 ---
 

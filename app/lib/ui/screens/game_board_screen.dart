@@ -17,6 +17,7 @@ import '../../data/services/bid_assistant_service.dart';
 import '../../data/services/tactical_coach_service.dart';
 import '../../data/services/notification_service.dart';
 import '../../data/logic/card_play_validator.dart';
+import '../../data/logic/card_sorting.dart';
 import '../../data/repositories/reaction_repository.dart';
 import '../../data/repositories/chat_repository.dart';
 
@@ -1190,33 +1191,44 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
           const Text('Your Hand',
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
           const SizedBox(height: 4),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: localState.hand.map((card) {
-                final isSubmittingThisCard =
-                    _isSubmittingCard && _submittedCard == card;
-                return Padding(
-                  padding: const EdgeInsets.only(right: 6),
-                  child: CardWidget(
-                    card: card,
-                    isSubmitting: isSubmittingThisCard,
-                    onTap: (round.phase == RoundPhase.playing &&
-                            isMyTurn &&
-                            !_isReviewCooldownActive &&
-                            !_isSubmittingCard)
-                        ? () => _playCard(
-                              card: card,
-                              hand: localState.hand,
-                              round: round,
-                              isMyTurn: isMyTurn,
-                            )
-                        : null,
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
+          Builder(builder: (context) {
+            final sortedHand = localState.hand.sortedHand(
+              trumpSuit: round.trumpSuit,
+              trumpPosition: TrumpPosition.none,
+            );
+            return SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: sortedHand.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final card = entry.value;
+                  final isLastInSuit = index < sortedHand.length - 1 &&
+                      sortedHand[index + 1].suit != card.suit;
+                  final isSubmittingThisCard =
+                      _isSubmittingCard && _submittedCard == card;
+                  return Padding(
+                    key: ValueKey('${card.suit.name}_${card.rank.name}'),
+                    padding: EdgeInsets.only(right: isLastInSuit ? 12.0 : 6.0),
+                    child: CardWidget(
+                      card: card,
+                      isSubmitting: isSubmittingThisCard,
+                      onTap: (round.phase == RoundPhase.playing &&
+                              isMyTurn &&
+                              !_isReviewCooldownActive &&
+                              !_isSubmittingCard)
+                          ? () => _playCard(
+                                card: card,
+                                hand: localState.hand,
+                                round: round,
+                                isMyTurn: isMyTurn,
+                              )
+                          : null,
+                    ),
+                  );
+                }).toList(),
+              ),
+            );
+          }),
           const SizedBox(height: 6),
           ReactionBar(
             gameId: widget.gameId,
