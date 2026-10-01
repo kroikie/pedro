@@ -240,6 +240,50 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
     );
   }
 
+  Future<void> _confirmDeleteGame(BuildContext context, GameSession session) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Game'),
+        content: Text(
+          'Are you sure you want to delete "${session.name ?? 'this game'}"? This action cannot be undone and will end the game for all players.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: Theme.of(context).colorScheme.onError,
+            ),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      try {
+        await _gameRepo.deleteGame(session.gameId);
+        if (context.mounted) {
+          Navigator.of(context).pop();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Game "${session.name ?? 'Pedro'}" deleted.')),
+          );
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to delete game: $e')),
+          );
+        }
+      }
+    }
+  }
+
   void _checkLiftCompletion(Lift? lift) {
     if (lift?.winnerId != null) {
       if (_lastObservedWinnerId != lift!.winnerId) {
@@ -331,14 +375,35 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
           return Scaffold(
               body: Center(child: Text('Error: ${snapshot.error}')));
         }
-        if (!snapshot.hasData) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
               body: Center(child: CircularProgressIndicator()));
         }
-        final session = snapshot.data!;
+        final session = snapshot.data;
+        if (session == null) {
+          return Scaffold(
+            appBar: AppBar(title: Text(widget.gameName ?? 'Pedro')),
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.info_outline, size: 48, color: Colors.grey),
+                  const SizedBox(height: 16),
+                  const Text('This game has ended or was deleted.'),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Return to Home'),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
         _checkLiftCompletion(session.currentRound.currentLift);
         _checkSubmissionCompletion(session);
 
+        final isHost = session.hostId != null && session.hostId == _uid;
         final gameTitle =
             (session.name != null && session.name!.trim().isNotEmpty)
                 ? session.name!
@@ -398,6 +463,36 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                   isLocalBidWinner: isLocalBidWinner,
                 );
               }),
+              if (isHost)
+                PopupMenuButton<String>(
+                  icon: const Icon(Icons.more_vert),
+                  tooltip: 'Game options',
+                  onSelected: (value) {
+                    if (value == 'delete') {
+                      _confirmDeleteGame(context, session);
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: 'delete',
+                      child: Row(
+                        children: [
+                          Icon(Icons.delete_outline,
+                              color: Theme.of(context).colorScheme.error,
+                              size: 20),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Delete Game',
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.error,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               const SizedBox(width: 12),
             ],
           ),

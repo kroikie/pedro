@@ -123,6 +123,9 @@ class FakeLobbyRepository implements LobbyRepository {
 
   @override
   Future<void> uninvitePlayer(String gameId, String targetPlayerId) async {}
+
+  @override
+  Future<void> deleteGame(String gameId) async {}
 }
 
 class FakePlayerRepository implements PlayerRepository {

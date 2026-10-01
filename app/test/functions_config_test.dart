@@ -11,6 +11,7 @@ void main() {
     test('resolves all game and lobby callable function endpoints correctly', () {
       const endpoints = [
         'create-game',
+        'delete-game',
         'join-game',
         'invite-player',
         'uninvite-player',

@@ -57,6 +57,50 @@ class _GameRoomScreenState extends State<GameRoomScreen> {
     );
   }
 
+  Future<void> _confirmDeleteGame(BuildContext context, GameRoom room) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Game'),
+        content: Text(
+          'Are you sure you want to delete "${room.name}"? This action cannot be undone and will remove the game for all players.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: Theme.of(context).colorScheme.onError,
+            ),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      try {
+        await _lobbyRepository.deleteGame(room.id);
+        if (context.mounted) {
+          Navigator.of(context).pop();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Game "${room.name}" deleted.')),
+          );
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to delete game: $e')),
+          );
+        }
+      }
+    }
+  }
+
   Future<Player?> _getPlayer(String uid) async {
     if (_playerCache.containsKey(uid)) {
       return _playerCache[uid];
@@ -82,7 +126,24 @@ class _GameRoomScreenState extends State<GameRoomScreen> {
 
         final room = snapshot.data;
         if (room == null) {
-          return const Scaffold(body: Center(child: Text('Game not found')));
+          return Scaffold(
+            appBar: AppBar(title: const Text('Game Room')),
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.info_outline, size: 48, color: Colors.grey),
+                  const SizedBox(height: 16),
+                  const Text('Game not found or has been deleted.'),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Return to Lobby'),
+                  ),
+                ],
+              ),
+            ),
+          );
         }
 
         if (room.status == GameStatus.playing && !_hasNavigated) {
@@ -113,12 +174,18 @@ class _GameRoomScreenState extends State<GameRoomScreen> {
           appBar: AppBar(
             title: Text(room.name),
             actions: [
-              if (isHost)
+              if (isHost) ...[
                 IconButton(
                   icon: const Icon(Icons.person_add),
                   onPressed: () => _showInviteDialog(context, room),
                   tooltip: 'Invite Player',
                 ),
+                IconButton(
+                  icon: const Icon(Icons.delete_outline),
+                  onPressed: () => _confirmDeleteGame(context, room),
+                  tooltip: 'Delete Game',
+                ),
+              ],
               IconButton(
                 icon: const Icon(Icons.info_outline),
                 tooltip: 'Game & App Info',

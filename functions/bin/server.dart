@@ -64,6 +64,47 @@ void main(List<String> args) {
       return CallableResult({'gameId': gameRef.id});
     });
 
+    // deleteGame
+    firebase.https.onCall(name: 'deleteGame', (request, response) async {
+      final auth = request.auth;
+      if (auth == null) throw UnauthenticatedError('User must be logged in.');
+
+      final data = request.data as Map<String, dynamic>;
+      final gameId = data['gameId'] as String?;
+      if (gameId == null || gameId.isEmpty) {
+        throw InvalidArgumentError('gameId is required.');
+      }
+
+      final firestore = firebase.adminApp.firestore();
+      final gameRef = firestore.collection('games').doc(gameId);
+      final gameDoc = await gameRef.get();
+
+      if (!gameDoc.exists) throw NotFoundError('Game not found.');
+
+      final gameData = gameDoc.data()!;
+      if (gameData['hostId'] != auth.uid) {
+        throw PermissionDeniedError('Only the game creator can delete this game.');
+      }
+
+      try {
+        final messages = await gameRef.collection('messages').get();
+        for (final doc in messages.docs) {
+          await doc.ref.delete();
+        }
+      } catch (_) {}
+
+      try {
+        final reactions = await gameRef.collection('reactions').get();
+        for (final doc in reactions.docs) {
+          await doc.ref.delete();
+        }
+      } catch (_) {}
+
+      await gameRef.delete();
+
+      return CallableResult({'success': true});
+    });
+
     // 2. invitePlayer
     firebase.https.onCall(name: 'invitePlayer', (request, response) async {
       final auth = request.auth;

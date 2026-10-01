@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../data/repositories/lobby_repository.dart';
 import '../../data/repositories/player_repository.dart';
 import '../../data/repositories/game_repository.dart';
@@ -40,6 +41,7 @@ class HomeFeedView extends StatefulWidget {
 class _HomeFeedViewState extends State<HomeFeedView> {
   late final _lobbyRepository = widget.lobbyRepository ?? LobbyRepository();
   late final _playerRepository = widget.playerRepository ?? PlayerRepository();
+  late final _currentUserId = widget.currentUserId ?? FirebaseAuth.instance.currentUser?.uid;
   final Map<String, Player?> _hostCache = {};
   bool _isNavigating = false;
 
@@ -126,6 +128,49 @@ class _HomeFeedViewState extends State<HomeFeedView> {
     } finally {
       if (mounted) {
         setState(() => _isNavigating = false);
+      }
+    }
+  }
+
+  Future<void> _confirmDeleteGame(BuildContext context, GameRoom game) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Game'),
+        content: Text(
+          'Are you sure you want to delete "${game.name}"? This action cannot be undone and will remove the game for all players.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: Theme.of(context).colorScheme.onError,
+            ),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      try {
+        await _lobbyRepository.deleteGame(game.id);
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Game "${game.name}" deleted.')),
+          );
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to delete game: $e')),
+          );
+        }
       }
     }
   }
@@ -429,6 +474,7 @@ class _HomeFeedViewState extends State<HomeFeedView> {
                 itemBuilder: (context, index) {
                   final game = games[index];
                   final isActive = game.status == GameStatus.playing || game.status == GameStatus.starting;
+                  final isHost = game.hostId == _currentUserId;
                   
                   return Container(
                     padding: const EdgeInsets.all(20),
@@ -463,7 +509,7 @@ class _HomeFeedViewState extends State<HomeFeedView> {
                                 borderRadius: BorderRadius.circular(99),
                               ),
                               child: Text(
-                                isActive ? 'ACTIVE NOW' : 'COMPLETED',
+                                isActive ? 'ACTIVE NOW' : (game.status == GameStatus.waiting ? 'WAITING' : 'COMPLETED'),
                                 style: GoogleFonts.plusJakartaSans(
                                   fontSize: 8,
                                   fontWeight: FontWeight.w800,
@@ -474,13 +520,58 @@ class _HomeFeedViewState extends State<HomeFeedView> {
                                 ),
                               ),
                             ),
-                            Text(
-                              'Target: ${game.targetScore}',
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                              ),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'Target: ${game.targetScore}',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                                if (isHost) ...[
+                                  const SizedBox(width: 4),
+                                  PopupMenuButton<String>(
+                                    icon: Icon(
+                                      Icons.more_vert,
+                                      size: 18,
+                                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                    ),
+                                    padding: EdgeInsets.zero,
+                                    constraints: const BoxConstraints(),
+                                    tooltip: 'Game options',
+                                    onSelected: (value) {
+                                      if (value == 'delete') {
+                                        _confirmDeleteGame(context, game);
+                                      }
+                                    },
+                                    itemBuilder: (context) => [
+                                      PopupMenuItem(
+                                        value: 'delete',
+                                        child: Row(
+                                          children: [
+                                            Icon(
+                                              Icons.delete_outline,
+                                              size: 18,
+                                              color: Theme.of(context).colorScheme.error,
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Text(
+                                              'Delete Game',
+                                              style: TextStyle(
+                                                color: Theme.of(context).colorScheme.error,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ],
                             ),
                           ],
                         ),

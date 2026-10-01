@@ -62,4 +62,10 @@ class GameRepository {
       'gameId': gameId,
     });
   }
+
+  Future<void> deleteGame(String gameId) async {
+    await _functions.callable('delete-game').call({
+      'gameId': gameId,
+    });
+  }
 }

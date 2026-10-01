@@ -10,6 +10,7 @@
 - **Instant Synchronization:** Play in real-time with friends or opponents across devices.
 - **Custom Game Rooms:** Easily create private game rooms or browse open lobbies. Game rooms feature fun, AI-generated room names.
 - **Direct Player Invites:** Send game invitations straight to your friends' in-app inbox.
+- **Game Management & Deletion:** Game creators maintain full administrative control over their games, with the option to permanently delete games they created directly from the lobby waiting room, the Home feed's recent games list, or the active game board. Deletion includes a confirmation safeguard and thoroughly removes the game document along with all associated chat messages and reactions across all players.
 
 ### 2. Interactive AI Companions
 - **Global AI Narrator (Trinidad & Tobago Voice):** An in-game announcer observes key moments—such as aggressive bids, key trumps played, and clutch scoring—delivering live commentary and banter with an authentic, witty Trinidadian accent and cadence (featuring iconic expressions like *"Dat is ah brave bid!"*, *"Lardits!"*, *"Jah!"*, and *"Oh gosh! Arthur does play card for gramoxone!"*). Powered server-side by **Genkit** (`gemini-2.5-flash`) in Cloud Functions, authenticated via **Google Cloud Secret Manager** (`GEMINI_API_KEY`).
@@ -52,7 +53,7 @@
 - **Iconic Mobile & Web Presence:** Features a custom luxury emblem centered on a polished gold capital 'P' adorned with a playing card spade on a deep emerald green felt background, evoking the timeless atmosphere of classic card tables across iOS, Android, and Web platforms.
 
 ### 8. Backend Architecture & Cloud Functions Endpoints
-- **Server-Side Authoritative Game Logic:** All game state transitions (game creation, player invitations, bidding, trump selection, card play, scoring, and player nudges) are orchestrated server-side in Cloud Functions to guarantee game state integrity.
+- **Server-Side Authoritative Game Logic:** All game state transitions (game creation, game deletion, player invitations, bidding, trump selection, card play, scoring, and player nudges) are orchestrated server-side in Cloud Functions to guarantee game state integrity.
 - **Dart Cloud Functions & Cloud Run Deployment:** Cloud functions are authored in Dart using `firebase_functions` and deployed directly as Google Cloud Run services (`https://<function-name>-260654198138.us-central1.run.app`).
 - **Dynamic Callable Routing:** The Flutter client seamlessly routes callable invocations through `PedroFunctionsExtension.callable`:
   - In local development and automated testing, functions automatically target the local Firebase Functions Emulator suite (`localhost:5001` or `10.0.2.2:5001`).

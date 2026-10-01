@@ -79,6 +79,7 @@ class RoundState with RoundStateMappable {
 @MappableClass()
 class GameSession with GameSessionMappable {
   final String gameId;
+  final String? hostId;
   final String? name;
   final int targetScore;
   final List<PlayerGameState> playerStates;
@@ -86,6 +87,7 @@ class GameSession with GameSessionMappable {
 
   const GameSession({
     required this.gameId,
+    this.hostId,
     this.name,
     this.targetScore = 35,
     required this.playerStates,

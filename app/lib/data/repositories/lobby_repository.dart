@@ -87,4 +87,10 @@ class LobbyRepository {
       'targetPlayerId': targetPlayerId,
     });
   }
+
+  Future<void> deleteGame(String gameId) async {
+    await _functions.callable('delete-game').call({
+      'gameId': gameId,
+    });
+  }
 }
