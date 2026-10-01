@@ -42,8 +42,25 @@ class _GameRoomScreenState extends State<GameRoomScreen> {
   late final _gameRepository = widget.gameRepository ?? GameRepository();
   late final _currentUserId =
       widget.currentUserId ?? FirebaseAuth.instance.currentUser?.uid;
-  final Map<String, Player?> _playerCache = {};
+  final Map<String, Player> _playerCache = {};
+  final Map<String, Future<Player?>> _playerFutureCache = {};
+  late Stream<GameRoom?> _gameRoomStream;
   bool _hasNavigated = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _gameRoomStream = _lobbyRepository.watchGame(widget.gameId);
+  }
+
+  @override
+  void didUpdateWidget(covariant GameRoomScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.gameId != widget.gameId ||
+        oldWidget.lobbyRepository != widget.lobbyRepository) {
+      _gameRoomStream = _lobbyRepository.watchGame(widget.gameId);
+    }
+  }
 
   void _showInviteDialog(BuildContext context, GameRoom room) {
     showDialog(
@@ -101,26 +118,26 @@ class _GameRoomScreenState extends State<GameRoomScreen> {
     }
   }
 
-  Future<Player?> _getPlayer(String uid) async {
-    if (_playerCache.containsKey(uid)) {
-      return _playerCache[uid];
-    }
-    final player = await _playerRepository.getPlayer(uid);
-    if (player != null) {
-      _playerCache[uid] = player;
-    }
-    return player;
+  Future<Player?> _getPlayer(String uid) {
+    return _playerFutureCache.putIfAbsent(uid, () async {
+      final player = await _playerRepository.getPlayer(uid);
+      if (player != null && mounted) {
+        _playerCache[uid] = player;
+      }
+      return player;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<GameRoom?>(
-      stream: _lobbyRepository.watchGame(widget.gameId),
+      stream: _gameRoomStream,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return Scaffold(body: Center(child: Text('Error: ${snapshot.error}')));
         }
-        if (snapshot.connectionState == ConnectionState.waiting) {
+        if (snapshot.connectionState == ConnectionState.waiting &&
+            !snapshot.hasData) {
           return const Scaffold(body: Center(child: CircularProgressIndicator()));
         }
 
@@ -216,6 +233,7 @@ class _GameRoomScreenState extends State<GameRoomScreen> {
                             
                             return FutureBuilder<Player?>(
                               future: _getPlayer(uid),
+                              initialData: _playerCache[uid],
                               builder: (context, snapshot) {
                                 final player = snapshot.data;
                                 return Opacity(

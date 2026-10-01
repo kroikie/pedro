@@ -80,164 +80,30 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
   bool _isReviewCooldownActive = false;
   Timer? _reviewCooldownTimer;
 
-  bool _isCallingPlayer = false;
-  Timer? _callCooldownTicker;
+  late Stream<GameSession?> _gameSessionStream;
 
   @override
   void initState() {
     super.initState();
+    _gameSessionStream = _gameRepo.watchGameSession(widget.gameId);
     NotificationService.instance.setActiveGame(widget.gameId);
+  }
+
+  @override
+  void didUpdateWidget(covariant GameBoardScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.gameId != widget.gameId ||
+        oldWidget.gameRepository != widget.gameRepository) {
+      _gameSessionStream = _gameRepo.watchGameSession(widget.gameId);
+    }
   }
 
   @override
   void dispose() {
     NotificationService.instance.setActiveGame(null);
     _reviewCooldownTimer?.cancel();
-    _callCooldownTicker?.cancel();
     _cardSubmissionSafetyTimer?.cancel();
     super.dispose();
-  }
-
-  void _ensureCooldownTicker() {
-    if (_callCooldownTicker != null && _callCooldownTicker!.isActive) return;
-    _callCooldownTicker = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (mounted) {
-        setState(() {});
-      } else {
-        timer.cancel();
-      }
-    });
-  }
-
-  Future<void> _callCurrentPlayer(GameSession session) async {
-    if (_isCallingPlayer) return;
-    setState(() => _isCallingPlayer = true);
-    try {
-      await _gameRepo.callPlayer(widget.gameId);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Nudge sent! AI Narrator is calling the player.'),
-            duration: Duration(seconds: 3),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Could not call player: $e'),
-            duration: const Duration(seconds: 3),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isCallingPlayer = false);
-      }
-    }
-  }
-
-  Widget _buildWaitingAndCallArea(GameSession session) {
-    final round = session.currentRound;
-    final activeIndex = round.turnIndex;
-    final activeUid = (activeIndex >= 0 && activeIndex < session.playerStates.length)
-        ? session.playerStates[activeIndex].uid
-        : null;
-
-    int cooldownRemaining = 0;
-    if (round.lastCalledAt != null) {
-      final diff = DateTime.now().toUtc().difference(round.lastCalledAt!.toUtc());
-      if (diff.inSeconds < 30) {
-        cooldownRemaining = 30 - diff.inSeconds;
-        _ensureCooldownTicker();
-      }
-    }
-
-    final showCallButton =
-        session.currentRound.phase != RoundPhase.finished &&
-            activeUid != null &&
-            activeUid != _uid;
-
-    final waitingTextWidget = (activeUid != null)
-        ? FutureBuilder<Player?>(
-            future: _getPlayer(activeUid),
-            builder: (context, snap) {
-              final name = snap.data?.screenName ?? 'player';
-              return Text(
-                'Waiting for $name...',
-                style: const TextStyle(color: Colors.grey, fontSize: 12),
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
-              );
-            },
-          )
-        : const Text(
-            'Waiting...',
-            style: TextStyle(color: Colors.grey, fontSize: 12),
-          );
-
-    if (!showCallButton) {
-      return waitingTextWidget;
-    }
-
-    final callButton = cooldownRemaining > 0
-        ? OutlinedButton.icon(
-            onPressed: null,
-            icon: const Icon(Icons.notifications_paused, size: 13),
-            label: Text('Called (${cooldownRemaining}s)',
-                style: const TextStyle(fontSize: 10)),
-            style: OutlinedButton.styleFrom(
-              visualDensity: VisualDensity.compact,
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 0),
-            ),
-          )
-        : OutlinedButton.icon(
-            onPressed:
-                _isCallingPlayer ? null : () => _callCurrentPlayer(session),
-            icon: const Icon(Icons.notifications_active,
-                size: 13, color: Color(0xFF00694B)),
-            label: const Text('Call Player',
-                style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF00694B))),
-            style: OutlinedButton.styleFrom(
-              visualDensity: VisualDensity.compact,
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 0),
-            ),
-          );
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        if (constraints.maxWidth >= 260) {
-          return Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Flexible(child: waitingTextWidget),
-              const SizedBox(width: 8),
-              callButton,
-            ],
-          );
-        }
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            waitingTextWidget,
-            const SizedBox(height: 2),
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.centerRight,
-              child: callButton,
-            ),
-          ],
-        );
-      },
-    );
   }
 
   Future<void> _confirmDeleteGame(BuildContext context, GameSession session) async {
@@ -369,13 +235,14 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<GameSession?>(
-      stream: _gameRepo.watchGameSession(widget.gameId),
+      stream: _gameSessionStream,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return Scaffold(
               body: Center(child: Text('Error: ${snapshot.error}')));
         }
-        if (snapshot.connectionState == ConnectionState.waiting) {
+        if (snapshot.connectionState == ConnectionState.waiting &&
+            !snapshot.hasData) {
           return const Scaffold(
               body: Center(child: CircularProgressIndicator()));
         }
@@ -630,7 +497,8 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                   ),
                 ),
                 FutureBuilder<Player?>(
-                  future: _playerRepo.getPlayer(lift.winnerId!),
+                  future: _getPlayer(lift.winnerId!),
+                  initialData: _playerCache[lift.winnerId!],
                   builder: (context, snap) => Text(
                     snap.data?.screenName ?? '...',
                     style: TextStyle(
@@ -779,7 +647,8 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                       ConstrainedBox(
                         constraints: const BoxConstraints(maxWidth: 60),
                         child: FutureBuilder<Player?>(
-                          future: _playerRepo.getPlayer(entry.key),
+                          future: _getPlayer(entry.key),
+                          initialData: _playerCache[entry.key],
                           builder: (context, snap) => Text(
                             snap.data?.screenName ?? '...',
                             style: TextStyle(
@@ -826,7 +695,8 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
               )
             else
               FutureBuilder<Player?>(
-                future: _playerRepo.getPlayer(lift.winnerId!),
+                future: _getPlayer(lift.winnerId!),
+                initialData: _playerCache[lift.winnerId!],
                 builder: (context, snap) {
                   final winnerName = snap.data?.screenName ?? 'Winner';
                   final isLocalWinner = lift.winnerId == _uid;
@@ -874,7 +744,8 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                     ),
                     if (lastLift.winnerId != null)
                       FutureBuilder<Player?>(
-                        future: _playerRepo.getPlayer(lastLift.winnerId!),
+                        future: _getPlayer(lastLift.winnerId!),
+                        initialData: _playerCache[lastLift.winnerId!],
                         builder: (context, snap) => Text(
                           'Won by ${snap.data?.screenName ?? '...'}',
                           style: TextStyle(
@@ -914,7 +785,8 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                               ),
                             ),
                             FutureBuilder<Player?>(
-                              future: _playerRepo.getPlayer(entry.key),
+                              future: _getPlayer(entry.key),
+                              initialData: _playerCache[entry.key],
                               builder: (context, snap) => Text(
                                 snap.data?.screenName ?? '...',
                                 style: const TextStyle(fontSize: 10),
@@ -1250,7 +1122,13 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                 )
               else
                 Flexible(
-                  child: _buildWaitingAndCallArea(session),
+                  child: _WaitingAndCallArea(
+                    session: session,
+                    currentUserId: _uid,
+                    gameRepo: _gameRepo,
+                    getPlayer: _getPlayer,
+                    playerCache: _playerCache,
+                  ),
                 ),
             ],
           ),
@@ -1507,3 +1385,178 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
         : Colors.black;
   }
 }
+
+class _WaitingAndCallArea extends StatefulWidget {
+  const _WaitingAndCallArea({
+    required this.session,
+    required this.currentUserId,
+    required this.gameRepo,
+    required this.getPlayer,
+    required this.playerCache,
+  });
+
+  final GameSession session;
+  final String? currentUserId;
+  final GameRepository gameRepo;
+  final Future<Player?> Function(String) getPlayer;
+  final Map<String, Player> playerCache;
+
+  @override
+  State<_WaitingAndCallArea> createState() => _WaitingAndCallAreaState();
+}
+
+class _WaitingAndCallAreaState extends State<_WaitingAndCallArea> {
+  bool _isCallingPlayer = false;
+  Timer? _callCooldownTicker;
+
+  @override
+  void dispose() {
+    _callCooldownTicker?.cancel();
+    super.dispose();
+  }
+
+  void _ensureCooldownTicker() {
+    if (_callCooldownTicker != null && _callCooldownTicker!.isActive) return;
+    _callCooldownTicker = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (mounted) {
+        setState(() {});
+      } else {
+        timer.cancel();
+      }
+    });
+  }
+
+  Future<void> _callCurrentPlayer(GameSession session) async {
+    if (_isCallingPlayer) return;
+    setState(() => _isCallingPlayer = true);
+    try {
+      await widget.gameRepo.callPlayer(session.gameId);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Nudge sent! AI Narrator is calling the player.'),
+            duration: Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Could not call player: $e'),
+            duration: const Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isCallingPlayer = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final round = widget.session.currentRound;
+    final activeIndex = round.turnIndex;
+    final activeUid = (activeIndex >= 0 && activeIndex < widget.session.playerStates.length)
+        ? widget.session.playerStates[activeIndex].uid
+        : null;
+
+    int cooldownRemaining = 0;
+    if (round.lastCalledAt != null) {
+      final diff = DateTime.now().toUtc().difference(round.lastCalledAt!.toUtc());
+      if (diff.inSeconds < 30) {
+        cooldownRemaining = 30 - diff.inSeconds;
+        _ensureCooldownTicker();
+      }
+    }
+
+    final showCallButton =
+        widget.session.currentRound.phase != RoundPhase.finished &&
+            activeUid != null &&
+            activeUid != widget.currentUserId;
+
+    final waitingTextWidget = (activeUid != null)
+        ? FutureBuilder<Player?>(
+            future: widget.getPlayer(activeUid),
+            initialData: widget.playerCache[activeUid],
+            builder: (context, snap) {
+              final name = snap.data?.screenName ?? 'player';
+              return Text(
+                'Waiting for $name...',
+                style: const TextStyle(color: Colors.grey, fontSize: 12),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              );
+            },
+          )
+        : const Text(
+            'Waiting...',
+            style: TextStyle(color: Colors.grey, fontSize: 12),
+          );
+
+    if (!showCallButton) {
+      return waitingTextWidget;
+    }
+
+    final callButton = cooldownRemaining > 0
+        ? OutlinedButton.icon(
+            onPressed: null,
+            icon: const Icon(Icons.notifications_paused, size: 13),
+            label: Text('Called (${cooldownRemaining}s)',
+                style: const TextStyle(fontSize: 10)),
+            style: OutlinedButton.styleFrom(
+              visualDensity: VisualDensity.compact,
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 0),
+            ),
+          )
+        : OutlinedButton.icon(
+            onPressed:
+                _isCallingPlayer ? null : () => _callCurrentPlayer(widget.session),
+            icon: const Icon(Icons.notifications_active,
+                size: 13, color: Color(0xFF00694B)),
+            label: const Text('Call Player',
+                style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF00694B))),
+            style: OutlinedButton.styleFrom(
+              visualDensity: VisualDensity.compact,
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 0),
+            ),
+          );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth >= 260) {
+          return Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Flexible(child: waitingTextWidget),
+              const SizedBox(width: 8),
+              callButton,
+            ],
+          );
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            waitingTextWidget,
+            const SizedBox(height: 2),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerRight,
+              child: callButton,
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
