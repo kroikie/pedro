@@ -35,6 +35,10 @@ class PlayerRepository {
     await _playersRef().doc(player.id).set(player, SetOptions(merge: true));
   }
 
+  Stream<Player?> watchPlayer(String uid) {
+    return _playersRef().doc(uid).snapshots().map((snapshot) => snapshot.data());
+  }
+
   Stream<List<Player>> watchAllPlayers() {
     return _playersRef().snapshots().map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
   }

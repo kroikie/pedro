@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../data/repositories/lobby_repository.dart';
+import '../../data/repositories/player_repository.dart';
+import '../../data/models/player.dart';
 import '../../data/models/game_room.dart';
 import '../../data/services/game_name_service.dart';
 import '../widgets/avatar_widget.dart';
@@ -19,6 +21,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final _lobbyRepository = LobbyRepository();
+  final _playerRepository = PlayerRepository();
   final _gameNameService = GameNameService();
   int _currentIndex = 0;
   bool _isCreating = false;
@@ -160,10 +163,21 @@ class _HomeScreenState extends State<HomeScreen> {
                 width: 2,
               ),
             ),
-            child: AvatarWidget(
-              avatarUrl: user?.photoURL,
-              radius: 18,
-            ),
+            child: user != null
+                ? StreamBuilder<Player?>(
+                    stream: _playerRepository.watchPlayer(user.uid),
+                    builder: (context, snapshot) {
+                      final playerAvatar = snapshot.data?.avatarUrl;
+                      return AvatarWidget(
+                        avatarUrl: playerAvatar ?? user.photoURL,
+                        radius: 18,
+                      );
+                    },
+                  )
+                : const AvatarWidget(
+                    avatarUrl: null,
+                    radius: 18,
+                  ),
           ),
           const SizedBox(width: 12),
           Text(

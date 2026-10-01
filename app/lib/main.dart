@@ -9,6 +9,7 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'firebase_options.dart';
 import 'package:firebase_ui_auth/firebase_ui_auth.dart' hide ProfileScreen;
+import 'package:firebase_ui_storage/firebase_ui_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'data/repositories/player_repository.dart';
@@ -61,6 +62,11 @@ void main() async {
   }
 
   FirebaseUIAuth.configureProviders(buildAppAuthProviders());
+  await FirebaseUIStorage.configure(
+    FirebaseUIStorageConfiguration(
+      storage: FirebaseStorage.instance,
+    ),
+  );
 
   await NotificationService.instance.initialize(navigatorKey: rootNavigatorKey);
 
@@ -274,6 +280,16 @@ class _AuthGateState extends State<AuthGate> {
         );
         await repo.updatePlayer(newPlayer);
         return newPlayer;
+      } else if ((player.avatarUrl == null || player.avatarUrl!.isEmpty) &&
+          user.photoURL != null &&
+          user.photoURL!.isNotEmpty) {
+        final updatedPlayer = Player(
+          id: player.id,
+          screenName: player.screenName,
+          avatarUrl: user.photoURL,
+        );
+        await repo.updatePlayer(updatedPlayer);
+        return updatedPlayer;
       }
       return player;
     } catch (e) {
