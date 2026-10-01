@@ -1,3 +1,4 @@
+import 'package:functions/game/deck.dart';
 import 'package:functions/game/narrator.dart';
 import 'package:test/test.dart';
 
@@ -52,23 +53,54 @@ void main() {
         );
       });
 
-      test('holding High and dropping Low includes player name without trump suffixes', () {
+      test('holding High and dropping Low includes player name with authentic Pedro banter', () {
         final high = formatPointEventContext(
           playerName: testPlayer,
           pointType: 'High',
           isStolen: false,
         );
-        expect(high, 'arthur thompson holding High.');
+        expect(high, 'arthur thompson holding High. High till higher comes!');
+
+        final highRank = formatPointEventContext(
+          playerName: testPlayer,
+          pointType: 'High',
+          isStolen: false,
+          cardRank: Rank.king,
+        );
+        expect(highRank, 'arthur thompson holding High with king. High till higher comes!');
+
+        final highSafe = formatPointEventContext(
+          playerName: testPlayer,
+          pointType: 'High',
+          isStolen: false,
+          cardRank: Rank.ace,
+          isSafe: true,
+        );
+        expect(highSafe, 'arthur thompson put down de Ace! High safe, nobody could touch dat!');
 
         final low = formatPointEventContext(
           playerName: testPlayer,
           pointType: 'Low',
           isStolen: false,
         );
-        expect(
-          low,
-          'arthur thompson drop low. 1 point safe even if lift lost!',
+        expect(low, 'arthur thompson drop low. Low till lower comes!');
+
+        final lowRank = formatPointEventContext(
+          playerName: testPlayer,
+          pointType: 'Low',
+          isStolen: false,
+          cardRank: Rank.three,
         );
+        expect(lowRank, 'arthur thompson drop low with three. Low till lower comes!');
+
+        final lowSafe = formatPointEventContext(
+          playerName: testPlayer,
+          pointType: 'Low',
+          isStolen: false,
+          cardRank: Rank.two,
+          isSafe: true,
+        );
+        expect(lowSafe, 'arthur thompson drop de 2! Low safe, nobody could beat dat!');
       });
 
       test('never contains generic "A player" in any point event', () {

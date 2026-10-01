@@ -240,6 +240,10 @@ void main(List<String> args) {
           'turnIndex': (playerIds.indexOf(auth.uid) + 1) % playerIds.length,
           'consecutivePasses': 0,
           'playedCards': [],
+          'highTrumpPlayerId': null,
+          'highTrumpPlayedCard': null,
+          'lowTrumpPlayerId': null,
+          'lowTrumpPlayedCard': null,
         },
       };
 
@@ -439,7 +443,9 @@ void main(List<String> args) {
         'currentRound.turnIndex': bidWinnerIndex,
         'currentRound.currentLift': {'leadPlayerId': auth.uid, 'plays': {}, 'winnerId': null},
         'currentRound.highTrumpPlayerId': null,
+        'currentRound.highTrumpPlayedCard': null,
         'currentRound.lowTrumpPlayerId': null,
+        'currentRound.lowTrumpPlayedCard': null,
       });
 
       final roomName = (gameData['name'] ?? 'Pedro') as String;
@@ -552,66 +558,80 @@ void main(List<String> args) {
       final playedCards = List<dynamic>.from(round['playedCards'] ?? []);
       playedCards.add(card.toJson());
 
-      // Track High/Low Trumps
+      // Track High/Low Trumps dynamically across lifts
       if (card.suit == trumpSuit) {
-        // High Trump logic
         final highTrumpPlayedCardData = round['highTrumpPlayedCard'] as Map<String, dynamic>?;
         final highTrumpPlayedCard =
             highTrumpPlayedCardData != null ? Card.fromJson(highTrumpPlayedCardData) : null;
+        final currentHighPlayerId = round['highTrumpPlayerId'] as String?;
 
-        if (highTrumpPlayedCard == null ||
-            rankValues[card.rank]! > rankValues[highTrumpPlayedCard.rank]!) {
-          final oldHolderId = round['highTrumpPlayerId'] as String?;
-          if (oldHolderId != null) {
-            final oldHolder = playerStates.firstWhere((p) => p['uid'] == oldHolderId);
+        final lowTrumpPlayedCardData = round['lowTrumpPlayedCard'] as Map<String, dynamic>?;
+        final lowTrumpPlayedCard =
+            lowTrumpPlayedCardData != null ? Card.fromJson(lowTrumpPlayedCardData) : null;
+        final currentLowPlayerId = round['lowTrumpPlayerId'] as String?;
+
+        final hlResult = evaluateHighLowTrump(
+          playedCard: card,
+          trumpSuit: trumpSuit,
+          playerId: auth.uid,
+          currentHighCard: highTrumpPlayedCard,
+          currentHighPlayerId: currentHighPlayerId,
+          currentLowCard: lowTrumpPlayedCard,
+          currentLowPlayerId: currentLowPlayerId,
+        );
+
+        if (hlResult.highChanged) {
+          if (hlResult.oldHighPlayerId != null && hlResult.oldHighPlayerId != auth.uid) {
+            final oldHolder = playerStates.firstWhere((p) => p['uid'] == hlResult.oldHighPlayerId);
             oldHolder['currentRoundPoints'] = ((oldHolder['currentRoundPoints'] as num?)?.toInt() ?? 0) - 1;
             final ep = List<String>.from(oldHolder['earnedPoints'] as Iterable? ?? []);
             ep.remove('High');
             oldHolder['earnedPoints'] = ep;
           }
-          playerState['currentRoundPoints'] = ((playerState['currentRoundPoints'] as num?)?.toInt() ?? 0) + 1;
-          playerState['earnedPoints'] = List<String>.from(
-            playerState['earnedPoints'] as Iterable? ?? [],
-          )..add('High');
-          round['highTrumpPlayerId'] = auth.uid;
-          round['highTrumpPlayedCard'] = card.toJson();
+          if (hlResult.oldHighPlayerId != auth.uid) {
+            playerState['currentRoundPoints'] = ((playerState['currentRoundPoints'] as num?)?.toInt() ?? 0) + 1;
+            final ep = List<String>.from(playerState['earnedPoints'] as Iterable? ?? []);
+            if (!ep.contains('High')) ep.add('High');
+            playerState['earnedPoints'] = ep;
+          }
+          round['highTrumpPlayerId'] = hlResult.newHighPlayerId;
+          round['highTrumpPlayedCard'] = hlResult.newHighCard!.toJson();
           _getPlayerName(firestore, auth.uid).then((name) {
             narratePointEvent(
               gameId,
               name,
               "High",
               false,
+              cardRank: card.rank,
+              isSafe: hlResult.isHighSafe,
             ).catchError((e) => print('Narration error: $e'));
           });
         }
 
-        // Low Trump logic
-        final lowTrumpPlayedCardData = round['lowTrumpPlayedCard'] as Map<String, dynamic>?;
-        final lowTrumpPlayedCard =
-            lowTrumpPlayedCardData != null ? Card.fromJson(lowTrumpPlayedCardData) : null;
-
-        if (lowTrumpPlayedCard == null ||
-            rankValues[card.rank]! < rankValues[lowTrumpPlayedCard.rank]!) {
-          final oldHolderId = round['lowTrumpPlayerId'] as String?;
-          if (oldHolderId != null) {
-            final oldHolder = playerStates.firstWhere((p) => p['uid'] == oldHolderId);
+        if (hlResult.lowChanged) {
+          if (hlResult.oldLowPlayerId != null && hlResult.oldLowPlayerId != auth.uid) {
+            final oldHolder = playerStates.firstWhere((p) => p['uid'] == hlResult.oldLowPlayerId);
             oldHolder['currentRoundPoints'] = ((oldHolder['currentRoundPoints'] as num?)?.toInt() ?? 0) - 1;
             final ep = List<String>.from(oldHolder['earnedPoints'] as Iterable? ?? []);
             ep.remove('Low');
             oldHolder['earnedPoints'] = ep;
           }
-          playerState['currentRoundPoints'] = ((playerState['currentRoundPoints'] as num?)?.toInt() ?? 0) + 1;
-          playerState['earnedPoints'] = List<String>.from(
-            playerState['earnedPoints'] as Iterable? ?? [],
-          )..add('Low');
-          round['lowTrumpPlayerId'] = auth.uid;
-          round['lowTrumpPlayedCard'] = card.toJson();
+          if (hlResult.oldLowPlayerId != auth.uid) {
+            playerState['currentRoundPoints'] = ((playerState['currentRoundPoints'] as num?)?.toInt() ?? 0) + 1;
+            final ep = List<String>.from(playerState['earnedPoints'] as Iterable? ?? []);
+            if (!ep.contains('Low')) ep.add('Low');
+            playerState['earnedPoints'] = ep;
+          }
+          round['lowTrumpPlayerId'] = hlResult.newLowPlayerId;
+          round['lowTrumpPlayedCard'] = hlResult.newLowCard!.toJson();
           _getPlayerName(firestore, auth.uid).then((name) {
             narratePointEvent(
               gameId,
               name,
               "Low",
               false,
+              cardRank: card.rank,
+              isSafe: hlResult.isLowSafe,
             ).catchError((e) => print('Narration error: $e'));
           });
         }
@@ -979,6 +999,10 @@ Future<void> finalizeRound(
       'turnIndex': (playerIds.indexOf(newDealerId) + 1) % playerIds.length,
       'consecutivePasses': 0,
       'playedCards': [],
+      'highTrumpPlayerId': null,
+      'highTrumpPlayedCard': null,
+      'lowTrumpPlayerId': null,
+      'lowTrumpPlayedCard': null,
     };
     await gameRef.update({'currentRound': nextRound});
 

@@ -103,4 +103,286 @@ void main() {
       expect(winner, 'p1');
     });
   });
+
+  group('High & Low Trump Evaluation', () {
+    const trump = Suit.hearts;
+
+    test('non-trump card does not change high or low', () {
+      final result = evaluateHighLowTrump(
+        playedCard: Card(suit: Suit.spades, rank: Rank.ace),
+        trumpSuit: trump,
+        playerId: 'p1',
+        currentHighCard: null,
+        currentHighPlayerId: null,
+        currentLowCard: null,
+        currentLowPlayerId: null,
+      );
+      expect(result.highChanged, isFalse);
+      expect(result.lowChanged, isFalse);
+    });
+
+    test('first trump played becomes both High and Low till higher/lower comes', () {
+      final card = Card(suit: trump, rank: Rank.seven);
+      final result = evaluateHighLowTrump(
+        playedCard: card,
+        trumpSuit: trump,
+        playerId: 'p1',
+        currentHighCard: null,
+        currentHighPlayerId: null,
+        currentLowCard: null,
+        currentLowPlayerId: null,
+      );
+      expect(result.highChanged, isTrue);
+      expect(result.oldHighPlayerId, isNull);
+      expect(result.newHighPlayerId, 'p1');
+      expect(result.newHighCard?.rank, Rank.seven);
+      expect(result.isHighSafe, isFalse);
+
+      expect(result.lowChanged, isTrue);
+      expect(result.oldLowPlayerId, isNull);
+      expect(result.newLowPlayerId, 'p1');
+      expect(result.newLowCard?.rank, Rank.seven);
+      expect(result.isLowSafe, isFalse);
+    });
+
+    test('first trump played as Ace is marked safe for High', () {
+      final card = Card(suit: trump, rank: Rank.ace);
+      final result = evaluateHighLowTrump(
+        playedCard: card,
+        trumpSuit: trump,
+        playerId: 'p1',
+        currentHighCard: null,
+        currentHighPlayerId: null,
+        currentLowCard: null,
+        currentLowPlayerId: null,
+      );
+      expect(result.highChanged, isTrue);
+      expect(result.isHighSafe, isTrue);
+      expect(result.lowChanged, isTrue);
+      expect(result.isLowSafe, isFalse);
+    });
+
+    test('first trump played as 2 is marked safe for Low', () {
+      final card = Card(suit: trump, rank: Rank.two);
+      final result = evaluateHighLowTrump(
+        playedCard: card,
+        trumpSuit: trump,
+        playerId: 'p1',
+        currentHighCard: null,
+        currentHighPlayerId: null,
+        currentLowCard: null,
+        currentLowPlayerId: null,
+      );
+      expect(result.highChanged, isTrue);
+      expect(result.isHighSafe, isFalse);
+      expect(result.lowChanged, isTrue);
+      expect(result.isLowSafe, isTrue);
+    });
+
+    test('higher trump beats current high across lifts', () {
+      final currentHigh = Card(suit: trump, rank: Rank.eight);
+      final currentLow = Card(suit: trump, rank: Rank.five);
+      final played = Card(suit: trump, rank: Rank.jack);
+
+      final result = evaluateHighLowTrump(
+        playedCard: played,
+        trumpSuit: trump,
+        playerId: 'p2',
+        currentHighCard: currentHigh,
+        currentHighPlayerId: 'p1',
+        currentLowCard: currentLow,
+        currentLowPlayerId: 'p1',
+      );
+      expect(result.highChanged, isTrue);
+      expect(result.oldHighPlayerId, 'p1');
+      expect(result.newHighPlayerId, 'p2');
+      expect(result.newHighCard?.rank, Rank.jack);
+      expect(result.lowChanged, isFalse);
+    });
+
+    test('lower trump beats current low across lifts', () {
+      final currentHigh = Card(suit: trump, rank: Rank.king);
+      final currentLow = Card(suit: trump, rank: Rank.four);
+      final played = Card(suit: trump, rank: Rank.three);
+
+      final result = evaluateHighLowTrump(
+        playedCard: played,
+        trumpSuit: trump,
+        playerId: 'p3',
+        currentHighCard: currentHigh,
+        currentHighPlayerId: 'p1',
+        currentLowCard: currentLow,
+        currentLowPlayerId: 'p2',
+      );
+      expect(result.lowChanged, isTrue);
+      expect(result.oldLowPlayerId, 'p2');
+      expect(result.newLowPlayerId, 'p3');
+      expect(result.newLowCard?.rank, Rank.three);
+      expect(result.highChanged, isFalse);
+    });
+
+    test('intermediate trump changes neither high nor low', () {
+      final currentHigh = Card(suit: trump, rank: Rank.queen);
+      final currentLow = Card(suit: trump, rank: Rank.four);
+      final played = Card(suit: trump, rank: Rank.eight);
+
+      final result = evaluateHighLowTrump(
+        playedCard: played,
+        trumpSuit: trump,
+        playerId: 'p4',
+        currentHighCard: currentHigh,
+        currentHighPlayerId: 'p1',
+        currentLowCard: currentLow,
+        currentLowPlayerId: 'p2',
+      );
+      expect(result.highChanged, isFalse);
+      expect(result.lowChanged, isFalse);
+    });
+
+    test('same player improving own high trump preserves identity', () {
+      final currentHigh = Card(suit: trump, rank: Rank.ten);
+      final played = Card(suit: trump, rank: Rank.ace);
+
+      final result = evaluateHighLowTrump(
+        playedCard: played,
+        trumpSuit: trump,
+        playerId: 'p1',
+        currentHighCard: currentHigh,
+        currentHighPlayerId: 'p1',
+        currentLowCard: Card(suit: trump, rank: Rank.two),
+        currentLowPlayerId: 'p2',
+      );
+      expect(result.highChanged, isTrue);
+      expect(result.oldHighPlayerId, 'p1');
+      expect(result.newHighPlayerId, 'p1');
+      expect(result.isHighSafe, isTrue);
+      expect(result.lowChanged, isFalse);
+    });
+
+    test('multi-lift progression maintains High and Low across distinct lifts', () {
+      Card? roundHighCard;
+      String? roundHighPlayerId;
+      Card? roundLowCard;
+      String? roundLowPlayerId;
+
+      // Lift 1, Play 1: P1 plays 7 of hearts
+      var r = evaluateHighLowTrump(
+        playedCard: Card(suit: trump, rank: Rank.seven),
+        trumpSuit: trump,
+        playerId: 'p1',
+        currentHighCard: roundHighCard,
+        currentHighPlayerId: roundHighPlayerId,
+        currentLowCard: roundLowCard,
+        currentLowPlayerId: roundLowPlayerId,
+      );
+      roundHighCard = r.newHighCard;
+      roundHighPlayerId = r.newHighPlayerId;
+      roundLowCard = r.newLowCard;
+      roundLowPlayerId = r.newLowPlayerId;
+      expect(roundHighPlayerId, 'p1');
+      expect(roundLowPlayerId, 'p1');
+
+      // Lift 1, Play 2: P2 plays 10 of hearts
+      r = evaluateHighLowTrump(
+        playedCard: Card(suit: trump, rank: Rank.ten),
+        trumpSuit: trump,
+        playerId: 'p2',
+        currentHighCard: roundHighCard,
+        currentHighPlayerId: roundHighPlayerId,
+        currentLowCard: roundLowCard,
+        currentLowPlayerId: roundLowPlayerId,
+      );
+      if (r.highChanged) {
+        roundHighCard = r.newHighCard;
+        roundHighPlayerId = r.newHighPlayerId;
+      }
+      if (r.lowChanged) {
+        roundLowCard = r.newLowCard;
+        roundLowPlayerId = r.newLowPlayerId;
+      }
+      expect(roundHighPlayerId, 'p2');
+      expect(roundLowPlayerId, 'p1');
+
+      // Lift 2, Play 1: P3 plays 3 of hearts (Low transfers to P3, P2 keeps High!)
+      r = evaluateHighLowTrump(
+        playedCard: Card(suit: trump, rank: Rank.three),
+        trumpSuit: trump,
+        playerId: 'p3',
+        currentHighCard: roundHighCard,
+        currentHighPlayerId: roundHighPlayerId,
+        currentLowCard: roundLowCard,
+        currentLowPlayerId: roundLowPlayerId,
+      );
+      if (r.highChanged) {
+        roundHighCard = r.newHighCard;
+        roundHighPlayerId = r.newHighPlayerId;
+      }
+      if (r.lowChanged) {
+        roundLowCard = r.newLowCard;
+        roundLowPlayerId = r.newLowPlayerId;
+      }
+      expect(roundHighPlayerId, 'p2');
+      expect(roundLowPlayerId, 'p3');
+
+      // Lift 3, Play 1: P4 plays Ace of hearts (High transfers to P4, P3 keeps Low!)
+      r = evaluateHighLowTrump(
+        playedCard: Card(suit: trump, rank: Rank.ace),
+        trumpSuit: trump,
+        playerId: 'p4',
+        currentHighCard: roundHighCard,
+        currentHighPlayerId: roundHighPlayerId,
+        currentLowCard: roundLowCard,
+        currentLowPlayerId: roundLowPlayerId,
+      );
+      if (r.highChanged) {
+        roundHighCard = r.newHighCard;
+        roundHighPlayerId = r.newHighPlayerId;
+      }
+      if (r.lowChanged) {
+        roundLowCard = r.newLowCard;
+        roundLowPlayerId = r.newLowPlayerId;
+      }
+      expect(roundHighPlayerId, 'p4');
+      expect(r.isHighSafe, isTrue);
+      expect(roundLowPlayerId, 'p3');
+
+      // Lift 4, Play 1: P1 plays 2 of hearts (Low transfers to P1, P4 keeps High!)
+      r = evaluateHighLowTrump(
+        playedCard: Card(suit: trump, rank: Rank.two),
+        trumpSuit: trump,
+        playerId: 'p1',
+        currentHighCard: roundHighCard,
+        currentHighPlayerId: roundHighPlayerId,
+        currentLowCard: roundLowCard,
+        currentLowPlayerId: roundLowPlayerId,
+      );
+      if (r.highChanged) {
+        roundHighCard = r.newHighCard;
+        roundHighPlayerId = r.newHighPlayerId;
+      }
+      if (r.lowChanged) {
+        roundLowCard = r.newLowCard;
+        roundLowPlayerId = r.newLowPlayerId;
+      }
+      expect(roundHighPlayerId, 'p4');
+      expect(roundLowPlayerId, 'p1');
+      expect(r.isLowSafe, isTrue);
+
+      // Lift 5: Non-trump cards played -> High and Low remain sealed
+      r = evaluateHighLowTrump(
+        playedCard: Card(suit: Suit.clubs, rank: Rank.king),
+        trumpSuit: trump,
+        playerId: 'p2',
+        currentHighCard: roundHighCard,
+        currentHighPlayerId: roundHighPlayerId,
+        currentLowCard: roundLowCard,
+        currentLowPlayerId: roundLowPlayerId,
+      );
+      expect(r.highChanged, isFalse);
+      expect(r.lowChanged, isFalse);
+      expect(roundHighPlayerId, 'p4');
+      expect(roundLowPlayerId, 'p1');
+    });
+  });
 }
+

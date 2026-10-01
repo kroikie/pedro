@@ -111,6 +111,8 @@ String formatPointEventContext({
   required String playerName,
   required String pointType,
   required bool isStolen,
+  Rank? cardRank,
+  bool isSafe = false,
 }) {
   if (pointType == 'Jack') {
     return isStolen
@@ -121,9 +123,21 @@ String formatPointEventContext({
   } else if (pointType == '9') {
     return 'Lardits! $playerName just snatch de 9! $playerName does play card for gramoxone!';
   } else if (pointType == 'High') {
-    return '$playerName holding High.';
+    if (isSafe || cardRank == Rank.ace) {
+      return '$playerName put down de Ace! High safe, nobody could touch dat!';
+    }
+    final rankName = cardRank != null ? cardRank.name : '';
+    return rankName.isNotEmpty
+        ? '$playerName holding High with $rankName. High till higher comes!'
+        : '$playerName holding High. High till higher comes!';
   } else if (pointType == 'Low') {
-    return '$playerName drop low. 1 point safe even if lift lost!';
+    if (isSafe || cardRank == Rank.two) {
+      return '$playerName drop de 2! Low safe, nobody could beat dat!';
+    }
+    final rankName = cardRank != null ? cardRank.name : '';
+    return rankName.isNotEmpty
+        ? '$playerName drop low with $rankName. Low till lower comes!'
+        : '$playerName drop low. Low till lower comes!';
   }
   return '';
 }
@@ -132,12 +146,16 @@ Future<void> narratePointEvent(
   String gameId,
   String playerName,
   String pointType,
-  bool isStolen,
-) async {
+  bool isStolen, {
+  Rank? cardRank,
+  bool isSafe = false,
+}) async {
   final context = formatPointEventContext(
     playerName: playerName,
     pointType: pointType,
     isStolen: isStolen,
+    cardRank: cardRank,
+    isSafe: isSafe,
   );
 
   String text = context;
@@ -152,6 +170,7 @@ Future<void> narratePointEvent(
           '- ALWAYS include the player\'s name ($playerName) in your comment. NEVER say "A player". '
           '- When a player makes a clutch, fierce, or ruthless play (hanging a Jack, winning a crucial lift, taking the 9, or scoring big points): ALWAYS comment that "Oh gosh! $playerName does play card for gramoxone!" or use "Lardits!" / "Jah!". '
           '- If it is a "Hang Jack" event, treat it as a dramatic robbery on the table. '
+          '- For High/Low points, reflect authentic Pedro phrasing: "High till higher comes" or "Low till lower comes" (unless it is Ace or 2, which are permanently safe). '
           '- Omit "trump point" or "trump" suffixes when referring to point cards (e.g. say "holding High", "drop low", "snatch de 9", or "grab de 5", NOT "High trump point", "lowest trump", or "9 ah trump"). '
           'Keep it spirited, humorous, and strictly 1 sentence.';
 
