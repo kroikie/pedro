@@ -51,16 +51,23 @@ The goal of Pedro is to be the first player (or team) to reach the target winnin
 
 ## 🏆 Scoring & Point Cards
 
-Points are scored by capturing specific high-value cards in winning lifts:
+Points are scored by playing or capturing specific high-value cards during the round:
 
 | Point Card | Points | Description |
 | :--- | :--- | :--- |
-| **High Trump** | **1 Point** | Highest trump card played (Ace of Trumps) |
-| **Low Trump** | **1 Point** | Lowest trump card played (2 of Trumps) |
-| **Jack of Trumps** | **1 to 3 Points** | 1 point normally; bonus points if captured from an opponent! |
-| **5 of Trumps (Pedro)** | **5 Points** | The famous Pedro card—worth a massive 5 points! |
-| **9 of Trumps** | **9 Points** | The highest single point value card in the game! |
-| **Game Point** | **1 Point** | Awarded to the player with the highest total face card values in captured lifts |
+| **High Trump** | **1 Point** | Awarded to the player who played the highest trump card in the round ("High till higher comes"). Ace of Trumps locks this permanently. |
+| **Low Trump** | **1 Point** | Awarded to the player who played the lowest trump card in the round ("Low till lower comes"). 2 of Trumps locks this permanently. |
+| **Jack of Trumps** | **1 to 3 Points** | 1 point if saved/won by the player who played it; 3 bonus points ("Hang Jack") if captured by an opponent! |
+| **5 of Trumps (Pedro)** | **5 Points** | The famous Pedro card—worth a massive 5 points! Captured in the winning lift. |
+| **9 of Trumps** | **9 Points** | The highest single point value card in the game! Captured in the winning lift. |
+| **Game Point** | **1 Point** | Awarded to the player with the highest total face card values in captured lifts across the round (10=10, Jack=1, Queen=2, King=3, Ace=4). |
+
+### Dynamic High & Low Mechanics ("Low Till Lower Comes")
+In Pedro, **High** and **Low** are dynamic points assessed across all lifts in the round:
+- When a player plays the first trump card of the round, they temporarily hold both High and Low claims.
+- **"High till higher comes"**: If another player plays a higher trump in any subsequent lift, the High point and badge immediately transfer to that player. Playing the Ace of trumps permanently secures High for the round.
+- **"Low till lower comes"**: If another player plays a lower trump in any subsequent lift, the Low point and badge immediately transfer to that player. Playing the 2 of trumps permanently secures Low for the round.
+- Unlike 5, 9, or Jack (which are captured by the winner of the lift), the player who **plays** High or Low retains the point even if they lose the lift—provided no higher or lower trump is played later in the round.
 
 ---
 
