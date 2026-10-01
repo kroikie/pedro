@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:firebase_ai/firebase_ai.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import '../models/card.dart';
 import '../models/game_session.dart';
 import '../logic/card_sorting.dart';
@@ -64,7 +66,17 @@ Suggest the best card to play with a 1-sentence reason.
 
       final response = await _model.generateContent([Content.text(prompt)]);
       return response.text?.trim() ?? 'No suggestion.';
-    } catch (e) {
+    } catch (e, stack) {
+      debugPrint('Error generating move suggestion: $e');
+      try {
+        if (!kIsWeb) {
+          FirebaseCrashlytics.instance.recordError(
+            e,
+            stack,
+            reason: 'TacticalCoachService.getMoveSuggestion failed',
+          );
+        }
+      } catch (_) {}
       return 'AI coach is thinking...';
     }
   }
