@@ -31,12 +31,6 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  try {
-    await initializeAppCheck();
-  } catch (e) {
-    debugPrint('App Check initialization failed: $e');
-  }
-
   // Initialize Crashlytics and Analytics
   if (!kIsWeb) {
     FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
@@ -44,6 +38,19 @@ void main() async {
       FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
       return true;
     };
+  }
+
+  try {
+    await initializeAppCheck();
+  } catch (e, stack) {
+    debugPrint('App Check initialization failed: $e');
+    if (!kIsWeb) {
+      FirebaseCrashlytics.instance.recordError(
+        e,
+        stack,
+        reason: 'App Check initialization failed',
+      );
+    }
   }
 
   // Connect to the local emulator suite if configured (defaults to debug mode only)

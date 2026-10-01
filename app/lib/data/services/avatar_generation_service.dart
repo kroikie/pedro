@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_ai/firebase_ai.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../repositories/player_repository.dart';
@@ -78,8 +79,17 @@ class AvatarGenerationService {
       }
 
       throw Exception('The AI model did not return any image data. Please try another description.');
-    } catch (e) {
+    } catch (e, stack) {
       debugPrint('Error generating avatar with gemini-3.1-flash-image: $e');
+      try {
+        if (!kIsWeb) {
+          FirebaseCrashlytics.instance.recordError(
+            e,
+            stack,
+            reason: 'AvatarGenerationService.generateAvatar failed',
+          );
+        }
+      } catch (_) {}
       rethrow;
     }
   }

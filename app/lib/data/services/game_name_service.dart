@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:firebase_ai/firebase_ai.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 
 class GameNameService {
   GameNameService({
@@ -21,8 +22,17 @@ class GameNameService {
       const prompt = 'Generate a short, playful two-word name for a card game room Example: "sneeky five". Only return the name.';
       final response = await _model.generateContent([Content.text(prompt)]);
       return response.text?.trim() ?? 'unknown_game';
-    } catch (e) {
+    } catch (e, stack) {
       debugPrint('Error generating room name: $e');
+      try {
+        if (!kIsWeb) {
+          FirebaseCrashlytics.instance.recordError(
+            e,
+            stack,
+            reason: 'GameNameService.generateRoomName failed',
+          );
+        }
+      } catch (_) {}
       return 'lucky_player';
     }
   }
