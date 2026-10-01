@@ -1,3 +1,5 @@
+// ignore_for_file: non_const_argument_for_const_parameter, non_constant_identifier_names
+
 import 'package:firebase_functions/firebase_functions.dart';
 import 'package:google_cloud_firestore/google_cloud_firestore.dart';
 import 'package:firebase_admin_sdk/firebase_admin_sdk.dart';
@@ -17,12 +19,17 @@ Future<String> _getPlayerName(Firestore firestore, String? uid) async {
   }
 }
 
+final GEMINI_API_KEY = defineSecret('GEMINI_API_KEY');
+
 void main(List<String> args) {
   FirebaseApp.initializeApp();
 
   runFunctions((firebase) {
     // 1. createGame
-    firebase.https.onCall(name: 'createGame', (request, response) async {
+    firebase.https.onCall(
+      name: 'createGame',
+      options: CallableOptions(secrets: [GEMINI_API_KEY]),
+      (request, response) async {
       final auth = request.auth;
       if (auth == null) {
         throw UnauthenticatedError('User must be logged in.');
@@ -278,7 +285,10 @@ void main(List<String> args) {
     });
 
     // 6. submitBid
-    firebase.https.onCall(name: 'submitBid', (request, response) async {
+    firebase.https.onCall(
+      name: 'submitBid',
+      options: CallableOptions(secrets: [GEMINI_API_KEY]),
+      (request, response) async {
       final auth = request.auth;
       if (auth == null) throw UnauthenticatedError('User must be logged in.');
 
@@ -465,7 +475,10 @@ void main(List<String> args) {
     });
 
     // 8. playCard
-    firebase.https.onCall(name: 'playCard', (request, response) async {
+    firebase.https.onCall(
+      name: 'playCard',
+      options: CallableOptions(secrets: [GEMINI_API_KEY]),
+      (request, response) async {
       final auth = request.auth;
       if (auth == null) throw UnauthenticatedError('User must be logged in.');
 
@@ -776,7 +789,10 @@ void main(List<String> args) {
     });
 
     // 9. call-player
-    firebase.https.onCall(name: 'call-player', (request, response) async {
+    firebase.https.onCall(
+      name: 'call-player',
+      options: CallableOptions(secrets: [GEMINI_API_KEY]),
+      (request, response) async {
       final auth = request.auth;
       if (auth == null) throw UnauthenticatedError('User must be logged in.');
 
