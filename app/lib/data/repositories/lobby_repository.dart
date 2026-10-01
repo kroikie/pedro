@@ -89,6 +89,14 @@ class LobbyRepository {
   }
 
   Future<void> deleteGame(String gameId) async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw FirebaseFunctionsException(
+        message: 'User must be authenticated to delete a game.',
+        code: 'unauthenticated',
+      );
+    }
+    await user.getIdToken();
     await _functions.callable('delete-game').call({
       'gameId': gameId,
     });
