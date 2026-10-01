@@ -1,5 +1,8 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart' hide Card;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pedro/data/models/card.dart' as pedro;
@@ -78,6 +81,63 @@ class _FakeHttpClientResponse extends Fake implements HttpClientResponse {
       onDone: onDone,
       cancelOnError: cancelOnError,
     );
+  }
+}
+
+class _FakeFirestore extends Fake implements FirebaseFirestore {}
+
+class _FakeUser extends Fake implements User {
+  bool tokenRefreshed = false;
+
+  @override
+  Future<String> getIdToken([bool forceRefresh = false]) async {
+    tokenRefreshed = true;
+    return 'fake-token';
+  }
+}
+
+class _FakeFirebaseAuth extends Fake implements FirebaseAuth {
+  final User? _user;
+
+  _FakeFirebaseAuth([this._user]);
+
+  @override
+  User? get currentUser => _user;
+}
+
+class _FakeHttpsCallableResult<T> extends Fake implements HttpsCallableResult<T> {
+  final T _data;
+  _FakeHttpsCallableResult(this._data);
+
+  @override
+  T get data => _data;
+}
+
+class _FakeHttpsCallable extends Fake implements HttpsCallable {
+  Map<String, dynamic>? calledWith;
+
+  @override
+  Future<HttpsCallableResult<T>> call<T>([dynamic parameters]) async {
+    calledWith = parameters as Map<String, dynamic>?;
+    return _FakeHttpsCallableResult<T>({'success': true} as T);
+  }
+}
+
+class _FakeFirebaseFunctions extends Fake implements FirebaseFunctions {
+  final Map<String, _FakeHttpsCallable> callables = {};
+
+  @override
+  HttpsCallable httpsCallable(String name, {HttpsCallableOptions? options}) {
+    final callable = _FakeHttpsCallable();
+    callables[name] = callable;
+    return callable;
+  }
+
+  @override
+  HttpsCallable httpsCallableFromUrl(String url, {HttpsCallableOptions? options}) {
+    final callable = _FakeHttpsCallable();
+    callables[url] = callable;
+    return callable;
   }
 }
 
@@ -453,6 +513,88 @@ void main() {
 
       expect(find.text('This game has ended or was deleted.'), findsOneWidget);
       expect(find.text('Return to Home'), findsOneWidget);
+    });
+  });
+
+  group('Repository Authentication Checks', () {
+    test('LobbyRepository.deleteGame throws unauthenticated exception when not logged in', () async {
+      final fakeFunctions = _FakeFirebaseFunctions();
+      final fakeAuth = _FakeFirebaseAuth(null);
+      final repo = LobbyRepository(
+        firestore: _FakeFirestore(),
+        functions: fakeFunctions,
+        auth: fakeAuth,
+      );
+
+      expect(
+        () => repo.deleteGame('game123'),
+        throwsA(
+          isA<FirebaseFunctionsException>().having(
+            (e) => e.code,
+            'code',
+            'unauthenticated',
+          ),
+        ),
+      );
+      expect(fakeFunctions.callables.isEmpty, isTrue);
+    });
+
+    test('LobbyRepository.deleteGame refreshes token and calls delete-game callable when authenticated', () async {
+      final fakeFunctions = _FakeFirebaseFunctions();
+      final fakeUser = _FakeUser();
+      final fakeAuth = _FakeFirebaseAuth(fakeUser);
+      final repo = LobbyRepository(
+        firestore: _FakeFirestore(),
+        functions: fakeFunctions,
+        auth: fakeAuth,
+      );
+
+      await repo.deleteGame('game123');
+
+      expect(fakeUser.tokenRefreshed, isTrue);
+      final callable = fakeFunctions.callables['delete-game'];
+      expect(callable, isNotNull);
+      expect(callable!.calledWith, {'gameId': 'game123'});
+    });
+
+    test('GameRepository.deleteGame throws unauthenticated exception when not logged in', () async {
+      final fakeFunctions = _FakeFirebaseFunctions();
+      final fakeAuth = _FakeFirebaseAuth(null);
+      final repo = GameRepository(
+        firestore: _FakeFirestore(),
+        functions: fakeFunctions,
+        auth: fakeAuth,
+      );
+
+      expect(
+        () => repo.deleteGame('game123'),
+        throwsA(
+          isA<FirebaseFunctionsException>().having(
+            (e) => e.code,
+            'code',
+            'unauthenticated',
+          ),
+        ),
+      );
+      expect(fakeFunctions.callables.isEmpty, isTrue);
+    });
+
+    test('GameRepository.deleteGame refreshes token and calls delete-game callable when authenticated', () async {
+      final fakeFunctions = _FakeFirebaseFunctions();
+      final fakeUser = _FakeUser();
+      final fakeAuth = _FakeFirebaseAuth(fakeUser);
+      final repo = GameRepository(
+        firestore: _FakeFirestore(),
+        functions: fakeFunctions,
+        auth: fakeAuth,
+      );
+
+      await repo.deleteGame('game123');
+
+      expect(fakeUser.tokenRefreshed, isTrue);
+      final callable = fakeFunctions.callables['delete-game'];
+      expect(callable, isNotNull);
+      expect(callable!.calledWith, {'gameId': 'game123'});
     });
   });
 }

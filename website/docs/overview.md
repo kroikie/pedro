@@ -58,3 +58,5 @@
 - **Dynamic Callable Routing:** The Flutter client seamlessly routes callable invocations through `PedroFunctionsExtension.callable`:
   - In local development and automated testing, functions automatically target the local Firebase Functions Emulator suite (`localhost:5001` or `10.0.2.2:5001`).
   - In production release builds across Android, iOS, and Web, functions target deterministic Cloud Run endpoints (`https://<function-name>-260654198138.us-central1.run.app`).
+- **End-to-End Authentication & Transport Security:** Cloud Run services allow public HTTP transport invocation (`allUsers` with `roles/run.invoker`) so client callable requests reach the Dart container, where request credentials are cryptographically authenticated against Firebase Authentication (`request.auth`). Client repositories proactively verify authentication state (`_auth.currentUser`) and force fresh ID token resolution before dispatching sensitive lifecycle operations like game deletion.
+

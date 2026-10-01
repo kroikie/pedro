@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../models/game_session.dart';
 import '../models/card.dart';
 import '../functions_config.dart';
@@ -8,11 +9,14 @@ class GameRepository {
   GameRepository({
     FirebaseFirestore? firestore,
     FirebaseFunctions? functions,
+    FirebaseAuth? auth,
   })  : _firestore = firestore ?? FirebaseFirestore.instance,
-        _functions = functions ?? FirebaseFunctions.instance;
+        _functions = functions ?? FirebaseFunctions.instance,
+        _auth = auth ?? FirebaseAuth.instance;
 
   final FirebaseFirestore _firestore;
   final FirebaseFunctions _functions;
+  final FirebaseAuth _auth;
 
   Stream<GameSession?> watchGameSession(String gameId) {
     return _firestore.collection('games').doc(gameId).snapshots().map((doc) {
@@ -64,6 +68,14 @@ class GameRepository {
   }
 
   Future<void> deleteGame(String gameId) async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw FirebaseFunctionsException(
+        message: 'User must be authenticated to delete a game.',
+        code: 'unauthenticated',
+      );
+    }
+    await user.getIdToken();
     await _functions.callable('delete-game').call({
       'gameId': gameId,
     });

@@ -33,6 +33,26 @@ while [ $attempt -le $MAX_RETRIES ]; do
     echo ""
     echo "✔ Deployment completed successfully on attempt $attempt!"
     rm -f deploy_attempt.log
+
+    # Ensure all callable Cloud Functions allow unauthenticated invocations at the Cloud Run
+    # transport layer so client requests can reach the Dart container where Firebase Auth is verified.
+    if command -v gcloud >/dev/null 2>&1; then
+      echo "Ensuring public invoker IAM bindings for Cloud Run callable functions..."
+      SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+      FUNCTIONS_YAML="${SCRIPT_DIR}/functions/functions.yaml"
+      if [ -f "$FUNCTIONS_YAML" ]; then
+        endpoints=$(awk '/endpoints:/{flag=1;next} flag && /^  [a-z0-9_-]+:/{print $1}' "$FUNCTIONS_YAML" | tr -d ':')
+        for fn in $endpoints; do
+          gcloud run services add-iam-policy-binding "$fn" \
+            --region="us-central1" \
+            --member="allUsers" \
+            --role="roles/run.invoker" \
+            --project "$PROJECT_ID" \
+            --quiet >/dev/null 2>&1 || true
+        done
+      fi
+    fi
+
     exit 0
   fi
 
