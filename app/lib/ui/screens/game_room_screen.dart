@@ -6,29 +6,53 @@ import '../../data/repositories/player_repository.dart';
 import '../../data/models/player.dart';
 import '../widgets/avatar_widget.dart';
 import '../../data/repositories/game_repository.dart';
+import '../../data/repositories/chat_repository.dart';
+import '../../data/repositories/reaction_repository.dart';
 import 'game_board_screen.dart';
 import '../widgets/chat_overlay.dart';
 
 class GameRoomScreen extends StatefulWidget {
-  const GameRoomScreen({super.key, required this.gameId});
+  const GameRoomScreen({
+    super.key,
+    required this.gameId,
+    this.lobbyRepository,
+    this.playerRepository,
+    this.gameRepository,
+    this.chatRepository,
+    this.reactionRepository,
+    this.currentUserId,
+  });
 
   final String gameId;
+  final LobbyRepository? lobbyRepository;
+  final PlayerRepository? playerRepository;
+  final GameRepository? gameRepository;
+  final ChatRepository? chatRepository;
+  final ReactionRepository? reactionRepository;
+  final String? currentUserId;
 
   @override
   State<GameRoomScreen> createState() => _GameRoomScreenState();
 }
 
 class _GameRoomScreenState extends State<GameRoomScreen> {
-  final _lobbyRepository = LobbyRepository();
-  final _playerRepository = PlayerRepository();
-  final _gameRepository = GameRepository();
-  final _currentUserId = FirebaseAuth.instance.currentUser?.uid;
+  late final _lobbyRepository = widget.lobbyRepository ?? LobbyRepository();
+  late final _playerRepository = widget.playerRepository ?? PlayerRepository();
+  late final _gameRepository = widget.gameRepository ?? GameRepository();
+  late final _currentUserId =
+      widget.currentUserId ?? FirebaseAuth.instance.currentUser?.uid;
   final Map<String, Player?> _playerCache = {};
+  bool _hasNavigated = false;
 
   void _showInviteDialog(BuildContext context, GameRoom room) {
     showDialog(
       context: context,
-      builder: (context) => InviteDialog(room: room),
+      builder: (context) => InviteDialog(
+        room: room,
+        playerRepository: _playerRepository,
+        lobbyRepository: _lobbyRepository,
+        currentUserId: _currentUserId,
+      ),
     );
   }
 
@@ -37,8 +61,8 @@ class _GameRoomScreenState extends State<GameRoomScreen> {
       return _playerCache[uid];
     }
     final player = await _playerRepository.getPlayer(uid);
-    if (mounted) {
-      setState(() => _playerCache[uid] = player);
+    if (player != null) {
+      _playerCache[uid] = player;
     }
     return player;
   }
@@ -60,14 +84,21 @@ class _GameRoomScreenState extends State<GameRoomScreen> {
           return const Scaffold(body: Center(child: Text('Game not found')));
         }
 
-        if (room.status == GameStatus.playing) {
+        if (room.status == GameStatus.playing && !_hasNavigated) {
+          _hasNavigated = true;
           WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
                 builder: (context) => GameBoardScreen(
                   gameId: widget.gameId,
                   gameName: room.name,
+                  gameRepository: _gameRepository,
+                  playerRepository: _playerRepository,
+                  chatRepository: widget.chatRepository,
+                  reactionRepository: widget.reactionRepository,
+                  currentUserId: _currentUserId,
                 ),
               ),
             );
@@ -152,7 +183,12 @@ class _GameRoomScreenState extends State<GameRoomScreen> {
                   ),
                 ),
               ),
-              ChatOverlay(gameId: widget.gameId),
+              ChatOverlay(
+                gameId: widget.gameId,
+                chatRepository: widget.chatRepository,
+                playerRepository: _playerRepository,
+                currentUserId: _currentUserId,
+              ),
             ],
           ),
         );
@@ -162,14 +198,25 @@ class _GameRoomScreenState extends State<GameRoomScreen> {
 }
 
 class InviteDialog extends StatelessWidget {
-  const InviteDialog({super.key, required this.room});
+  const InviteDialog({
+    super.key,
+    required this.room,
+    this.playerRepository,
+    this.lobbyRepository,
+    this.currentUserId,
+  });
+
   final GameRoom room;
+  final PlayerRepository? playerRepository;
+  final LobbyRepository? lobbyRepository;
+  final String? currentUserId;
 
   @override
   Widget build(BuildContext context) {
-    final playerRepo = PlayerRepository();
-    final lobbyRepo = LobbyRepository();
-    final currentUid = FirebaseAuth.instance.currentUser?.uid;
+    final playerRepo = playerRepository ?? PlayerRepository();
+    final lobbyRepo = lobbyRepository ?? LobbyRepository();
+    final currentUid =
+        currentUserId ?? FirebaseAuth.instance.currentUser?.uid;
 
     return AlertDialog(
       title: const Text('Invite Player'),
