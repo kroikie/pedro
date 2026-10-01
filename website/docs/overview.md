@@ -13,8 +13,8 @@
 - **Game Management & Deletion:** Game creators maintain full administrative control over their games, with the option to permanently delete games they created directly from the lobby waiting room, the Home feed's recent games list, or the active game board. Deletion includes a confirmation safeguard and thoroughly removes the game document along with all associated chat messages and reactions across all players.
 
 ### 2. Interactive AI Companions
-- **Global AI Narrator (Trinidad & Tobago Voice):** An in-game announcer observes key moments—such as aggressive bids, key trumps played, and clutch scoring—delivering live commentary and banter with an authentic, witty Trinidadian accent and cadence (featuring iconic expressions like *"Dat is ah brave bid!"*, *"Lardits!"*, *"Jah!"*, and *"Oh gosh! Arthur does play card for gramoxone!"*). Powered server-side by **Genkit** (`gemini-2.5-flash`) in Cloud Functions, authenticated via **Google Cloud Secret Manager** (`GEMINI_API_KEY`).
-- **Personal AI Coach & Smart Room Naming:** 
+- **Global AI Narrator (Trinidad & Tobago Voice):** An in-game announcer observes key moments—such as aggressive bids, key trumps played, and clutch scoring—delivering live commentary and banter with an authentic, witty Trinidadian accent and cadence (featuring iconic expressions like *"Dat is ah brave bid!"*, *"Lardits!"*, *"Jah!"*, and *"Oh gosh! Arthur does play card for gramoxone!"*). Powered server-side by **Genkit** (`gemini-3.5-flash-lite`) in Cloud Functions, authenticated via **Google Cloud Secret Manager** (`GEMINI_API_KEY`).
+- **Personal AI Coach & Smart Room Naming (`gemini-3.5-flash-lite`):** 
   - **Bid Assistant:** Analyzes your hand during the Wadger phase and suggests competitive bid ranges with strategy tips.
   - **Tactical Insights:** Recommends optimal moves and highlights key remaining cards during gameplay to elevate your skills.
   - **Creative Room Names:** Automatically names newly created game rooms with playful card-themed titles.

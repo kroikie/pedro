@@ -4,9 +4,17 @@ import '../models/game_session.dart';
 import '../logic/card_sorting.dart';
 
 class TacticalCoachService {
-  final _model = FirebaseAI.googleAI().generativeModel(
-    model: 'gemini-3.1-flash-lite-preview',
-  );
+  TacticalCoachService({
+    FirebaseAI? firebaseAI,
+  }) : _customFirebaseAI = firebaseAI;
+
+  final FirebaseAI? _customFirebaseAI;
+
+  FirebaseAI get _firebaseAI => _customFirebaseAI ?? FirebaseAI.googleAI();
+
+  GenerativeModel get _model => _firebaseAI.generativeModel(
+        model: 'gemini-3.5-flash-lite',
+      );
 
   Future<String> getMoveSuggestion({
     required List<Card> hand,

@@ -199,5 +199,11 @@ void main() {
         );
       });
     });
+
+    group('Model Configuration', () {
+      test('narratorModel is configured to gemini-3.5-flash-lite', () {
+        expect(narratorModel, equals('gemini-3.5-flash-lite'));
+      });
+    });
   });
 }
