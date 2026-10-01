@@ -24,7 +24,9 @@ class AvatarGenerationService {
   final FirebaseStorage? _customStorage;
   final PlayerRepository? _customPlayerRepository;
 
-  FirebaseAI get _firebaseAI => _customFirebaseAI ?? FirebaseAI.googleAI();
+  FirebaseAI get _firebaseAI =>
+      _customFirebaseAI ??
+      FirebaseAI.googleAI(useLimitedUseAppCheckTokens: true);
   FirebaseStorage get _storage => _customStorage ?? FirebaseStorage.instance;
   PlayerRepository get _playerRepository =>
       _customPlayerRepository ?? PlayerRepository();

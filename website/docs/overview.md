@@ -18,7 +18,7 @@
   - **Bid Assistant:** Analyzes your hand during the Wadger phase and suggests competitive bid ranges with strategy tips.
   - **Tactical Insights:** Recommends optimal moves and highlights key remaining cards during gameplay to elevate your skills.
   - **Creative Room Names:** Automatically names newly created game rooms with playful card-themed titles.
-  - **App Check & Fraud Defense Security:** Client-side AI calls via Firebase AI Logic are strictly protected by **Firebase App Check** enforced with **Fraud Defense (reCAPTCHA Enterprise)** across iOS, Android, and Web, preventing unauthorized API quota exploitation.
+  - **App Check & Replay Protection Security:** Client-side AI calls via Firebase AI Logic are strictly protected by **Firebase App Check** enforced with **Fraud Defense (reCAPTCHA Enterprise)** and **Replay Protection** across iOS, Android, and Web. The client requests single-use limited tokens (`useLimitedUseAppCheckTokens: true`) for each inference, preventing unauthorized API quota exploitation and token replay attacks.
 
 ### 3. In-Game Social Interactions & Live Reactions
 - **Transient Chat Notifications:** When comments are posted by the AI Narrator or fellow players, a floating notification banner appears over the board for a few seconds before smoothly fading down into the collapsed Game Chat bar. Players never have to keep the chat open to stay connected with the banter.
