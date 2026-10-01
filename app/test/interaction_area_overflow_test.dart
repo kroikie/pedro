@@ -31,6 +31,9 @@ class MockGameRepo implements GameRepository {
 
   @override
   Future<void> callPlayer(String gameId) async {}
+
+  @override
+  Future<void> deleteGame(String gameId) async {}
 }
 
 class MockPlayerRepo implements PlayerRepository {

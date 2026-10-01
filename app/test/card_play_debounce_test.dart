@@ -50,6 +50,9 @@ class FakeGameRepository implements GameRepository {
 
   @override
   Future<void> callPlayer(String gameId) async {}
+
+  @override
+  Future<void> deleteGame(String gameId) async {}
 }
 
 class FakePlayerRepository implements PlayerRepository {

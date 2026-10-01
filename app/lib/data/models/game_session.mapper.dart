@@ -686,6 +686,12 @@ class GameSessionMapper extends ClassMapperBase<GameSession> {
 
   static String _$gameId(GameSession v) => v.gameId;
   static const Field<GameSession, String> _f$gameId = Field('gameId', _$gameId);
+  static String? _$hostId(GameSession v) => v.hostId;
+  static const Field<GameSession, String> _f$hostId = Field(
+    'hostId',
+    _$hostId,
+    opt: true,
+  );
   static String? _$name(GameSession v) => v.name;
   static const Field<GameSession, String> _f$name = Field(
     'name',
@@ -711,6 +717,7 @@ class GameSessionMapper extends ClassMapperBase<GameSession> {
   @override
   final MappableFields<GameSession> fields = const {
     #gameId: _f$gameId,
+    #hostId: _f$hostId,
     #name: _f$name,
     #targetScore: _f$targetScore,
     #playerStates: _f$playerStates,
@@ -720,6 +727,7 @@ class GameSessionMapper extends ClassMapperBase<GameSession> {
   static GameSession _instantiate(DecodingData data) {
     return GameSession(
       gameId: data.dec(_f$gameId),
+      hostId: data.dec(_f$hostId),
       name: data.dec(_f$name),
       targetScore: data.dec(_f$targetScore),
       playerStates: data.dec(_f$playerStates),
@@ -796,6 +804,7 @@ abstract class GameSessionCopyWith<$R, $In extends GameSession, $Out>
   RoundStateCopyWith<$R, RoundState, RoundState> get currentRound;
   $R call({
     String? gameId,
+    String? hostId,
     String? name,
     int? targetScore,
     List<PlayerGameState>? playerStates,
@@ -829,6 +838,7 @@ class _GameSessionCopyWithImpl<$R, $Out>
   @override
   $R call({
     String? gameId,
+    Object? hostId = $none,
     Object? name = $none,
     int? targetScore,
     List<PlayerGameState>? playerStates,
@@ -836,6 +846,7 @@ class _GameSessionCopyWithImpl<$R, $Out>
   }) => $apply(
     FieldCopyWithData({
       if (gameId != null) #gameId: gameId,
+      if (hostId != $none) #hostId: hostId,
       if (name != $none) #name: name,
       if (targetScore != null) #targetScore: targetScore,
       if (playerStates != null) #playerStates: playerStates,
@@ -845,6 +856,7 @@ class _GameSessionCopyWithImpl<$R, $Out>
   @override
   GameSession $make(CopyWithData data) => GameSession(
     gameId: data.get(#gameId, or: $value.gameId),
+    hostId: data.get(#hostId, or: $value.hostId),
     name: data.get(#name, or: $value.name),
     targetScore: data.get(#targetScore, or: $value.targetScore),
     playerStates: data.get(#playerStates, or: $value.playerStates),
