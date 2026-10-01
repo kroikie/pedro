@@ -346,6 +346,15 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                     ? widget.gameName!
                     : 'Pedro';
 
+        final mediaQuery = MediaQuery.of(context);
+        final viewInsetsBottom = mediaQuery.viewInsets.bottom;
+        final availableHeight = mediaQuery.size.height -
+            viewInsetsBottom -
+            mediaQuery.padding.vertical -
+            kToolbarHeight;
+        final shouldHideInteractionArea =
+            viewInsetsBottom > 0 && availableHeight < 560;
+
         return Scaffold(
           appBar: AppBar(
             title: Text(
@@ -392,37 +401,44 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
               const SizedBox(width: 12),
             ],
           ),
-          body: Column(
-            children: [
-              Expanded(
-                child: Stack(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Align(
-                        alignment: const Alignment(0, 0.08),
-                        child: _buildLiftArea(
-                          session.currentRound.currentLift,
-                          session.playerStates,
-                          lastLift: session.currentRound.lastLift,
+          body: GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onTap: () {
+              FocusManager.instance.primaryFocus?.unfocus();
+            },
+            child: Column(
+              children: [
+                Expanded(
+                  child: Stack(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Align(
+                          alignment: const Alignment(0, 0.08),
+                          child: _buildLiftArea(
+                            session.currentRound.currentLift,
+                            session.playerStates,
+                            lastLift: session.currentRound.lastLift,
+                          ),
                         ),
                       ),
-                    ),
-                    ..._buildPlayerPositions(session),
-                    FloatingReactionsOverlay(
-                      gameId: widget.gameId,
-                      reactionRepository: widget.reactionRepository,
-                    ),
-                  ],
+                      ..._buildPlayerPositions(session),
+                      FloatingReactionsOverlay(
+                        gameId: widget.gameId,
+                        reactionRepository: widget.reactionRepository,
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              _buildInteractionArea(session),
-              ChatOverlay(
-                gameId: widget.gameId,
-                chatRepository: widget.chatRepository,
-                playerRepository: _playerRepo,
-              ),
-            ],
+                if (!shouldHideInteractionArea) _buildInteractionArea(session),
+                ChatOverlay(
+                  gameId: widget.gameId,
+                  chatRepository: widget.chatRepository,
+                  playerRepository: _playerRepo,
+                  currentUserId: _uid,
+                ),
+              ],
+            ),
           ),
         );
       },

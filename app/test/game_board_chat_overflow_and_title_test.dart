@@ -80,6 +80,8 @@ class MockReactionRepository implements ReactionRepository {
 }
 
 class MockChatRepository implements ChatRepository {
+  final List<String> sentMessages = [];
+
   @override
   Stream<List<ChatMessage>> watchMessages(String gameId) {
     return Stream.value([
@@ -108,7 +110,9 @@ class MockChatRepository implements ChatRepository {
     required String senderName,
     required String text,
     bool isAi = false,
-  }) async {}
+  }) async {
+    sentMessages.add(text);
+  }
 
   @override
   Future<void> postNarratorCommentary({
@@ -424,6 +428,165 @@ void main() {
       final animatedContainerAfter =
           tester.widget<AnimatedContainer>(find.byType(AnimatedContainer));
       expect(animatedContainerAfter.constraints?.maxHeight ?? 210, 210);
+    });
+
+    testWidgets(
+        'When keyboard is visible on iPhone SE, text field remains visible above keyboard with zero overflow',
+        (tester) async {
+      tester.view.physicalSize = const Size(375, 667);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+        tester.view.resetViewInsets();
+      });
+
+      mockGameRepo.currentSession = GameSession(
+        gameId: 'game_keyboard_test',
+        name: 'Keyboard Test Game',
+        targetScore: 35,
+        playerStates: [
+          const PlayerGameState(
+            uid: 'p1',
+            hand: [
+              pedro.Card(suit: pedro.Suit.hearts, rank: pedro.Rank.ten),
+              pedro.Card(suit: pedro.Suit.diamonds, rank: pedro.Rank.five),
+            ],
+            currentRoundPoints: 0,
+            totalScore: 4,
+          ),
+          const PlayerGameState(
+            uid: 'p2',
+            hand: [pedro.Card(suit: pedro.Suit.clubs, rank: pedro.Rank.ace)],
+            currentRoundPoints: 2,
+            totalScore: 12,
+            earnedPoints: ['Bid: 4'],
+          ),
+          const PlayerGameState(
+            uid: 'p3',
+            hand: [pedro.Card(suit: pedro.Suit.spades, rank: pedro.Rank.king)],
+            currentRoundPoints: 0,
+            totalScore: 9,
+          ),
+          const PlayerGameState(
+            uid: 'p4',
+            hand: [pedro.Card(suit: pedro.Suit.hearts, rank: pedro.Rank.five)],
+            currentRoundPoints: 0,
+            totalScore: 15,
+          ),
+        ],
+        currentRound: const RoundState(
+          dealerId: 'p1',
+          bidWinnerId: 'p2',
+          bidValue: 4,
+          trumpSuit: pedro.Suit.diamonds,
+          phase: RoundPhase.playing,
+          turnIndex: 0,
+        ),
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: GameBoardScreen(
+            gameId: 'game_keyboard_test',
+            currentUserId: 'p1',
+            gameRepository: mockGameRepo,
+            playerRepository: mockPlayerRepo,
+            reactionRepository: mockReactionRepo,
+            chatRepository: mockChatRepo,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Expand chat
+      await tester.tap(find.text('Game Chat'));
+      await tester.pumpAndSettle();
+
+      // Before keyboard: cards hand is visible
+      expect(find.text('Your Hand'), findsOneWidget);
+      expect(find.byType(TextField), findsOneWidget);
+
+      // Simulate soft keyboard appearing (300px keyboard height)
+      tester.view.viewInsets = const FakeViewPadding(bottom: 300);
+      await tester.pumpAndSettle();
+
+      // TextField must still be present and rendered with no overflow
+      expect(find.byType(TextField), findsOneWidget);
+      expect(find.byIcon(Icons.send), findsOneWidget);
+      expect(tester.takeException(), isNull);
+
+      // Verify the TextField bottom is at or above the keyboard top (667 - 300 = 367)
+      final textFieldBottom = tester.getBottomLeft(find.byType(TextField)).dy;
+      expect(textFieldBottom <= 367.0, isTrue);
+
+      // Dismissing the keyboard restores the full interaction area
+      tester.view.viewInsets = FakeViewPadding.zero;
+      await tester.pumpAndSettle();
+
+      expect(find.text('Your Hand'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets(
+        'Hitting done on the keyboard does not submit message; UI send button submits message',
+        (tester) async {
+      mockGameRepo.currentSession = const GameSession(
+        gameId: 'game_submit_test',
+        targetScore: 35,
+        playerStates: [
+          PlayerGameState(
+            uid: 'p1',
+            hand: [pedro.Card(suit: pedro.Suit.diamonds, rank: pedro.Rank.ten)],
+            totalScore: 0,
+          ),
+        ],
+        currentRound: RoundState(
+          dealerId: 'p1',
+          phase: RoundPhase.playing,
+        ),
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: GameBoardScreen(
+            gameId: 'game_submit_test',
+            currentUserId: 'p1',
+            gameRepository: mockGameRepo,
+            playerRepository: mockPlayerRepo,
+            reactionRepository: mockReactionRepo,
+            chatRepository: mockChatRepo,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Open the chat
+      await tester.tap(find.text('Game Chat'));
+      await tester.pumpAndSettle();
+
+      // Type a draft message
+      await tester.enterText(find.byType(TextField), 'Wait nah man!');
+      await tester.pump();
+
+      // Verify text is in the field
+      expect(find.text('Wait nah man!'), findsOneWidget);
+
+      // Simulate hitting "Done" on the soft keyboard
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pumpAndSettle();
+
+      // Verify message was NOT submitted and draft is still intact
+      expect(mockChatRepo.sentMessages, isEmpty);
+      expect(find.text('Wait nah man!'), findsOneWidget);
+
+      // Now tap the UI send button
+      await tester.tap(find.byIcon(Icons.send));
+      await tester.pumpAndSettle();
+
+      // Message should now be submitted via UI action and text field cleared
+      expect(mockChatRepo.sentMessages, contains('Wait nah man!'));
+      expect(find.text('Wait nah man!'), findsNothing);
     });
   });
 }

@@ -13,12 +13,14 @@ class ChatOverlay extends StatefulWidget {
     this.chatRepository,
     this.playerRepository,
     this.expandedHeight,
+    this.currentUserId,
   });
 
   final String gameId;
   final ChatRepository? chatRepository;
   final PlayerRepository? playerRepository;
   final double? expandedHeight;
+  final String? currentUserId;
 
   @override
   State<ChatOverlay> createState() => _ChatOverlayState();
@@ -31,6 +33,7 @@ class _ChatOverlayState extends State<ChatOverlay>
   late final PlayerRepository _playerRepo =
       widget.playerRepository ?? PlayerRepository();
   final _messageController = TextEditingController();
+  final _messageFocusNode = FocusNode();
   final _scrollController = ScrollController();
   final _overlayPortalController = OverlayPortalController();
 
@@ -159,12 +162,13 @@ class _ChatOverlayState extends State<ChatOverlay>
   Future<void> _loadPlayerName() async {
     try {
       final user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        final player = await _playerRepo.getPlayer(user.uid);
+      final uid = user?.uid ?? widget.currentUserId;
+      if (uid != null) {
+        final player = await _playerRepo.getPlayer(uid);
         if (mounted) {
           setState(() {
             _cachedScreenName =
-                player?.screenName ?? user.displayName ?? 'Anonymous';
+                player?.screenName ?? user?.displayName ?? 'Anonymous';
           });
         }
       }
@@ -181,16 +185,17 @@ class _ChatOverlayState extends State<ChatOverlay>
     try {
       user = FirebaseAuth.instance.currentUser;
     } catch (_) {}
-    if (user == null) return;
+    final uid = user?.uid ?? widget.currentUserId;
+    if (uid == null) return;
 
-    final senderName = _cachedScreenName ?? user.displayName ?? 'Anonymous';
+    final senderName = _cachedScreenName ?? user?.displayName ?? 'Anonymous';
     if (_cachedScreenName == null) {
       _loadPlayerName();
     }
 
     await _chatRepo.sendMessage(
       gameId: widget.gameId,
-      senderId: user.uid,
+      senderId: uid,
       senderName: senderName,
       text: text,
     );
@@ -202,6 +207,7 @@ class _ChatOverlayState extends State<ChatOverlay>
     _messageSubscription?.cancel();
     _toastTimer?.cancel();
     _toastAnimController.dispose();
+    _messageFocusNode.dispose();
     _messageController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -209,9 +215,17 @@ class _ChatOverlayState extends State<ChatOverlay>
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.sizeOf(context).height;
-    final defaultExpandedHeight =
-        (screenHeight * 0.28).clamp(200.0, 260.0);
+    final mediaQuery = MediaQuery.of(context);
+    final screenHeight = mediaQuery.size.height;
+    final viewInsetsBottom = mediaQuery.viewInsets.bottom;
+    final availableHeight =
+        screenHeight - viewInsetsBottom - mediaQuery.padding.vertical;
+    final maxAllowedExpanded = viewInsetsBottom > 0
+        ? (availableHeight * 0.75).clamp(160.0, 260.0)
+        : 260.0;
+    final defaultExpandedHeight = viewInsetsBottom > 0
+        ? (screenHeight * 0.28).clamp(160.0, maxAllowedExpanded)
+        : (screenHeight * 0.28).clamp(200.0, 260.0);
     final effectiveExpandedHeight =
         widget.expandedHeight ?? defaultExpandedHeight;
 
@@ -221,7 +235,8 @@ class _ChatOverlayState extends State<ChatOverlay>
         if (_activeToastMessage == null) return const SizedBox.shrink();
         final bottomOffset = (_isExpanded ? effectiveExpandedHeight : 60.0) +
             12.0 +
-            MediaQuery.paddingOf(context).bottom;
+            mediaQuery.padding.bottom +
+            viewInsetsBottom;
         return Positioned(
           bottom: bottomOffset,
           left: 16.0,
@@ -350,12 +365,16 @@ class _ChatOverlayState extends State<ChatOverlay>
                               Expanded(
                                 child: TextField(
                                   controller: _messageController,
+                                  focusNode: _messageFocusNode,
+                                  textInputAction: TextInputAction.done,
                                   decoration: const InputDecoration(
                                     hintText: 'Type a message...',
                                     border: OutlineInputBorder(),
                                     isDense: true,
                                   ),
-                                  onSubmitted: (_) => _sendMessage(),
+                                  onSubmitted: (_) {
+                                    _messageFocusNode.unfocus();
+                                  },
                                 ),
                               ),
                               IconButton(
