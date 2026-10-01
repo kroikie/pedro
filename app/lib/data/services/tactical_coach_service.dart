@@ -1,6 +1,7 @@
 import 'package:firebase_ai/firebase_ai.dart';
 import '../models/card.dart';
 import '../models/game_session.dart';
+import '../logic/card_sorting.dart';
 
 class TacticalCoachService {
   final _model = FirebaseAI.googleAI().generativeModel(
@@ -14,7 +15,8 @@ class TacticalCoachService {
     required List<Card> playedCards,
   }) async {
     try {
-      final handStr = hand.map((c) => c.toString()).join(', ');
+      final sortedHand = hand.sortedHand(trumpSuit: trumpSuit);
+      final handStr = sortedHand.map((c) => c.toString()).join(', ');
       final liftStr = (currentLift?.winnerId != null)
           ? 'No cards played yet (you are leading the lift)'
           : (currentLift?.plays.values.map((c) => c.toString()).join(', ') ?? 'No cards played yet');
