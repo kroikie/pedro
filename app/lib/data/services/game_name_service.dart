@@ -8,7 +8,9 @@ class GameNameService {
 
   final FirebaseAI? _customFirebaseAI;
 
-  FirebaseAI get _firebaseAI => _customFirebaseAI ?? FirebaseAI.googleAI();
+  FirebaseAI get _firebaseAI =>
+      _customFirebaseAI ??
+      FirebaseAI.googleAI(useLimitedUseAppCheckTokens: true);
 
   GenerativeModel get _model => _firebaseAI.generativeModel(
         model: 'gemini-3.5-flash-lite',
