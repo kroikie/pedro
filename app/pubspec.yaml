@@ -30,6 +30,7 @@ dependencies:
   firebase_ui_auth: ^3.0.1
   firebase_ui_oauth_google: ^2.0.1
   google_fonts: ^8.2.1
+  package_info_plus: ^10.2.1
 
 dev_dependencies:
   flutter_test:

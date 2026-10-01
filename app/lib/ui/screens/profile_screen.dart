@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../data/repositories/player_repository.dart';
 import '../../data/models/player.dart';
 import '../widgets/avatar_widget.dart';
+import '../widgets/app_version_footer.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -123,32 +124,42 @@ class _ProfileScreenState extends State<ProfileScreen> {
       appBar: AppBar(title: const Text('Profile')),
       body: _isLoading 
         ? const Center(child: CircularProgressIndicator())
-        : Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              children: [
-                GestureDetector(
-                  onTap: _pickAndUploadImage,
-                  child: AvatarWidget(
-                    avatarUrl: _player?.avatarUrl,
-                    radius: 50,
+        : LayoutBuilder(
+            builder: (context, constraints) => SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight - 32),
+                child: IntrinsicHeight(
+                  child: Column(
+                    children: [
+                      GestureDetector(
+                        onTap: _pickAndUploadImage,
+                        child: AvatarWidget(
+                          avatarUrl: _player?.avatarUrl,
+                          radius: 50,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      const Text('Tap to change avatar'),
+                      const SizedBox(height: 32),
+                      TextField(
+                        controller: _nameController,
+                        decoration: const InputDecoration(labelText: 'Screen Name'),
+                      ),
+                      const SizedBox(height: 32),
+                      ElevatedButton(
+                        onPressed: _saveProfile,
+                        child: const Text('Save Profile'),
+                      ),
+                      const Spacer(),
+                      const SizedBox(height: 24),
+                      const AppVersionFooter(),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 16),
-                const Text('Tap to change avatar'),
-                const SizedBox(height: 32),
-                TextField(
-                  controller: _nameController,
-                  decoration: const InputDecoration(labelText: 'Screen Name'),
-                ),
-                const SizedBox(height: 32),
-                ElevatedButton(
-                  onPressed: _saveProfile,
-                  child: const Text('Save Profile'),
-                ),
-              ],
+              ),
             ),
-        ),
+          ),
     );
   }
 }

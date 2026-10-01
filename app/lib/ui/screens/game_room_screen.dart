@@ -10,6 +10,7 @@ import '../../data/repositories/chat_repository.dart';
 import '../../data/repositories/reaction_repository.dart';
 import 'game_board_screen.dart';
 import '../widgets/chat_overlay.dart';
+import '../widgets/app_version_footer.dart';
 
 class GameRoomScreen extends StatefulWidget {
   const GameRoomScreen({
@@ -118,6 +119,14 @@ class _GameRoomScreenState extends State<GameRoomScreen> {
                   onPressed: () => _showInviteDialog(context, room),
                   tooltip: 'Invite Player',
                 ),
+              IconButton(
+                icon: const Icon(Icons.info_outline),
+                tooltip: 'Game & App Info',
+                onPressed: () => showPedroAboutDialog(
+                  context,
+                  gameId: widget.gameId,
+                ),
+              ),
             ],
           ),
           body: Column(

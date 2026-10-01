@@ -8,6 +8,7 @@ import '../widgets/avatar_widget.dart';
 import 'game_room_screen.dart';
 import 'home_feed_view.dart';
 import 'profile_screen.dart';
+import '../widgets/app_version_footer.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -178,7 +179,13 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       actions: [
         IconButton(
+          icon: Icon(Icons.info_outline, color: theme.colorScheme.primary),
+          tooltip: 'About Pedro',
+          onPressed: () => showPedroAboutDialog(context),
+        ),
+        IconButton(
           icon: Icon(Icons.logout, color: theme.colorScheme.primary),
+          tooltip: 'Sign Out',
           onPressed: () {
             FirebaseAuth.instance.signOut();
           },

@@ -33,6 +33,7 @@
 ### 5. User Profiles & Customization
 - **Flexible & Secure Sign-In:** Sign in easily and jump straight into the action with support for Email/Password and native one-tap Google Sign-In across Web, Android, and iOS release environments (configured with native iOS URL schemes, GID client descriptors, and seamless presentation lifecycle).
 - **Personalized Avatars:** Choose your player nickname and upload custom avatar images to represent yourself at the table.
+- **Version Identification & Diagnostics Reporting:** Players and beta testers can quickly identify and copy their exact app version and build number (`vX.Y.Z (Build N)`) from the footer of the Sign-In screen, the bottom of the User Profile screen, or via the **About Pedro** info dialog in game lobbies and tables. A single tap copies the version string, while a long press copies a full diagnostic bundle (Version, Build, Platform, Firebase UID, and Active Game ID) for frictionless bug reporting.
 
 ### 6. Adaptive & Accessible Design
 - Clean, intuitive interface with smooth animations, clear card visuals, and adaptive layouts tailored for phones, tablets, and web browsers.
