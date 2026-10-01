@@ -12,10 +12,12 @@
 - **Direct Player Invites:** Send game invitations straight to your friends' in-app inbox.
 
 ### 2. Interactive AI Companions
-- **Global AI Narrator (Trinidad & Tobago Voice):** An in-game announcer observes key moments—such as aggressive bids, key trumps played, and clutch scoring—delivering live commentary and banter with an authentic, witty Trinidadian accent and cadence (featuring iconic expressions like *"Dat is ah brave bid!"*, *"Lardits!"*, *"Jah!"*, and *"Oh gosh! Arthur does play card for gramoxone!"*).
-- **Personal AI Coach:** 
+- **Global AI Narrator (Trinidad & Tobago Voice):** An in-game announcer observes key moments—such as aggressive bids, key trumps played, and clutch scoring—delivering live commentary and banter with an authentic, witty Trinidadian accent and cadence (featuring iconic expressions like *"Dat is ah brave bid!"*, *"Lardits!"*, *"Jah!"*, and *"Oh gosh! Arthur does play card for gramoxone!"*). Powered server-side by **Genkit** (`gemini-2.5-flash`) in Cloud Functions, authenticated via **Google Cloud Secret Manager** (`GEMINI_API_KEY`).
+- **Personal AI Coach & Smart Room Naming:** 
   - **Bid Assistant:** Analyzes your hand during the Wadger phase and suggests competitive bid ranges with strategy tips.
   - **Tactical Insights:** Recommends optimal moves and highlights key remaining cards during gameplay to elevate your skills.
+  - **Creative Room Names:** Automatically names newly created game rooms with playful card-themed titles.
+  - **App Check & Fraud Defense Security:** Client-side AI calls via Firebase AI Logic are strictly protected by **Firebase App Check** enforced with **Fraud Defense (reCAPTCHA Enterprise)** across iOS, Android, and Web, preventing unauthorized API quota exploitation.
 
 ### 3. In-Game Social Interactions & Live Reactions
 - **Transient Chat Notifications:** When comments are posted by the AI Narrator or fellow players, a floating notification banner appears over the board for a few seconds before smoothly fading down into the collapsed Game Chat bar. Players never have to keep the chat open to stay connected with the banter.

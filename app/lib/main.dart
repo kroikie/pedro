@@ -9,13 +9,13 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'firebase_options.dart';
 import 'package:firebase_ui_auth/firebase_ui_auth.dart' hide ProfileScreen;
-import 'package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'data/repositories/player_repository.dart';
 import 'data/models/player.dart';
 import 'data/emulator_config.dart';
 import 'data/auth_config.dart';
+import 'data/app_check_config.dart';
 import 'data/services/notification_service.dart';
 
 import 'ui/screens/auth_screen.dart';
@@ -29,6 +29,12 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  try {
+    await initializeAppCheck();
+  } catch (e) {
+    debugPrint('App Check initialization failed: $e');
+  }
 
   // Initialize Crashlytics and Analytics
   if (!kIsWeb) {
