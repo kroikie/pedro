@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import '../../data/auth_config.dart';
+import '../widgets/app_version_footer.dart';
 
 class AuthScreen extends StatelessWidget {
   const AuthScreen({super.key});
@@ -127,6 +128,12 @@ class AuthScreen extends StatelessWidget {
               'Welcome to the Veranda. Sign in to join the tables.',
               style: TextStyle(fontSize: 14),
             ),
+          );
+        },
+        footerBuilder: (context, action) {
+          return const Padding(
+            padding: EdgeInsets.only(top: 16.0, bottom: 24.0),
+            child: AppVersionFooter(),
           );
         },
         actions: [
