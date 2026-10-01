@@ -59,6 +59,11 @@ class MockPlayerRepository implements PlayerRepository {
   Future<void> removeFcmToken(String uid, String token) async {}
 
   @override
+  Stream<Player?> watchPlayer(String uid) {
+    return Stream.value(players[uid]);
+  }
+
+  @override
   Stream<List<Player>> watchAllPlayers() {
     return Stream.value(players.values.toList());
   }

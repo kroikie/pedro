@@ -32,7 +32,14 @@
 
 ### 5. User Profiles & Customization
 - **Flexible & Secure Sign-In:** Sign in easily and jump straight into the action with support for Email/Password and native one-tap Google Sign-In across Web, Android, and iOS release environments (configured with native iOS URL schemes, GID client descriptors, and seamless presentation lifecycle).
-- **Personalized Avatars:** Choose your player nickname and upload custom avatar images to represent yourself at the table.
+- **Initial Google Account Avatar:** When signing in with Google, the photo from the user's Google account is automatically used as their initial avatar. Players can also re-sync or revert to their Google profile photo at any time from their profile settings.
+- **AI Avatar Generator (`gemini-3.1-flash-image`):** Players can generate stylized, vibrant cartoon avatars directly within the app using Firebase AI Logic:
+  - **Cartoon Animals:** Create cartoon portraits of favorite animals (e.g. a majestic lion, clever fox, sly wolf, or wise owl).
+  - **Cartoon Persons:** Generate stylized cartoon headshots based on custom descriptions, specifically designed with darker skin tones (deep melanin and rich brown complexions, e.g. army woman, astronaut, detective, or gamer).
+  - **In-App Interactive Preview:** Allows players to preview generated artwork in a circular frame, refine prompts, and confirm before setting as their active avatar.
+- **Custom Image Upload:** Players can continue to upload their own images from their device photo gallery.
+- **Firebase Cloud Storage & FirebaseUI Storage:** All generated and uploaded avatars are saved to Firebase Cloud Storage under timestamped, user-scoped paths (`avatars/{userId}_{timestamp}.jpg`). Avatars are efficiently rendered and cached across the app using FirebaseUI Storage (`StorageImage`), with authenticated-only read access and user-isolated write validation in `storage.rules`.
+- **Administrative Backfill Tool:** An administrative CLI utility (`scripts/backfill_google_avatars.sh` / `functions/bin/backfill_google_avatars.dart`) allows operators to scan existing accounts and backfill missing avatar URLs for players who previously authenticated via Google Sign-In.
 - **Version Identification & Diagnostics Reporting:** Players and beta testers can quickly identify and copy their exact app version and build number (`vX.Y.Z (Build N)`) from the footer of the Sign-In screen, the bottom of the User Profile screen, or via the **About Pedro** info dialog in game lobbies and tables. A single tap copies the version string, while a long press copies a full diagnostic bundle (Version, Build, Platform, Firebase UID, and Active Game ID) for frictionless bug reporting.
 
 ### 6. Adaptive & Accessible Design

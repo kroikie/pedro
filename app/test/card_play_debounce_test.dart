@@ -68,6 +68,11 @@ class FakePlayerRepository implements PlayerRepository {
   Future<void> removeFcmToken(String uid, String token) async {}
 
   @override
+  Stream<Player?> watchPlayer(String uid) {
+    return Stream.value(Player(id: uid, screenName: 'Player $uid'));
+  }
+
+  @override
   Stream<List<Player>> watchAllPlayers() {
     return const Stream.empty();
   }

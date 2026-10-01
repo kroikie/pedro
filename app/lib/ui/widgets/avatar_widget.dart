@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:firebase_ui_storage/firebase_ui_storage.dart';
 
 class AvatarWidget extends StatelessWidget {
   const AvatarWidget({
@@ -21,26 +22,30 @@ class AvatarWidget extends StatelessWidget {
       );
     }
 
-    final isFirebaseStorage = avatarUrl!.startsWith('gs://') || 
-                             avatarUrl!.contains('firebasestorage.googleapis.com');
+    final isFirebaseStorage = avatarUrl!.startsWith('gs://') ||
+        avatarUrl!.contains('firebasestorage.googleapis.com') ||
+        avatarUrl!.startsWith('avatars/');
 
     if (isFirebaseStorage) {
-      return FutureBuilder<String>(
-        future: FirebaseStorage.instance.refFromURL(avatarUrl!).getDownloadURL(),
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            return _buildImage(snapshot.data!);
-          }
-          if (snapshot.hasError) {
-            return _errorIcon();
-          }
-          return SizedBox(
-            width: radius * 2,
-            height: radius * 2,
-            child: const CircularProgressIndicator(),
-          );
-        },
-      );
+      try {
+        final ref = avatarUrl!.startsWith('avatars/')
+            ? FirebaseStorage.instance.ref(avatarUrl!)
+            : FirebaseStorage.instance.refFromURL(avatarUrl!);
+
+        return SizedBox(
+          width: radius * 2,
+          height: radius * 2,
+          child: ClipOval(
+            child: StorageImage(
+              ref: ref,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, [stackTrace]) => _errorIcon(),
+            ),
+          ),
+        );
+      } catch (_) {
+        return _errorIcon();
+      }
     }
 
     return _buildImage(avatarUrl!);

@@ -140,6 +140,9 @@ class FakePlayerRepository implements PlayerRepository {
   Stream<List<Player>> watchAllPlayers() => Stream.value([]);
 
   @override
+  Stream<Player?> watchPlayer(String uid) => Stream.value(Player(id: uid, screenName: 'Player $uid'));
+
+  @override
   Future<void> updatePlayer(Player player) async {}
 
   @override
