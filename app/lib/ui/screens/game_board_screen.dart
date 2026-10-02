@@ -954,6 +954,49 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                             fontWeight: FontWeight.w600,
                           ),
                         ),
+                      if (playerState.cardsDiscarded != null &&
+                          round.phase == RoundPhase.playing)
+                        Container(
+                          margin: const EdgeInsets.only(top: 2),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 4, vertical: 1),
+                          decoration: BoxDecoration(
+                            color: Colors.purple.shade50,
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(
+                                color: Colors.purple.shade200, width: 0.8),
+                          ),
+                          child: Text(
+                            'Replaced: ${playerState.cardsDiscarded}',
+                            style: TextStyle(
+                              fontSize: 8,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.purple.shade900,
+                            ),
+                          ),
+                        ),
+                      if (round.phase == RoundPhase.wadger &&
+                          round.passedPlayerIds.contains(playerState.uid) &&
+                          !playerState.earnedPoints.contains('Pass'))
+                        Container(
+                          margin: const EdgeInsets.only(top: 2),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 4, vertical: 1),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade200,
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(
+                                color: Colors.grey.shade400, width: 0.8),
+                          ),
+                          child: Text(
+                            'Passed',
+                            style: TextStyle(
+                              fontSize: 8,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey.shade700,
+                            ),
+                          ),
+                        ),
                       if (playerState.earnedPoints.isNotEmpty)
                         _buildPointsChips(playerState.earnedPoints),
                     ],
@@ -1011,7 +1054,9 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
     final isLocalBidder =
         round.bidWinnerId == _uid && round.phase != RoundPhase.wadger;
 
-    if (round.phase == RoundPhase.wadger && isMyTurn) {
+    if (round.phase == RoundPhase.wadger &&
+        isMyTurn &&
+        !round.passedPlayerIds.contains(_uid)) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _analyzeHand(localState.hand);
       });
@@ -1091,6 +1136,49 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                           style:
                               const TextStyle(fontSize: 11, color: Colors.blue)),
                     ],
+                    if (localState.cardsDiscarded != null &&
+                        round.phase == RoundPhase.playing)
+                      Container(
+                        margin: const EdgeInsets.only(top: 2),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 5, vertical: 1),
+                        decoration: BoxDecoration(
+                          color: Colors.purple.shade50,
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(
+                              color: Colors.purple.shade200, width: 0.8),
+                        ),
+                        child: Text(
+                          'You replaced ${localState.cardsDiscarded} cards',
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.purple.shade900,
+                          ),
+                        ),
+                      ),
+                    if (round.phase == RoundPhase.wadger &&
+                        round.passedPlayerIds.contains(_uid) &&
+                        !localState.earnedPoints.contains('Pass'))
+                      Container(
+                        margin: const EdgeInsets.only(top: 2),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 5, vertical: 1),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade200,
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(
+                              color: Colors.grey.shade400, width: 0.8),
+                        ),
+                        child: Text(
+                          'You Passed',
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey.shade700,
+                          ),
+                        ),
+                      ),
                     _buildPointsChips(localState.earnedPoints),
                     Text('Total: ${localState.totalScore}',
                         style: const TextStyle(
@@ -1133,7 +1221,9 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
             ],
           ),
           const SizedBox(height: 8),
-          if (round.phase == RoundPhase.wadger && isMyTurn) ...[
+          if (round.phase == RoundPhase.wadger &&
+              isMyTurn &&
+              !round.passedPlayerIds.contains(_uid)) ...[
             if (_isAnalyzingHand) const LinearProgressIndicator(),
             if (_bidSuggestion != null)
               Padding(
@@ -1303,16 +1393,42 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
 
   Widget _buildBidControls(GameSession session) {
     final currentBid = session.currentRound.bidValue;
+    final isInitialBid = currentBid == 0;
     return Column(
       children: [
-        const Text('Place your bid (1-20) or Pass',
-            style: TextStyle(fontSize: 11)),
+        Text(
+          isInitialBid
+              ? 'Place opening bid (1-20)'
+              : 'Place your bid (${currentBid + 1}-20) or Pass',
+          style: const TextStyle(fontSize: 11),
+        ),
         const SizedBox(height: 6),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 2),
+                child: ActionChip(
+                  label: Text(
+                    'Pass',
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: isInitialBid
+                          ? Colors.grey.shade500
+                          : Colors.red.shade900,
+                    ),
+                  ),
+                  onPressed: isInitialBid
+                      ? null
+                      : () => _gameRepo.submitBid(widget.gameId, null),
+                  backgroundColor:
+                      isInitialBid ? Colors.grey.shade200 : Colors.red[100],
+                  visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
+                ),
+              ),
               for (int b = currentBid + 1; b <= 20; b++)
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 2),
@@ -1324,16 +1440,6 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                     padding: EdgeInsets.zero,
                   ),
                 ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 2),
-                child: ActionChip(
-                  label: const Text('Pass', style: TextStyle(fontSize: 10)),
-                  onPressed: () => _gameRepo.submitBid(widget.gameId, null),
-                  backgroundColor: Colors.red[100],
-                  visualDensity: VisualDensity.compact,
-                  padding: EdgeInsets.zero,
-                ),
-              ),
             ],
           ),
         ),
