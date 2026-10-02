@@ -13,7 +13,7 @@ class BidAssistantService {
 
   FirebaseAI get _firebaseAI =>
       _customFirebaseAI ??
-      FirebaseAI.googleAI(useLimitedUseAppCheckTokens: true);
+      FirebaseAI.googleAI();
 
   GenerativeModel get _model => _firebaseAI.generativeModel(
         model: 'gemini-3.5-flash-lite',
