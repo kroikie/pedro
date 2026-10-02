@@ -280,6 +280,7 @@ void main(List<String> args) {
                       'totalScore': 0,
                       'capturedValueCards': [],
                       'earnedPoints': [],
+                      'cardsDiscarded': null,
                     },
                   )
                   .toList(),
@@ -287,6 +288,7 @@ void main(List<String> args) {
           'bidValue': 0,
           'turnIndex': (playerIds.indexOf(auth.uid) + 1) % playerIds.length,
           'consecutivePasses': 0,
+          'passedPlayerIds': [],
           'playedCards': [],
           'highTrumpPlayerId': null,
           'highTrumpPlayedCard': null,
@@ -355,11 +357,22 @@ void main(List<String> args) {
       final playerStates = List<Map<String, dynamic>>.from(round['playerStates'] as Iterable);
       final playerState = playerStates.firstWhere((p) => p['uid'] == auth.uid);
 
-      int newBidValue = (round['bidValue'] as num).toInt();
+      final currentBidValue = (round['bidValue'] as num?)?.toInt() ?? 0;
+      if (bid == null && currentBidValue == 0) {
+        throw InvalidArgumentError('The initial bid cannot be a pass.');
+      }
+
+      final passedPlayerIds = List<String>.from((round['passedPlayerIds'] ?? []) as Iterable);
+      if (passedPlayerIds.contains(auth.uid)) {
+        throw FailedPreconditionError('You have already passed this round.');
+      }
+
+      int newBidValue = currentBidValue;
       String? newBidWinnerId = round['bidWinnerId'] as String?;
       int newConsecutivePasses = (round['consecutivePasses'] as num?)?.toInt() ?? 0;
 
       if (bid == null) {
+        passedPlayerIds.add(auth.uid);
         newConsecutivePasses++;
         playerState['earnedPoints'] = ['Pass'];
       } else {
@@ -372,28 +385,31 @@ void main(List<String> args) {
 
       final numPlayers = playerIds.length;
       String nextPhase = 'wadger';
-      int nextTurnIndex = (turnIndex + 1) % numPlayers;
+      int nextTurnIndex = turnIndex;
 
-      if (newConsecutivePasses == numPlayers - 1 && newBidWinnerId != null) {
+      if (isBiddingComplete(
+        totalPlayers: numPlayers,
+        passedPlayerIds: passedPlayerIds,
+        bidWinnerId: newBidWinnerId,
+      )) {
         nextPhase = 'discarding';
-        nextTurnIndex = playerIds.indexOf(newBidWinnerId);
+        nextTurnIndex = playerIds.indexOf(newBidWinnerId!);
         for (final ps in playerStates) {
           ps['earnedPoints'] = [];
         }
-      } else if (newConsecutivePasses == numPlayers) {
-        newBidValue = 1;
-        newBidWinnerId = round['dealerId'] as String;
-        nextPhase = 'discarding';
-        nextTurnIndex = playerIds.indexOf(newBidWinnerId);
-        for (final ps in playerStates) {
-          ps['earnedPoints'] = [];
-        }
+      } else {
+        nextTurnIndex = getNextBidderIndex(
+          playerIds: playerIds,
+          currentTurnIndex: turnIndex,
+          passedPlayerIds: passedPlayerIds,
+        );
       }
 
       await gameRef.update({
         'currentRound.bidValue': newBidValue,
         'currentRound.bidWinnerId': newBidWinnerId,
         'currentRound.consecutivePasses': newConsecutivePasses,
+        'currentRound.passedPlayerIds': passedPlayerIds,
         'currentRound.phase': nextPhase,
         'currentRound.turnIndex': nextTurnIndex,
         'currentRound.playerStates': playerStates,
@@ -466,6 +482,7 @@ void main(List<String> args) {
             (ps['hand'] as Iterable).map((c) => Card.fromJson(c as Map<String, dynamic>)).toList();
         final keep = hand.where((c) => c.suit == suit).toList();
         final discard = hand.where((c) => c.suit != suit).toList();
+        ps['cardsDiscarded'] = discard.length;
         ps['hand'] = keep.map((c) => c.toJson()).toList();
         discardedCards.addAll(discard);
       }
@@ -500,13 +517,19 @@ void main(List<String> args) {
       });
 
       final roomName = (gameData['name'] ?? 'Pedro') as String;
+      final suitNameUpper = suit.name.toUpperCase();
+      postCommentary(
+        gameId,
+        'Trump is $suitNameUpper! All players returned their non-trump cards for replacement.',
+      ).catchError((e) => print('Narration commentary error: $e'));
+
       final otherPlayerIds = playerIds.where((pid) => pid != auth.uid).toList();
       if (otherPlayerIds.isNotEmpty) {
         sendGameNotification(
           adminApp: firebase.adminApp,
           firestore: firestore,
           recipientUids: otherPlayerIds,
-          title: 'Pedro: Trump is ${suit.name.toUpperCase()}',
+          title: 'Pedro: Trump is $suitNameUpper',
           body: 'Play has begun in $roomName!',
           data: {'gameId': gameId, 'type': 'turn'},
         ).catchError((e) => print('FCM error: $e'));
@@ -1049,12 +1072,14 @@ Future<void> finalizeRound(
               'totalScore': (prev['totalScore'] as num?)?.toInt() ?? 0,
               'capturedValueCards': [],
               'earnedPoints': [],
+              'cardsDiscarded': null,
             };
           }).toList(),
       'bidWinnerId': null,
       'bidValue': 0,
       'turnIndex': (playerIds.indexOf(newDealerId) + 1) % playerIds.length,
       'consecutivePasses': 0,
+      'passedPlayerIds': [],
       'playedCards': [],
       'highTrumpPlayerId': null,
       'highTrumpPlayedCard': null,

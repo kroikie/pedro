@@ -26,13 +26,15 @@ The goal of Pedro is to be the first player (or team) to reach the target winnin
 
 ### Phase 1: The Wadger (Bidding)
 - Players bid on the number of point cards they predict they can win during the round.
-- Bidding starts at a minimum bid of **1**.
-- In turn order, each player must either **raise the bid** or **pass**.
+- **Opening Bidder:** The player to the dealer's right starts the bidding. The opening bid must be at least **1** point; the opening bidder cannot pass ("Pass" is disabled).
+- **Pass Button Ordering:** The **Pass** option is positioned on the far left of the bid controls for quick, scroll-free access.
+- **Auction-Style Pass Elimination:** In turn order, players must either **raise the bid** or **pass**. Once a player passes, they are eliminated from making any further bids in that round. Bidding rotates anti-clockwise exclusively among remaining active bidders until all but the highest bidder have passed.
 - The highest bidder wins the Wadger and names the **Trump Suit** for the round.
 
 ### Phase 2: Discard & Draw
-- Once trump is named, players discard their non-trump cards.
+- Once trump is named, all players return their non-trump cards to the board for replacement.
 - The deck is redistributed so each player holds a tight 6-card hand of trumps and high-value cards.
+- **Card Replacement Transparency:** The game board displays a `Replaced: X` badge on every player's seat around the table (and in the player info area), revealing exactly how many non-trump cards each player returned for replacement. This provides vital strategic intelligence about how many trumps each player holds.
 
 ### Phase 3: Gameplay & Lifts
 - The bid winner leads the first card (lift).
