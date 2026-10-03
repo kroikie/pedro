@@ -26,6 +26,37 @@ if [[ ! -f "${IPA_PATH}" ]]; then
 fi
 
 echo "========================================="
+echo " Uploading dSYMs to Firebase Crashlytics "
+echo "========================================="
+
+UPLOAD_SYMBOLS_PATH=""
+if [[ -x "${APP_DIR}/build/ios/SourcePackages/checkouts/firebase-ios-sdk/Crashlytics/upload-symbols" ]]; then
+  UPLOAD_SYMBOLS_PATH="${APP_DIR}/build/ios/SourcePackages/checkouts/firebase-ios-sdk/Crashlytics/upload-symbols"
+elif [[ -x "${APP_DIR}/ios/Pods/FirebaseCrashlytics/upload-symbols" ]]; then
+  UPLOAD_SYMBOLS_PATH="${APP_DIR}/ios/Pods/FirebaseCrashlytics/upload-symbols"
+else
+  UPLOAD_SYMBOLS_PATH=$(find "${APP_DIR}/build/ios" "${APP_DIR}/ios" -type f -name "upload-symbols" -perm +111 2>/dev/null | head -n 1)
+fi
+
+ARCHIVE_DSYMS_DIR=$(find "${APP_DIR}/build/ios/archive" -name "dSYMs" -type d 2>/dev/null | head -n 1)
+if [[ -z "${ARCHIVE_DSYMS_DIR}" ]]; then
+  ARCHIVE_DSYMS_DIR="${APP_DIR}/build/ios/archive/Runner.xcarchive/dSYMs"
+fi
+GSP_PATH="${APP_DIR}/ios/Runner/GoogleService-Info.plist"
+
+if [[ -n "${UPLOAD_SYMBOLS_PATH}" && -x "${UPLOAD_SYMBOLS_PATH}" && -d "${ARCHIVE_DSYMS_DIR}" ]]; then
+  echo "Found Crashlytics upload-symbols tool at: ${UPLOAD_SYMBOLS_PATH}"
+  echo "Uploading dSYMs from: ${ARCHIVE_DSYMS_DIR}..."
+  "${UPLOAD_SYMBOLS_PATH}" \
+    -gsp "${GSP_PATH}" \
+    -p ios \
+    -- "${ARCHIVE_DSYMS_DIR}"
+  echo "✅ dSYMs uploaded successfully to Firebase Crashlytics!"
+else
+  echo "⚠️ Warning: Could not locate upload-symbols tool or dSYMs directory at ${ARCHIVE_DSYMS_DIR}. Skipping dSYM upload."
+fi
+
+echo "========================================="
 echo " Distributing to Firebase App Distribution"
 echo " Target Groups: ${GROUPS}                "
 echo " IPA: ${IPA_PATH}                        "

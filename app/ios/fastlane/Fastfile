@@ -76,7 +76,34 @@ platform :ios do
 
     UI.user_error!("No IPA file found after build") unless ipa_path && File.exist?(ipa_path)
 
-    # 5. Distribute to Firebase App Distribution
+    # 5. Upload dSYMs to Firebase Crashlytics
+    UI.message("Uploading dSYMs to Firebase Crashlytics...")
+    dsyms_dir = Dir.glob("#{flutter_app_dir}/build/ios/archive/*/dSYMs").first ||
+                "#{flutter_app_dir}/build/ios/archive/Runner.xcarchive/dSYMs"
+    gsp_path = File.expand_path("../Runner/GoogleService-Info.plist", __dir__)
+
+    upload_symbols_bin = Dir.glob("#{flutter_app_dir}/build/ios/**/Crashlytics/upload-symbols").select { |f| File.file?(f) && File.executable?(f) }.first ||
+                         Dir.glob("#{flutter_app_dir}/ios/Pods/FirebaseCrashlytics/upload-symbols").select { |f| File.file?(f) && File.executable?(f) }.first
+
+    if upload_symbols_bin && File.exist?(upload_symbols_bin) && dsyms_dir && File.directory?(dsyms_dir)
+      UI.message("Using Crashlytics upload-symbols tool at: #{upload_symbols_bin}")
+      UI.message("Uploading dSYM files from: #{dsyms_dir}...")
+      sh("\"#{upload_symbols_bin}\" -gsp \"#{gsp_path}\" -p ios -- \"#{dsyms_dir}\"")
+      UI.success("✅ Successfully uploaded dSYMs to Firebase Crashlytics!")
+    else
+      UI.important("Notice: upload-symbols tool or dSYMs directory not found (#{dsyms_dir}). Attempting upload_symbols_to_crashlytics...")
+      begin
+        upload_symbols_to_crashlytics(
+          dsym_path: dsyms_dir,
+          gsp_path: gsp_path
+        )
+        UI.success("✅ Successfully uploaded dSYMs via fastlane upload_symbols_to_crashlytics!")
+      rescue => e
+        UI.important("Warning: Could not upload dSYMs to Crashlytics: #{e.message}")
+      end
+    end
+
+    # 6. Distribute to Firebase App Distribution
     UI.message("Distributing #{ipa_path} to Firebase App Distribution...")
     xdg_env = ENV["RUNNER_TEMP"] ? "XDG_CONFIG_HOME='#{ENV['RUNNER_TEMP']}' " : ""
     if ENV["GOOGLE_APPLICATION_CREDENTIALS"] && File.exist?(ENV["GOOGLE_APPLICATION_CREDENTIALS"])
