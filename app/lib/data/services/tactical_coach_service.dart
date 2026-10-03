@@ -67,16 +67,18 @@ Suggest the best card to play with a 1-sentence reason.
       final response = await _model.generateContent([Content.text(prompt)]);
       return response.text?.trim() ?? 'No suggestion.';
     } catch (e, stack) {
-      debugPrint('Error generating move suggestion: $e');
-      try {
-        if (!kIsWeb) {
-          FirebaseCrashlytics.instance.recordError(
+      print('TacticalCoachService.getMoveSuggestion error: $e');
+      if (!kIsWeb) {
+        try {
+          await FirebaseCrashlytics.instance.recordError(
             e,
             stack,
-            reason: 'TacticalCoachService.getMoveSuggestion failed',
+            reason: 'TacticalCoachService.getMoveSuggestion failed: $e',
           );
+        } catch (crashError) {
+          print('Crashlytics recordError also failed: $crashError');
         }
-      } catch (_) {}
+      }
       return 'AI coach is thinking...';
     }
   }

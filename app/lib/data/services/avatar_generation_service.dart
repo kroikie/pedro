@@ -80,16 +80,18 @@ class AvatarGenerationService {
 
       throw Exception('The AI model did not return any image data. Please try another description.');
     } catch (e, stack) {
-      debugPrint('Error generating avatar with gemini-3.1-flash-image: $e');
-      try {
-        if (!kIsWeb) {
-          FirebaseCrashlytics.instance.recordError(
+      print('AvatarGenerationService.generateAvatar error: $e');
+      if (!kIsWeb) {
+        try {
+          await FirebaseCrashlytics.instance.recordError(
             e,
             stack,
-            reason: 'AvatarGenerationService.generateAvatar failed',
+            reason: 'AvatarGenerationService.generateAvatar failed: $e',
           );
+        } catch (crashError) {
+          print('Crashlytics recordError also failed: $crashError');
         }
-      } catch (_) {}
+      }
       rethrow;
     }
   }
