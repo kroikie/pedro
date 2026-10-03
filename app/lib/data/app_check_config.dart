@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 
 /// Fraud Defense (reCAPTCHA Enterprise) site keys configured in Firebase App Check.
-const String kIosRecaptchaSiteKey = '6LeDStwtAAAAACXAuGfNoeTRi7aB-mmlToO-QZcb';
+const String kIosRecaptchaSiteKey = '6LefvtgtAAAAAAqjt2iGOQP0RZZDrVVqsNw7kfI5';
 const String kAndroidRecaptchaSiteKey = '6Lf2utgtAAAAAFsI-5cfYSkaAy2MXSl43RDzR2Ta';
 const String kWebRecaptchaSiteKey = '6LcJmdgtAAAAAFI3-tcjsrtqt2EkMXVeaDaNtbos';
 
@@ -16,8 +16,7 @@ Future<void> initializeAppCheck() async {
     providerAndroid: kDebugMode
         ? const AndroidDebugProvider()
         : const AndroidReCaptchaProvider(kAndroidRecaptchaSiteKey),
-    providerWeb: kDebugMode
-        ? WebDebugProvider()
-        : ReCaptchaEnterpriseProvider(kWebRecaptchaSiteKey),
+    providerWeb:
+        kDebugMode ? WebDebugProvider() : ReCaptchaEnterpriseProvider(kWebRecaptchaSiteKey),
   );
 }

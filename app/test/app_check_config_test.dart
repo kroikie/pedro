@@ -8,7 +8,7 @@ void main() {
       expect(kAndroidRecaptchaSiteKey, isNotEmpty);
       expect(kWebRecaptchaSiteKey, isNotEmpty);
 
-      expect(kIosRecaptchaSiteKey, '6LeDStwtAAAAACXAuGfNoeTRi7aB-mmlToO-QZcb');
+      expect(kIosRecaptchaSiteKey, '6LefvtgtAAAAAAqjt2iGOQP0RZZDrVVqsNw7kfI5');
       expect(kAndroidRecaptchaSiteKey, '6Lf2utgtAAAAAFsI-5cfYSkaAy2MXSl43RDzR2Ta');
       expect(kWebRecaptchaSiteKey, '6LcJmdgtAAAAAFI3-tcjsrtqt2EkMXVeaDaNtbos');
     });
