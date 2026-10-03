@@ -161,24 +161,54 @@ Future<void> showPedroAboutDialog(
         'Pedro is a fast-paced multiplayer card game with strategic bidding, real-time banter, and AI companions.',
       ),
       const SizedBox(height: 16),
-      OutlinedButton.icon(
-        icon: const Icon(Icons.copy, size: 16),
-        label: const Text('Copy Diagnostics'),
-        onPressed: () async {
-          final diag = await service.getDiagnosticsInfo(
-            userId: currentUid,
-            gameId: gameId,
-          );
-          await Clipboard.setData(ClipboardData(text: diag));
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Diagnostic details copied to clipboard'),
-                duration: Duration(seconds: 2),
-              ),
-            );
-          }
-        },
+      Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: [
+          OutlinedButton.icon(
+            icon: const Icon(Icons.copy, size: 16),
+            label: const Text('Copy Diagnostics'),
+            onPressed: () async {
+              final diag = await service.getDiagnosticsInfo(
+                userId: currentUid,
+                gameId: gameId,
+                forceRefresh: true,
+              );
+              await Clipboard.setData(ClipboardData(text: diag));
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Diagnostic details copied to clipboard'),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              }
+            },
+          ),
+          OutlinedButton.icon(
+            icon: const Icon(Icons.security, size: 16),
+            label: const Text('Test Attestation (Live)'),
+            onPressed: () async {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Testing App Check attestation with server...'),
+                  duration: Duration(seconds: 1),
+                ),
+              );
+              final result = await service.testAppCheckAttestation(forceRefresh: true);
+              await Clipboard.setData(ClipboardData(text: result));
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(result),
+                    duration: const Duration(seconds: 4),
+                  ),
+                );
+              }
+            },
+          ),
+        ],
       ),
     ],
   );

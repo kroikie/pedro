@@ -37,7 +37,11 @@ class AppInfoService {
     return 'Pedro v$version ($buildNumber)';
   }
 
-  Future<String> getDiagnosticsInfo({String? userId, String? gameId}) async {
+  Future<String> getDiagnosticsInfo({
+    String? userId,
+    String? gameId,
+    bool forceRefresh = true,
+  }) async {
     final info = await getPackageInfo();
     final platformName = kIsWeb
         ? 'Web (${defaultTargetPlatform.name})'
@@ -56,15 +60,33 @@ class AppInfoService {
     }
     try {
       final appCheck = _appCheck ?? FirebaseAppCheck.instance;
-      final token = await appCheck.getToken();
+      final token = await appCheck.getToken(forceRefresh);
       if (token != null && token.isNotEmpty) {
-        buffer.writeln('App Check: Token active');
+        buffer.writeln(
+          'App Check: Token active (${token.length} chars${forceRefresh ? ", fresh" : ", cached"})',
+        );
       } else {
-        buffer.writeln('App Check: No token returned');
+        buffer.writeln(
+          'App Check: No token returned${forceRefresh ? " (fresh)" : ""}',
+        );
       }
     } catch (e) {
       buffer.writeln('App Check: $e');
     }
     return buffer.toString().trim();
+  }
+
+  /// Explicitly tests App Check attestation by forcing a fresh token roundtrip.
+  Future<String> testAppCheckAttestation({bool forceRefresh = true}) async {
+    try {
+      final appCheck = _appCheck ?? FirebaseAppCheck.instance;
+      final token = await appCheck.getToken(forceRefresh);
+      if (token != null && token.isNotEmpty) {
+        return 'App Check attestation succeeded: token active (${token.length} chars${forceRefresh ? ", live refreshed" : ""})';
+      }
+      return 'App Check attestation returned null or empty token.';
+    } catch (e) {
+      return 'App Check attestation failed: $e';
+    }
   }
 }

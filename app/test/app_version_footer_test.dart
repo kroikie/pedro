@@ -133,6 +133,7 @@ void main() {
       expect(find.text('Pedro'), findsOneWidget);
       expect(find.text('v1.2.3 (Build 42)'), findsOneWidget);
       expect(find.text('Copy Diagnostics'), findsOneWidget);
+      expect(find.text('Test Attestation (Live)'), findsOneWidget);
 
       // Tap Copy Diagnostics inside dialog
       await tester.tap(find.text('Copy Diagnostics'));
@@ -140,6 +141,15 @@ void main() {
 
       expect(
         find.text('Diagnostic details copied to clipboard'),
+        findsOneWidget,
+      );
+
+      // Tap Test Attestation (Live) inside dialog
+      await tester.tap(find.text('Test Attestation (Live)'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.textContaining('App Check attestation'),
         findsOneWidget,
       );
     });

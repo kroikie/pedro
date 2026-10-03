@@ -130,6 +130,24 @@ void main() {
       final diag = await service.getDiagnosticsInfo();
       expect(diag, contains('App Check: Exception: Token error'));
     });
+
+    test('testAppCheckAttestation returns success string when token is valid', () async {
+      final service = AppInfoService(
+        appCheck: _FakeAppCheck(token: 'valid-live-token'),
+      );
+
+      final result = await service.testAppCheckAttestation(forceRefresh: true);
+      expect(result, contains('App Check attestation succeeded: token active'));
+    });
+
+    test('testAppCheckAttestation returns failure string when getToken throws', () async {
+      final service = AppInfoService(
+        appCheck: _FakeAppCheck(shouldThrow: true),
+      );
+
+      final result = await service.testAppCheckAttestation(forceRefresh: true);
+      expect(result, contains('App Check attestation failed: Exception: Token error'));
+    });
   });
 }
 
