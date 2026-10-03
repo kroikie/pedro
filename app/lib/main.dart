@@ -7,6 +7,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:flutter/foundation.dart';
 import 'firebase_options.dart';
 import 'package:firebase_ui_auth/firebase_ui_auth.dart' hide ProfileScreen;
@@ -44,12 +45,38 @@ void main() async {
   try {
     await initializeAppCheck();
   } catch (e, stack) {
-    debugPrint('App Check initialization failed: $e');
+    print('App Check initialization failed: $e');
     if (!kIsWeb) {
       FirebaseCrashlytics.instance.recordError(
         e,
         stack,
-        reason: 'App Check initialization failed',
+        reason: 'App Check initialization failed: $e',
+      );
+    }
+  }
+
+  // Probe App Check token to surface reCAPTCHA Enterprise errors early.
+  // On iOS this validates the full reCAPTCHA assessment flow.
+  if (!kIsWeb) {
+    try {
+      final token = await FirebaseAppCheck.instance.getToken();
+      if (token != null && token.isNotEmpty) {
+        print('App Check: token obtained (${token.length} chars)');
+      } else {
+        const msg = 'App Check: getToken returned null/empty';
+        print(msg);
+        FirebaseCrashlytics.instance.recordError(
+          Exception(msg),
+          StackTrace.current,
+          reason: msg,
+        );
+      }
+    } catch (e, stack) {
+      print('App Check: getToken FAILED: $e');
+      FirebaseCrashlytics.instance.recordError(
+        e,
+        stack,
+        reason: 'App Check getToken probe failed: $e',
       );
     }
   }

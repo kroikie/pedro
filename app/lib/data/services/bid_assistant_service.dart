@@ -30,16 +30,18 @@ class BidAssistantService {
       final response = await _model.generateContent([Content.text(prompt)]);
       return response.text?.trim() ?? 'No suggestion available.';
     } catch (e, stack) {
-      debugPrint('Error generating bid suggestion: $e');
-      try {
-        if (!kIsWeb) {
-          FirebaseCrashlytics.instance.recordError(
+      print('BidAssistantService.getBidSuggestion error: $e');
+      if (!kIsWeb) {
+        try {
+          await FirebaseCrashlytics.instance.recordError(
             e,
             stack,
-            reason: 'BidAssistantService.getBidSuggestion failed',
+            reason: 'BidAssistantService.getBidSuggestion failed: $e',
           );
+        } catch (crashError) {
+          print('Crashlytics recordError also failed: $crashError');
         }
-      } catch (_) {}
+      }
       return 'AI coach is offline.';
     }
   }

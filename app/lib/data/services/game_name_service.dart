@@ -23,16 +23,19 @@ class GameNameService {
       final response = await _model.generateContent([Content.text(prompt)]);
       return response.text?.trim() ?? 'unknown_game';
     } catch (e, stack) {
-      debugPrint('Error generating room name: $e');
-      try {
-        if (!kIsWeb) {
-          FirebaseCrashlytics.instance.recordError(
+      // print() works in release builds unlike debugPrint()
+      print('GameNameService.generateRoomName error: $e');
+      if (!kIsWeb) {
+        try {
+          await FirebaseCrashlytics.instance.recordError(
             e,
             stack,
-            reason: 'GameNameService.generateRoomName failed',
+            reason: 'GameNameService.generateRoomName failed: $e',
           );
+        } catch (crashError) {
+          print('Crashlytics recordError also failed: $crashError');
         }
-      } catch (_) {}
+      }
       return 'lucky_player';
     }
   }
