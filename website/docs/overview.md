@@ -48,6 +48,7 @@
 - Clean, intuitive interface with smooth animations, clear card visuals, and adaptive layouts tailored for phones, tablets, and web browsers.
 - **Dynamic Game Identification:** The navigation bar clearly presents the active game room's name with graceful text truncation, keeping game context prominent without encroaching on contract status indicators.
 - **Adaptive Turn & Action Indicators:** The player interaction bar dynamically reorganizes turn status, bidder targets, and "Call Player" actions into responsive multi-axis layouts across varying screen dimensions and text scales, eliminating RenderFlex pixel clipping while preserving player name legibility.
+- **Adaptive Multi-Row Trick Grid (5 to 8 Players):** To preserve complete visual clarity and situational awareness during multiplayer games with 5 to 8 players, trick cards in the live lift area and the Previous Trick modal adaptively organize into a 2-row layout bounded by a safe central corridor. Cards automatically scale responsively, with side player badges adjusting their alignments and footprints in 7–8 player sessions so no cards or player attribution labels are ever blocked.
 - **Responsive Card Interactions & Debouncing:** Instant visual feedback (dimming and border emphasis) upon card selection, paired with proactive tap debouncing and server-side idempotency to eliminate accidental double-submissions and network race conditions.
 
 ### 7. Signature Branding & Visual Identity

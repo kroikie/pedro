@@ -373,16 +373,24 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                 Expanded(
                   child: Stack(
                     children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                        child: Align(
-                          alignment: const Alignment(0, 0.08),
-                          child: _buildLiftArea(
-                            session.currentRound.currentLift,
-                            session.playerStates,
-                            lastLift: session.currentRound.lastLift,
-                          ),
-                        ),
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          final boardWidth = constraints.maxWidth;
+                          final numPlayers = session.playerStates.length;
+                          final maxCenterWidth = (boardWidth * (numPlayers >= 7 ? 0.64 : 0.60))
+                              .clamp(190.0, 260.0);
+                          return Align(
+                            alignment: const Alignment(0, 0.06),
+                            child: ConstrainedBox(
+                              constraints: BoxConstraints(maxWidth: maxCenterWidth),
+                              child: _buildLiftArea(
+                                session.currentRound.currentLift,
+                                session.playerStates,
+                                lastLift: session.currentRound.lastLift,
+                              ),
+                            ),
+                          );
+                        },
                       ),
                       ..._buildPlayerPositions(session),
                       FloatingReactionsOverlay(
@@ -542,131 +550,11 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
               ],
             ),
           const SizedBox(height: 6),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: orderedPlays.map((entry) {
-                final isLead = entry.key == lift.leadPlayerId;
-                final isWinner = entry.key == lift.winnerId;
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Stack(
-                        clipBehavior: Clip.none,
-                        alignment: Alignment.topCenter,
-                        children: [
-                          Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(6),
-                              boxShadow: isWinner
-                                  ? [
-                                      BoxShadow(
-                                        color: Colors.amber.withValues(alpha: 0.6),
-                                        blurRadius: 8,
-                                        spreadRadius: 2,
-                                      ),
-                                    ]
-                                  : null,
-                            ),
-                            child: CardWidget(
-                              card: entry.value,
-                              width: 52,
-                              height: 78,
-                            ),
-                          ),
-                          if (isWinner)
-                            Positioned(
-                              top: -8,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 5, vertical: 1),
-                                decoration: BoxDecoration(
-                                  color: Colors.green.shade700,
-                                  borderRadius: BorderRadius.circular(4),
-                                  boxShadow: const [
-                                    BoxShadow(
-                                      color: Colors.black26,
-                                      blurRadius: 2,
-                                      offset: Offset(0, 1),
-                                    ),
-                                  ],
-                                ),
-                                child: const Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.star, size: 8, color: Colors.white),
-                                    SizedBox(width: 2),
-                                    Text(
-                                      'WINNER',
-                                      style: TextStyle(
-                                        fontSize: 8,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                        letterSpacing: 0.5,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            )
-                          else if (isLead)
-                            Positioned(
-                              top: -8,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 5, vertical: 1),
-                                decoration: BoxDecoration(
-                                  color: Colors.amber.shade800,
-                                  borderRadius: BorderRadius.circular(4),
-                                  boxShadow: const [
-                                    BoxShadow(
-                                      color: Colors.black26,
-                                      blurRadius: 2,
-                                      offset: Offset(0, 1),
-                                    ),
-                                  ],
-                                ),
-                                child: const Text(
-                                  'LEAD',
-                                  style: TextStyle(
-                                    fontSize: 8,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                    letterSpacing: 0.5,
-                                  ),
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 60),
-                        child: FutureBuilder<Player?>(
-                          future: _getPlayer(entry.key),
-                          initialData: _playerCache[entry.key],
-                          builder: (context, snap) => Text(
-                            snap.data?.screenName ?? '...',
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight:
-                                  (isWinner || isLead) ? FontWeight.bold : FontWeight.normal,
-                              color: isWinner ? Colors.amber.shade900 : null,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }).toList(),
-            ),
+          _buildTrickCardsGrid(
+            orderedPlays: orderedPlays,
+            totalPlayers: states.length,
+            leadPlayerId: lift.leadPlayerId,
+            winnerId: lift.winnerId,
           ),
           if (isLiftComplete) ...[
             const SizedBox(height: 6),
@@ -720,6 +608,207 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
     );
   }
 
+  Widget _buildTrickCardsGrid({
+    required List<MapEntry<String, pedro.Card>> orderedPlays,
+    required int totalPlayers,
+    required String? leadPlayerId,
+    required String? winnerId,
+  }) {
+    if (orderedPlays.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final int cardsPerRow = totalPlayers <= 4
+        ? 4
+        : (totalPlayers <= 6 ? 3 : 4);
+    final double cardWidth = totalPlayers <= 4
+        ? 52.0
+        : (totalPlayers <= 6 ? 46.0 : 40.0);
+    final double cardHeight = totalPlayers <= 4
+        ? 78.0
+        : (totalPlayers <= 6 ? 69.0 : 60.0);
+    final double cardSpacing = totalPlayers <= 4
+        ? 4.0
+        : (totalPlayers <= 6 ? 3.0 : 2.5);
+    final double nameMaxWidth = totalPlayers <= 4
+        ? 60.0
+        : (totalPlayers <= 6 ? 52.0 : 44.0);
+    final double nameFontSize = totalPlayers <= 4
+        ? 10.0
+        : (totalPlayers <= 6 ? 9.5 : 9.0);
+
+    final List<List<MapEntry<String, pedro.Card>>> rows = [];
+    for (int i = 0; i < orderedPlays.length; i += cardsPerRow) {
+      rows.add(orderedPlays.sublist(
+        i,
+        (i + cardsPerRow).clamp(0, orderedPlays.length),
+      ));
+    }
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (int r = 0; r < rows.length; r++) ...[
+          if (r > 0) const SizedBox(height: 6),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: rows[r].map((entry) {
+                final isLead = entry.key == leadPlayerId;
+                final isWinner = entry.key == winnerId;
+                return _buildTrickCardItem(
+                  entry: entry,
+                  isLead: isLead,
+                  isWinner: isWinner,
+                  cardWidth: cardWidth,
+                  cardHeight: cardHeight,
+                  cardSpacing: cardSpacing,
+                  nameMaxWidth: nameMaxWidth,
+                  nameFontSize: nameFontSize,
+                  isCompact: totalPlayers >= 7,
+                );
+              }).toList(),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildTrickCardItem({
+    required MapEntry<String, pedro.Card> entry,
+    required bool isLead,
+    required bool isWinner,
+    required double cardWidth,
+    required double cardHeight,
+    required double cardSpacing,
+    required double nameMaxWidth,
+    required double nameFontSize,
+    required bool isCompact,
+  }) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: cardSpacing),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.topCenter,
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(6),
+                  boxShadow: isWinner
+                      ? [
+                          BoxShadow(
+                            color: Colors.amber.withValues(alpha: 0.6),
+                            blurRadius: 8,
+                            spreadRadius: 2,
+                          ),
+                        ]
+                      : null,
+                ),
+                child: CardWidget(
+                  card: entry.value,
+                  width: cardWidth,
+                  height: cardHeight,
+                ),
+              ),
+              if (isWinner)
+                Positioned(
+                  top: -8,
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isCompact ? 4.0 : 5.0,
+                      vertical: 1.0,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade700,
+                      borderRadius: BorderRadius.circular(4),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 2,
+                          offset: Offset(0, 1),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.star, size: isCompact ? 7.0 : 8.0, color: Colors.white),
+                        const SizedBox(width: 2),
+                        Text(
+                          'WINNER',
+                          style: TextStyle(
+                            fontSize: isCompact ? 7.5 : 8.0,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              else if (isLead)
+                Positioned(
+                  top: -8,
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isCompact ? 4.0 : 5.0,
+                      vertical: 1.0,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.shade800,
+                      borderRadius: BorderRadius.circular(4),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 2,
+                          offset: Offset(0, 1),
+                        ),
+                      ],
+                    ),
+                    child: Text(
+                      'LEAD',
+                      style: TextStyle(
+                        fontSize: isCompact ? 7.5 : 8.0,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: nameMaxWidth),
+            child: FutureBuilder<Player?>(
+              future: _getPlayer(entry.key),
+              initialData: _playerCache[entry.key],
+              builder: (context, snap) => Text(
+                snap.data?.screenName ?? '...',
+                style: TextStyle(
+                  fontSize: nameFontSize,
+                  fontWeight:
+                      (isWinner || isLead) ? FontWeight.bold : FontWeight.normal,
+                  color: isWinner ? Colors.amber.shade900 : null,
+                ),
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showPreviousLiftModal(
     BuildContext context,
     Lift lastLift,
@@ -758,45 +847,11 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                   ],
                 ),
                 const SizedBox(height: 12),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: orderedPlays.map((entry) {
-                      final isWinner = entry.key == lastLift.winnerId;
-                      final isLead = entry.key == lastLift.leadPlayerId;
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 6.0),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            CardWidget(
-                              card: entry.value,
-                              width: 52,
-                              height: 78,
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              isWinner ? '★ WINNER' : (isLead ? 'LEAD' : ''),
-                              style: TextStyle(
-                                fontSize: 9,
-                                fontWeight: FontWeight.bold,
-                                color: isWinner ? Colors.green.shade700 : Colors.amber.shade800,
-                              ),
-                            ),
-                            FutureBuilder<Player?>(
-                              future: _getPlayer(entry.key),
-                              initialData: _playerCache[entry.key],
-                              builder: (context, snap) => Text(
-                                snap.data?.screenName ?? '...',
-                                style: const TextStyle(fontSize: 10),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }).toList(),
-                  ),
+                _buildTrickCardsGrid(
+                  orderedPlays: orderedPlays,
+                  totalPlayers: states.length,
+                  leadPlayerId: lastLift.leadPlayerId,
+                  winnerId: lastLift.winnerId,
                 ),
                 const SizedBox(height: 8),
               ],
@@ -823,17 +878,17 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
         const Alignment(-0.92, -0.3),
       ],
       5: [
-        const Alignment(0.92, -0.15),
+        const Alignment(0.92, -0.26),
         const Alignment(0.65, -0.88),
         const Alignment(-0.65, -0.88),
-        const Alignment(-0.92, -0.15),
+        const Alignment(-0.92, -0.26),
       ],
       6: [
-        const Alignment(0.92, -0.15),
+        const Alignment(0.92, -0.26),
         const Alignment(0.65, -0.88),
         const Alignment(0.0, -0.92),
         const Alignment(-0.65, -0.88),
-        const Alignment(-0.92, -0.15),
+        const Alignment(-0.92, -0.26),
       ],
       7: [
         const Alignment(0.92, 0.3),
@@ -855,6 +910,17 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
     };
 
     final playerPositions = layouts[numPlayers] ?? layouts[4]!;
+    final isCompact = numPlayers >= 7;
+    final badgeMaxWidth = isCompact ? 72.0 : 82.0;
+    final avatarRadius = isCompact ? 16.0 : 18.0;
+    final badgePadding = EdgeInsets.symmetric(
+      horizontal: isCompact ? 4.0 : 6.0,
+      vertical: isCompact ? 4.0 : 5.0,
+    );
+    final badgeOuterPadding = EdgeInsets.symmetric(
+      horizontal: isCompact ? 4.0 : 6.0,
+      vertical: isCompact ? 6.0 : 8.0,
+    );
 
     for (int i = 1; i < numPlayers; i++) {
       final index = (localIndex + i) % numPlayers;
@@ -868,7 +934,7 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
         Align(
           alignment: alignment,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 8.0),
+            padding: badgeOuterPadding,
             child: FutureBuilder<Player?>(
               future: _getPlayer(playerState.uid),
               initialData: _playerCache[playerState.uid],
@@ -878,10 +944,9 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                   fit: BoxFit.scaleDown,
                   alignment: Alignment.center,
                   child: Container(
-                    constraints: const BoxConstraints(maxWidth: 82),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
-                  decoration: BoxDecoration(
+                    constraints: BoxConstraints(maxWidth: badgeMaxWidth),
+                    padding: badgePadding,
+                    decoration: BoxDecoration(
                     color: isHisTurn
                         ? Colors.green.withValues(alpha: 0.1)
                         : (isBidder
@@ -921,12 +986,13 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                             ),
                           ),
                         ),
-                      AvatarWidget(avatarUrl: player?.avatarUrl, radius: 18),
+                      AvatarWidget(avatarUrl: player?.avatarUrl, radius: avatarRadius),
                       const SizedBox(height: 2),
                       Text(
                         player?.screenName ?? '...',
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 11),
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: isCompact ? 10.0 : 11.0),
                         overflow: TextOverflow.ellipsis,
                         maxLines: 1,
                       ),
