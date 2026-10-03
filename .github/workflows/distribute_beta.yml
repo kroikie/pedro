@@ -409,6 +409,21 @@ jobs:
               --build-name="${{ steps.version.outputs.version_name }}" \
               --build-number="${{ steps.version.outputs.build_number }}"
 
+            echo "Uploading dSYMs to Firebase Crashlytics..."
+            UPLOAD_SYMBOLS_BIN=$(find build/ios -name "upload-symbols" -type f -perm +111 2>/dev/null | head -n 1)
+            ARCHIVE_DSYMS=$(find build/ios/archive -name "dSYMs" -type d 2>/dev/null | head -n 1)
+            if [ -n "$UPLOAD_SYMBOLS_BIN" ] && [ -n "$ARCHIVE_DSYMS" ]; then
+              echo "Found Crashlytics upload-symbols tool at: $UPLOAD_SYMBOLS_BIN"
+              echo "Uploading dSYMs from: $ARCHIVE_DSYMS..."
+              "$UPLOAD_SYMBOLS_BIN" \
+                -gsp ios/Runner/GoogleService-Info.plist \
+                -p ios \
+                -- "$ARCHIVE_DSYMS"
+              echo "✅ Successfully uploaded dSYMs to Crashlytics!"
+            else
+              echo "⚠️ Warning: Could not locate upload-symbols tool or dSYMs directory"
+            fi
+
             echo "Distributing directly via Firebase CLI..."
             IPA_PATH=$(find build/ios/ipa -name "*.ipa" | head -n 1)
             if [[ ! -f "$IPA_PATH" ]]; then
@@ -420,6 +435,14 @@ jobs:
               --groups "${{ github.event.inputs.groups || 'player-players' }}" \
               --release-notes "${{ github.event.inputs.release_notes || github.event.head_commit.message || 'Beta Release' }}"
           fi
+
+      - name: Archive dSYMs Artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ios-dsyms-${{ steps.version.outputs.version_name }}-${{ steps.version.outputs.build_number }}
+          path: app/build/ios/archive/*/dSYMs
+          if-no-files-found: ignore
 
       - name: Clean up temporary keychain
         if: always()
