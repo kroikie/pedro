@@ -56,14 +56,15 @@ void main() async {
   }
 
   // Probe App Check token to surface reCAPTCHA Enterprise errors early.
-  // On iOS this validates the full reCAPTCHA assessment flow.
+  // Passing forceRefresh: true validates the live reCAPTCHA assessment roundtrip
+  // rather than returning a 1-hour cached token.
   if (!kIsWeb) {
     try {
-      final token = await FirebaseAppCheck.instance.getToken();
+      final token = await FirebaseAppCheck.instance.getToken(true);
       if (token != null && token.isNotEmpty) {
-        print('App Check: token obtained (${token.length} chars)');
+        print('App Check: live token obtained (${token.length} chars)');
       } else {
-        const msg = 'App Check: getToken returned null/empty';
+        const msg = 'App Check: getToken(true) returned null/empty';
         print(msg);
         FirebaseCrashlytics.instance.recordError(
           Exception(msg),
@@ -72,11 +73,11 @@ void main() async {
         );
       }
     } catch (e, stack) {
-      print('App Check: getToken FAILED: $e');
+      print('App Check: getToken(true) FAILED: $e');
       FirebaseCrashlytics.instance.recordError(
         e,
         stack,
-        reason: 'App Check getToken probe failed: $e',
+        reason: 'App Check getToken(true) probe failed: $e',
       );
     }
   }
