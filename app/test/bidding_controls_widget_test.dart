@@ -10,7 +10,19 @@ import 'package:pedro/data/repositories/chat_repository.dart';
 import 'package:pedro/data/repositories/game_repository.dart';
 import 'package:pedro/data/repositories/player_repository.dart';
 import 'package:pedro/data/repositories/reaction_repository.dart';
+import 'package:pedro/data/services/bid_assistant_service.dart';
 import 'package:pedro/ui/screens/game_board_screen.dart';
+
+class MockBidAssistantService implements BidAssistantService {
+  int callCount = 0;
+  String suggestionToReturn = 'Bid between 7 and 9.';
+
+  @override
+  Future<String> getBidSuggestion(List<pedro.Card> hand) async {
+    callCount++;
+    return suggestionToReturn;
+  }
+}
 
 class MockGameRepo implements GameRepository {
   GameSession? currentSession;
@@ -131,7 +143,8 @@ void main() {
     mockReactionRepo = MockReactionRepo();
   });
 
-  Widget buildTestScreen(GameSession session) {
+  Widget buildTestScreen(GameSession session,
+      {BidAssistantService? bidAssistantService}) {
     mockGameRepo.currentSession = session;
     return MaterialApp(
       home: GameBoardScreen(
@@ -141,6 +154,7 @@ void main() {
         playerRepository: mockPlayerRepo,
         chatRepository: mockChatRepo,
         reactionRepository: mockReactionRepo,
+        bidAssistantService: bidAssistantService,
       ),
     );
   }
@@ -350,6 +364,116 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Passed'), findsOneWidget);
+    });
+
+    testWidgets(
+        'AI Hint does not execute automatically during bidding; triggers on Get Hint tap and clears on bid',
+        (tester) async {
+      tester.view.physicalSize = const Size(800, 1200);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      final mockBidAssistant = MockBidAssistantService();
+      final session = GameSession(
+        gameId: 'game1',
+        targetScore: 35,
+        playerStates: [
+          const PlayerGameState(
+            uid: 'p1',
+            hand: [pedro.Card(suit: pedro.Suit.hearts, rank: pedro.Rank.ace)],
+          ),
+          const PlayerGameState(uid: 'p2', hand: []),
+          const PlayerGameState(uid: 'p3', hand: []),
+          const PlayerGameState(uid: 'p4', hand: []),
+        ],
+        currentRound: const RoundState(
+          dealerId: 'p4',
+          phase: RoundPhase.wadger,
+          turnIndex: 0,
+          bidValue: 0,
+        ),
+      );
+
+      await tester.pumpWidget(
+        buildTestScreen(session, bidAssistantService: mockBidAssistant),
+      );
+      await tester.pumpAndSettle();
+
+      // 1. Verify hint is NOT called automatically
+      expect(mockBidAssistant.callCount, equals(0));
+      expect(find.textContaining('Coach:'), findsNothing);
+
+      // 2. Verify "Get Hint" button is present
+      final getHintButton = find.widgetWithText(ElevatedButton, 'Get Hint');
+      expect(getHintButton, findsOneWidget);
+
+      // 3. Tap "Get Hint" and verify hint appears
+      await tester.tap(getHintButton);
+      await tester.pumpAndSettle();
+      expect(mockBidAssistant.callCount, equals(1));
+      expect(find.text('Coach: Bid between 7 and 9.'), findsOneWidget);
+
+      // 4. Submit bid and verify hint is cleared
+      final bidChip = find.widgetWithText(ActionChip, '5');
+      expect(bidChip, findsOneWidget);
+      await tester.tap(bidChip);
+      await tester.pump();
+      expect(find.textContaining('Coach:'), findsNothing);
+      expect(mockGameRepo.submitBidCalled, isTrue);
+      expect(mockGameRepo.lastSubmittedBid, equals(5));
+    });
+
+    testWidgets(
+        'AI Hint clears when player passes in subsequent bid',
+        (tester) async {
+      tester.view.physicalSize = const Size(800, 1200);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      final mockBidAssistant = MockBidAssistantService();
+      final session = GameSession(
+        gameId: 'game1',
+        targetScore: 35,
+        playerStates: [
+          const PlayerGameState(
+            uid: 'p1',
+            hand: [pedro.Card(suit: pedro.Suit.hearts, rank: pedro.Rank.ace)],
+          ),
+          const PlayerGameState(uid: 'p2', hand: []),
+          const PlayerGameState(uid: 'p3', hand: []),
+          const PlayerGameState(uid: 'p4', hand: []),
+        ],
+        currentRound: const RoundState(
+          dealerId: 'p4',
+          phase: RoundPhase.wadger,
+          turnIndex: 0,
+          bidValue: 5,
+        ),
+      );
+
+      await tester.pumpWidget(
+        buildTestScreen(session, bidAssistantService: mockBidAssistant),
+      );
+      await tester.pumpAndSettle();
+
+      // Tap Get Hint
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Get Hint'));
+      await tester.pumpAndSettle();
+      expect(find.text('Coach: Bid between 7 and 9.'), findsOneWidget);
+
+      // Tap Pass
+      final passChip = find.widgetWithText(ActionChip, 'Pass');
+      await tester.tap(passChip);
+      await tester.pump();
+      expect(find.textContaining('Coach:'), findsNothing);
+      expect(mockGameRepo.submitBidCalled, isTrue);
+      expect(mockGameRepo.lastSubmittedBid, isNull);
     });
   });
 }

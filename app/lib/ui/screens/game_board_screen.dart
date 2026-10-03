@@ -1120,13 +1120,8 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
     final isLocalBidder =
         round.bidWinnerId == _uid && round.phase != RoundPhase.wadger;
 
-    if (round.phase == RoundPhase.wadger &&
-        isMyTurn &&
-        !round.passedPlayerIds.contains(_uid)) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _analyzeHand(localState.hand);
-      });
-    } else if (round.phase != RoundPhase.wadger && _bidSuggestion != null) {
+    if ((round.phase != RoundPhase.wadger || !isMyTurn) &&
+        _bidSuggestion != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted && _bidSuggestion != null) {
           setState(() => _bidSuggestion = null);
@@ -1300,6 +1295,16 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                         color: Colors.blueGrey,
                         fontSize: 11)),
               ),
+            ElevatedButton.icon(
+              onPressed: _isAnalyzingHand
+                  ? null
+                  : () => _analyzeHand(localState.hand),
+              icon: const Icon(Icons.lightbulb, size: 16),
+              label: const Text('Get Hint'),
+              style: ElevatedButton.styleFrom(
+                  visualDensity: VisualDensity.compact),
+            ),
+            const SizedBox(height: 6),
             _buildBidControls(session),
           ],
           if (round.phase == RoundPhase.playing && isMyTurn) ...[
@@ -1488,7 +1493,12 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                   ),
                   onPressed: isInitialBid
                       ? null
-                      : () => _gameRepo.submitBid(widget.gameId, null),
+                      : () {
+                          if (mounted) {
+                            setState(() => _bidSuggestion = null);
+                          }
+                          _gameRepo.submitBid(widget.gameId, null);
+                        },
                   backgroundColor:
                       isInitialBid ? Colors.grey.shade200 : Colors.red[100],
                   visualDensity: VisualDensity.compact,
@@ -1500,7 +1510,12 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 2),
                   child: ActionChip(
                     label: Text('$b', style: const TextStyle(fontSize: 10)),
-                    onPressed: () => _gameRepo.submitBid(widget.gameId, b),
+                    onPressed: () {
+                      if (mounted) {
+                        setState(() => _bidSuggestion = null);
+                      }
+                      _gameRepo.submitBid(widget.gameId, b);
+                    },
                     backgroundColor: Colors.blue[100],
                     visualDensity: VisualDensity.compact,
                     padding: EdgeInsets.zero,
