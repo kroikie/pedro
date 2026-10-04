@@ -102,6 +102,27 @@ class GameRoomMapper extends ClassMapperBase<GameRoom> {
     opt: true,
     def: const [],
   );
+  static List<String> _$viewerIds(GameRoom v) => v.viewerIds;
+  static const Field<GameRoom, List<String>> _f$viewerIds = Field(
+    'viewerIds',
+    _$viewerIds,
+    opt: true,
+    def: const [],
+  );
+  static Map<String, int> _$viewerHeartbeats(GameRoom v) => v.viewerHeartbeats;
+  static const Field<GameRoom, Map<String, int>> _f$viewerHeartbeats = Field(
+    'viewerHeartbeats',
+    _$viewerHeartbeats,
+    opt: true,
+    def: const {},
+  );
+  static bool _$isOpen(GameRoom v) => v.isOpen;
+  static const Field<GameRoom, bool> _f$isOpen = Field(
+    'isOpen',
+    _$isOpen,
+    opt: true,
+    def: false,
+  );
   static GameStatus _$status(GameRoom v) => v.status;
   static const Field<GameRoom, GameStatus> _f$status = Field(
     'status',
@@ -114,6 +135,12 @@ class GameRoomMapper extends ClassMapperBase<GameRoom> {
     'createdAt',
     _$createdAt,
   );
+  static DateTime? _$updatedAt(GameRoom v) => v.updatedAt;
+  static const Field<GameRoom, DateTime> _f$updatedAt = Field(
+    'updatedAt',
+    _$updatedAt,
+    opt: true,
+  );
 
   @override
   final MappableFields<GameRoom> fields = const {
@@ -123,8 +150,12 @@ class GameRoomMapper extends ClassMapperBase<GameRoom> {
     #targetScore: _f$targetScore,
     #playerIds: _f$playerIds,
     #invitedPlayerIds: _f$invitedPlayerIds,
+    #viewerIds: _f$viewerIds,
+    #viewerHeartbeats: _f$viewerHeartbeats,
+    #isOpen: _f$isOpen,
     #status: _f$status,
     #createdAt: _f$createdAt,
+    #updatedAt: _f$updatedAt,
   };
 
   static GameRoom _instantiate(DecodingData data) {
@@ -135,8 +166,12 @@ class GameRoomMapper extends ClassMapperBase<GameRoom> {
       targetScore: data.dec(_f$targetScore),
       playerIds: data.dec(_f$playerIds),
       invitedPlayerIds: data.dec(_f$invitedPlayerIds),
+      viewerIds: data.dec(_f$viewerIds),
+      viewerHeartbeats: data.dec(_f$viewerHeartbeats),
+      isOpen: data.dec(_f$isOpen),
       status: data.dec(_f$status),
       createdAt: data.dec(_f$createdAt),
+      updatedAt: data.dec(_f$updatedAt),
     );
   }
 
@@ -200,6 +235,9 @@ abstract class GameRoomCopyWith<$R, $In extends GameRoom, $Out>
   ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>> get playerIds;
   ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>>
   get invitedPlayerIds;
+  ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>> get viewerIds;
+  MapCopyWith<$R, String, int, ObjectCopyWith<$R, int, int>>
+  get viewerHeartbeats;
   $R call({
     String? id,
     String? hostId,
@@ -207,8 +245,12 @@ abstract class GameRoomCopyWith<$R, $In extends GameRoom, $Out>
     int? targetScore,
     List<String>? playerIds,
     List<String>? invitedPlayerIds,
+    List<String>? viewerIds,
+    Map<String, int>? viewerHeartbeats,
+    bool? isOpen,
     GameStatus? status,
     DateTime? createdAt,
+    DateTime? updatedAt,
   });
   GameRoomCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
 }
@@ -236,6 +278,20 @@ class _GameRoomCopyWithImpl<$R, $Out>
     (v) => call(invitedPlayerIds: v),
   );
   @override
+  ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>> get viewerIds =>
+      ListCopyWith(
+        $value.viewerIds,
+        (v, t) => ObjectCopyWith(v, $identity, t),
+        (v) => call(viewerIds: v),
+      );
+  @override
+  MapCopyWith<$R, String, int, ObjectCopyWith<$R, int, int>>
+  get viewerHeartbeats => MapCopyWith(
+    $value.viewerHeartbeats,
+    (v, t) => ObjectCopyWith(v, $identity, t),
+    (v) => call(viewerHeartbeats: v),
+  );
+  @override
   $R call({
     String? id,
     String? hostId,
@@ -243,8 +299,12 @@ class _GameRoomCopyWithImpl<$R, $Out>
     int? targetScore,
     List<String>? playerIds,
     List<String>? invitedPlayerIds,
+    List<String>? viewerIds,
+    Map<String, int>? viewerHeartbeats,
+    bool? isOpen,
     GameStatus? status,
     DateTime? createdAt,
+    Object? updatedAt = $none,
   }) => $apply(
     FieldCopyWithData({
       if (id != null) #id: id,
@@ -253,8 +313,12 @@ class _GameRoomCopyWithImpl<$R, $Out>
       if (targetScore != null) #targetScore: targetScore,
       if (playerIds != null) #playerIds: playerIds,
       if (invitedPlayerIds != null) #invitedPlayerIds: invitedPlayerIds,
+      if (viewerIds != null) #viewerIds: viewerIds,
+      if (viewerHeartbeats != null) #viewerHeartbeats: viewerHeartbeats,
+      if (isOpen != null) #isOpen: isOpen,
       if (status != null) #status: status,
       if (createdAt != null) #createdAt: createdAt,
+      if (updatedAt != $none) #updatedAt: updatedAt,
     }),
   );
   @override
@@ -265,8 +329,12 @@ class _GameRoomCopyWithImpl<$R, $Out>
     targetScore: data.get(#targetScore, or: $value.targetScore),
     playerIds: data.get(#playerIds, or: $value.playerIds),
     invitedPlayerIds: data.get(#invitedPlayerIds, or: $value.invitedPlayerIds),
+    viewerIds: data.get(#viewerIds, or: $value.viewerIds),
+    viewerHeartbeats: data.get(#viewerHeartbeats, or: $value.viewerHeartbeats),
+    isOpen: data.get(#isOpen, or: $value.isOpen),
     status: data.get(#status, or: $value.status),
     createdAt: data.get(#createdAt, or: $value.createdAt),
+    updatedAt: data.get(#updatedAt, or: $value.updatedAt),
   );
 
   @override

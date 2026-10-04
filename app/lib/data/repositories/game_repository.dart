@@ -27,9 +27,19 @@ class GameRepository {
         roundData['lastCalledAt'] = (roundData['lastCalledAt'] as Timestamp).toDate().toIso8601String();
       }
       
+      final viewerHeartbeats = data['viewerHeartbeats'] as Map<String, dynamic>?;
+      final createdAt = data['createdAt'] as Timestamp?;
+      final updatedAt = data['updatedAt'] as Timestamp?;
+
       return GameSession.fromMap({
         'gameId': doc.id,
         ...data,
+        'viewerHeartbeats': viewerHeartbeats?.map(
+              (key, value) => MapEntry(key, (value as num).toInt()),
+            ) ??
+            {},
+        'createdAt': createdAt?.toDate().toIso8601String(),
+        'updatedAt': updatedAt?.toDate().toIso8601String(),
         'playerStates': roundData['playerStates'],
         'currentRound': roundData,
       });
@@ -77,6 +87,24 @@ class GameRepository {
     }
     await user.getIdToken();
     await _functions.callable('delete-game').call({
+      'gameId': gameId,
+    });
+  }
+
+  Future<void> joinGameAsViewer(String gameId) async {
+    await _functions.callable('join-game-as-viewer').call({
+      'gameId': gameId,
+    });
+  }
+
+  Future<void> heartbeatViewer(String gameId) async {
+    await _functions.callable('heartbeat-viewer').call({
+      'gameId': gameId,
+    });
+  }
+
+  Future<void> leaveGameViewer(String gameId) async {
+    await _functions.callable('leave-game-viewer').call({
       'gameId': gameId,
     });
   }

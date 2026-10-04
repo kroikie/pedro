@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:app_links/app_links.dart';
 import '../../data/repositories/lobby_repository.dart';
 import '../../data/repositories/player_repository.dart';
 import '../../data/models/player.dart';
@@ -8,6 +10,8 @@ import '../../data/models/game_room.dart';
 import '../../data/services/game_name_service.dart';
 import '../widgets/avatar_widget.dart';
 import 'game_room_screen.dart';
+import 'game_board_screen.dart';
+import 'all_games_screen.dart';
 import 'home_feed_view.dart';
 import 'profile_screen.dart';
 import '../widgets/app_version_footer.dart';
@@ -23,8 +27,85 @@ class _HomeScreenState extends State<HomeScreen> {
   final _lobbyRepository = LobbyRepository();
   final _playerRepository = PlayerRepository();
   final _gameNameService = GameNameService();
+  late final AppLinks _appLinks;
+  StreamSubscription<Uri>? _linkSubscription;
   int _currentIndex = 0;
   bool _isCreating = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initDeepLinks();
+  }
+
+  @override
+  void dispose() {
+    _linkSubscription?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _initDeepLinks() async {
+    _appLinks = AppLinks();
+    try {
+      final initialUri = await _appLinks.getInitialLink();
+      if (initialUri != null) {
+        _handleDeepLink(initialUri);
+      }
+    } catch (_) {}
+
+    _linkSubscription = _appLinks.uriLinkStream.listen(
+      (uri) => _handleDeepLink(uri),
+      onError: (_) {},
+    );
+  }
+
+  void _handleDeepLink(Uri uri) async {
+    final segments = uri.pathSegments;
+    String? gameId;
+    if (segments.length >= 2 && (segments[0] == 'game' || segments[0] == 'live')) {
+      gameId = segments[1];
+    } else if (uri.queryParameters.containsKey('gameId')) {
+      gameId = uri.queryParameters['gameId'];
+    }
+
+    if (gameId == null || gameId.isEmpty || !mounted) return;
+
+    try {
+      final game = await _lobbyRepository.watchGame(gameId).first;
+      if (!mounted) return;
+      if (game == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Game not found or has been deleted.')),
+        );
+        return;
+      }
+
+      if (game.status == GameStatus.playing || game.status == GameStatus.finished) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => GameBoardScreen(
+              gameId: game.id,
+              gameName: game.name,
+            ),
+          ),
+        );
+      } else {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => GameRoomScreen(gameId: game.id),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load game: $e')),
+        );
+      }
+    }
+  }
 
   Future<void> _showCreateGameDialog() async {
     final name = await _gameNameService.generateRoomName();
@@ -124,7 +205,15 @@ class _HomeScreenState extends State<HomeScreen> {
           HomeFeedView(
             onCreateGameTap: _isCreating ? () {} : _showCreateGameDialog,
             onViewAllGamesTap: () {
-              setState(() => _currentIndex = 0);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => AllGamesScreen(
+                    lobbyRepository: _lobbyRepository,
+                    playerRepository: _playerRepository,
+                  ),
+                ),
+              );
             },
           ),
           _buildInboxView(),

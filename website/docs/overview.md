@@ -54,11 +54,21 @@
 ### 7. Signature Branding & Visual Identity
 - **Iconic Mobile & Web Presence:** Features a custom luxury emblem centered on a polished gold capital 'P' adorned with a playing card spade on a deep emerald green felt background, evoking the timeless atmosphere of classic card tables across iOS, Android, and Web platforms.
 
-### 8. Backend Architecture & Cloud Functions Endpoints
-- **Server-Side Authoritative Game Logic:** All game state transitions (game creation, game deletion, player invitations, bidding, trump selection, card play, scoring, and player nudges) are orchestrated server-side in Cloud Functions to guarantee game state integrity.
+### 8. Live Spectating & Deep Linking
+- **Open Games for Non-Players:** Once a match starts (`status == 'playing'`), it becomes open (`isOpen: true`) for non-participants to watch live. Seated players see a **"Jump In"** button, while all other players see **"Watch Live"**. Waiting rooms (`status == 'waiting'`) remain private to the host and invited players.
+- **Dedicated Spectator Layout:** Spectators enter the table with an unconstrained perimeter layout showing all 4–8 players arranged around the table. The bottom hand bar is swapped with a specialized **Spectator Mode** dashboard showing live turn indicators, broadcast trick peeks, real-time emoji reactions, and game chat.
+- **Live Spectator Presence & Active Viewers List:** A live viewer badge (`👁️ N watching`) appears in the app bar. Tapping the badge opens a bottom sheet listing all active spectators in real time.
+- **Swipe-Away / Force-Close Resilience:** Dual-layer presence tracking pairs Flutter's `AppLifecycleListener` (instant unregister when the app is swiped away, minimized, or detached) with a 30-second heartbeat lease (60-second TTL in Firestore) to self-heal ghost viewer counts even if a device is abruptly powered off or killed.
+- **Deep Linking & "Share Live Game":** Players and spectators can tap **Share** on the game board to generate a shareable Universal Link (`https://pedro-f65a6.web.app/game/<gameId>`) via `share_plus` with clipboard fallback. Native Universal Links (iOS) and Android App Links (`assetlinks.json` / `apple-app-site-association`) route players directly to their seat and non-players directly into live spectating.
+- **Chronological "All Games" Activity Feed:** The Home feed and dedicated **All Games** screen list matches chronologically by their most recent gameplay activity (`updatedAt ?? createdAt`), organized into **Live Matches** and **My Games** tabs with relative timestamps (e.g., "Just now", "5m ago").
+
+### 9. Backend Architecture & Cloud Functions Endpoints
+- **Server-Side Authoritative Game Logic:** All game state transitions (game creation, game deletion, player invitations, bidding, trump selection, card play, scoring, player nudges, and spectator presence) are orchestrated server-side in Cloud Functions to guarantee game state integrity.
+- **Spectator Presence Endpoints:** Dedicated callable endpoints (`join-game-as-viewer`, `heartbeat-viewer`, `leave-game-viewer`) track live spectators and maintain lease heartbeats securely.
 - **Dart Cloud Functions & Cloud Run Deployment:** Cloud functions are authored in Dart using `firebase_functions` and deployed directly as Google Cloud Run services (`https://<function-name>-260654198138.us-central1.run.app`).
 - **Dynamic Callable Routing:** The Flutter client seamlessly routes callable invocations through `PedroFunctionsExtension.callable`:
   - In local development and automated testing, functions automatically target the local Firebase Functions Emulator suite (`localhost:5001` or `10.0.2.2:5001`).
   - In production release builds across Android, iOS, and Web, functions target deterministic Cloud Run endpoints (`https://<function-name>-260654198138.us-central1.run.app`).
 - **End-to-End Authentication & Transport Security:** Cloud Run services allow public HTTP transport invocation (`allUsers` with `roles/run.invoker`) so client callable requests reach the Dart container, where request credentials are cryptographically authenticated against Firebase Authentication (`request.auth`). Client repositories proactively verify authentication state (`_auth.currentUser`) and force fresh ID token resolution before dispatching sensitive lifecycle operations like game deletion.
+
 

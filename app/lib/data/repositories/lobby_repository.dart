@@ -24,9 +24,25 @@ class LobbyRepository {
     return _firestore
         .collection('games')
         .where('playerIds', arrayContains: uid)
-        .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs.map(_mapDoc).toList());
+        .map((snapshot) {
+          final list = snapshot.docs.map(_mapDoc).toList();
+          list.sort((a, b) => b.lastActivityAt.compareTo(a.lastActivityAt));
+          return list;
+        });
+  }
+
+  Stream<List<GameRoom>> watchLiveGames() {
+    return _firestore
+        .collection('games')
+        .where('isOpen', isEqualTo: true)
+        .where('status', isEqualTo: 'playing')
+        .snapshots()
+        .map((snapshot) {
+          final list = snapshot.docs.map(_mapDoc).toList();
+          list.sort((a, b) => b.lastActivityAt.compareTo(a.lastActivityAt));
+          return list;
+        });
   }
 
   Stream<List<GameRoom>> watchInvitations() {
@@ -45,11 +61,19 @@ class LobbyRepository {
   GameRoom _mapDoc(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
     final createdAt = data['createdAt'] as Timestamp?;
+    final updatedAt = data['updatedAt'] as Timestamp?;
+    final viewerHeartbeats = data['viewerHeartbeats'] as Map<String, dynamic>?;
+
     return GameRoom.fromMap({
       'id': doc.id,
       ...data,
       'createdAt': createdAt?.toDate().toIso8601String() ??
           DateTime.now().toIso8601String(),
+      'updatedAt': updatedAt?.toDate().toIso8601String(),
+      'viewerHeartbeats': viewerHeartbeats?.map(
+            (key, value) => MapEntry(key, (value as num).toInt()),
+          ) ??
+          {},
     });
   }
 
@@ -98,6 +122,24 @@ class LobbyRepository {
     }
     await user.getIdToken();
     await _functions.callable('delete-game').call({
+      'gameId': gameId,
+    });
+  }
+
+  Future<void> joinGameAsViewer(String gameId) async {
+    await _functions.callable('join-game-as-viewer').call({
+      'gameId': gameId,
+    });
+  }
+
+  Future<void> heartbeatViewer(String gameId) async {
+    await _functions.callable('heartbeat-viewer').call({
+      'gameId': gameId,
+    });
+  }
+
+  Future<void> leaveGameViewer(String gameId) async {
+    await _functions.callable('leave-game-viewer').call({
       'gameId': gameId,
     });
   }

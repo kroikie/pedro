@@ -149,6 +149,17 @@ jobs:
           chmod +x deploy_functions.sh
           ./deploy_functions.sh pedro-f65a6
 
+      - name: Build Website Documentation & Deep Linking Assets
+        run: |
+          npm --prefix website ci || npm --prefix website install
+          npm --prefix website run docs:build
+
+      - name: Deploy Firebase Hosting
+        env:
+          XDG_CONFIG_HOME: ${{ runner.temp }}
+        run: |
+          firebase deploy --only hosting --project pedro-f65a6
+
       - name: Post-deploy pub token cleanup
         if: always()
         run: |

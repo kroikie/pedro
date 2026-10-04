@@ -127,6 +127,18 @@ class FakeLobbyRepository implements LobbyRepository {
 
   @override
   Future<void> deleteGame(String gameId) async {}
+
+  @override
+  Stream<List<GameRoom>> watchLiveGames() => const Stream.empty();
+
+  @override
+  Future<void> joinGameAsViewer(String gameId) async {}
+
+  @override
+  Future<void> heartbeatViewer(String gameId) async {}
+
+  @override
+  Future<void> leaveGameViewer(String gameId) async {}
 }
 
 class FakePlayerRepository implements PlayerRepository {
