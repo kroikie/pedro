@@ -194,3 +194,78 @@ int calculateDiscardsCount({
 }) {
   return hand.where((c) => c.suit != trumpSuit).length;
 }
+
+const cardGameValues = <Rank, int>{
+  Rank.ten: 10,
+  Rank.ace: 4,
+  Rank.king: 3,
+  Rank.queen: 2,
+  Rank.jack: 1,
+};
+
+int getCardGameValue(Card card) {
+  return cardGameValues[card.rank] ?? 0;
+}
+
+int calculateGameTotal(Iterable<Card> cards) {
+  int total = 0;
+  for (final card in cards) {
+    total += getCardGameValue(card);
+  }
+  return total;
+}
+
+class GamePointLeaderResult {
+  final String? leaderUid;
+  final int highestValue;
+  final bool isTied;
+
+  const GamePointLeaderResult({
+    this.leaderUid,
+    this.highestValue = 0,
+    this.isTied = false,
+  });
+}
+
+GamePointLeaderResult evaluateGamePointLeader(List<Map<String, dynamic>> playerStates) {
+  int bestValue = 0;
+  String? bestUid;
+  bool tied = false;
+
+  for (final ps in playerStates) {
+    final val = (ps['gameValue'] as num?)?.toInt() ?? 0;
+    if (val > bestValue) {
+      bestValue = val;
+      bestUid = ps['uid'] as String?;
+      tied = false;
+    } else if (val == bestValue && val > 0) {
+      tied = true;
+    }
+  }
+
+  return GamePointLeaderResult(
+    leaderUid: tied ? null : bestUid,
+    highestValue: bestValue,
+    isTied: tied,
+  );
+}
+
+Map<String, dynamic>? evaluateGamePointWinner(List<Map<String, dynamic>> playerStates) {
+  int bestValue = 0;
+  Map<String, dynamic>? winner;
+  bool tied = false;
+
+  for (final ps in playerStates) {
+    final val = (ps['gameValue'] as num?)?.toInt() ?? 0;
+    if (val > bestValue) {
+      bestValue = val;
+      winner = ps;
+      tied = false;
+    } else if (val == bestValue && val > 0) {
+      tied = true;
+    }
+  }
+
+  return tied ? null : winner;
+}
+

@@ -20,6 +20,9 @@ import '../../data/logic/card_play_validator.dart';
 import '../../data/logic/card_sorting.dart';
 import '../../data/repositories/reaction_repository.dart';
 import '../../data/repositories/chat_repository.dart';
+import '../widgets/won_lifts_modal.dart';
+import '../widgets/game_point_tracker_modal.dart';
+import '../widgets/round_summary_dialog.dart';
 
 class GameBoardScreen extends StatefulWidget {
   const GameBoardScreen({
@@ -79,6 +82,9 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
   String? _lastObservedWinnerId;
   bool _isReviewCooldownActive = false;
   Timer? _reviewCooldownTimer;
+
+  int? _lastSeenSummaryRound;
+  bool _isSummaryDialogVisible = false;
 
   late Stream<GameSession?> _gameSessionStream;
 
@@ -189,6 +195,39 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
     }
   }
 
+  void _checkRoundSummary(GameSession session) {
+    final summary = session.lastRoundSummary;
+    if (summary != null &&
+        summary.roundNumber != _lastSeenSummaryRound &&
+        !_isSummaryDialogVisible) {
+      _lastSeenSummaryRound = summary.roundNumber;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && !_isSummaryDialogVisible) {
+          _openRoundSummary(context, summary);
+        }
+      });
+    }
+  }
+
+  void _openRoundSummary(BuildContext context, RoundSummary summary) {
+    if (_isSummaryDialogVisible) return;
+    _isSummaryDialogVisible = true;
+    RoundSummaryDialog.show(
+      context: context,
+      summary: summary,
+      currentPlayerId: _uid ?? '',
+      playerCache: _playerCache,
+      onContinue: () {
+        if (mounted && Navigator.of(context).canPop()) {
+          Navigator.of(context).pop();
+        }
+        _isSummaryDialogVisible = false;
+      },
+    ).then((_) {
+      _isSummaryDialogVisible = false;
+    });
+  }
+
   Future<void> _analyzeHand(List<pedro.Card> hand) async {
     if (_bidSuggestion != null || _isAnalyzingHand) return;
     setState(() => _isAnalyzingHand = true);
@@ -269,6 +308,7 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
         }
         _checkLiftCompletion(session.currentRound.currentLift);
         _checkSubmissionCompletion(session);
+        _checkRoundSummary(session);
 
         final isHost = session.hostId != null && session.hostId == _uid;
         final gameTitle =
@@ -330,6 +370,12 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                   isLocalBidWinner: isLocalBidWinner,
                 );
               }),
+              if (session.lastRoundSummary != null)
+                IconButton(
+                  icon: const Icon(Icons.receipt_long),
+                  tooltip: 'Round Recap',
+                  onPressed: () => _openRoundSummary(context, session.lastRoundSummary!),
+                ),
               if (isHost)
                 PopupMenuButton<String>(
                   icon: const Icon(Icons.more_vert),
@@ -1041,6 +1087,101 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                             ),
                           ),
                         ),
+                      if (round.phase == RoundPhase.playing || round.completedLifts.isNotEmpty)
+                        Builder(
+                          builder: (context) {
+                            final wonCount = round.completedLifts
+                                .where((l) => l.winnerId == playerState.uid)
+                                .length;
+                            return InkWell(
+                              borderRadius: BorderRadius.circular(4),
+                              onTap: () => WonLiftsModal.show(
+                                context: context,
+                                session: session,
+                                targetPlayerId: playerState.uid,
+                                currentPlayerId: _uid ?? '',
+                                playerCache: _playerCache,
+                              ),
+                              child: Container(
+                                margin: const EdgeInsets.only(top: 2),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 4, vertical: 1),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.shade50,
+                                  borderRadius: BorderRadius.circular(4),
+                                  border: Border.all(
+                                      color: Colors.blue.shade200, width: 0.8),
+                                ),
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.layers,
+                                          size: 8, color: Colors.blue.shade900),
+                                      const SizedBox(width: 2),
+                                      Text(
+                                        '$wonCount ${wonCount == 1 ? 'lift' : 'lifts'}',
+                                        style: TextStyle(
+                                          fontSize: 8,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.blue.shade900,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      if (playerState.gameValue > 0 || round.phase == RoundPhase.playing)
+                        InkWell(
+                          borderRadius: BorderRadius.circular(4),
+                          onTap: () => GamePointTrackerModal.show(
+                            context: context,
+                            session: session,
+                            currentPlayerId: _uid ?? '',
+                            playerCache: _playerCache,
+                          ),
+                          child: Container(
+                            margin: const EdgeInsets.only(top: 2),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 4, vertical: 1),
+                            decoration: BoxDecoration(
+                              color: round.gamePointLeaderId == playerState.uid
+                                  ? Colors.amber.shade100
+                                  : Colors.amber.shade50,
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(
+                                color: round.gamePointLeaderId == playerState.uid
+                                    ? Colors.amber.shade600
+                                    : Colors.amber.shade200,
+                                width: 0.8,
+                              ),
+                            ),
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (round.gamePointLeaderId == playerState.uid) ...[
+                                    const Text('👑', style: TextStyle(fontSize: 8)),
+                                    const SizedBox(width: 1),
+                                  ],
+                                  Text(
+                                    'Game: ${playerState.gameValue}',
+                                    style: TextStyle(
+                                      fontSize: 8,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.amber.shade900,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
                       if (round.phase == RoundPhase.wadger &&
                           round.passedPlayerIds.contains(playerState.uid) &&
                           !playerState.earnedPoints.contains('Pass'))
@@ -1085,7 +1226,10 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
         Color bgColor = Colors.blue.shade100;
         Color textColor = Colors.blue.shade900;
 
-        if (p == 'Hang Jack') {
+        if (p == 'Game') {
+          bgColor = Colors.amber.shade200;
+          textColor = Colors.amber.shade900;
+        } else if (p == 'Hang Jack') {
           bgColor = Colors.red.shade100;
           textColor = Colors.red.shade900;
         } else if (p.startsWith('Bid:')) {
@@ -1241,6 +1385,100 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                         ),
                       ),
                     _buildPointsChips(localState.earnedPoints),
+                    if (round.phase == RoundPhase.playing || round.completedLifts.isNotEmpty) ...[
+                      const SizedBox(height: 3),
+                      Wrap(
+                        spacing: 4,
+                        runSpacing: 2,
+                        children: [
+                          Builder(
+                            builder: (context) {
+                              final localWonCount = round.completedLifts
+                                  .where((l) => l.winnerId == _uid)
+                                  .length;
+                              return InkWell(
+                                borderRadius: BorderRadius.circular(4),
+                                onTap: () => WonLiftsModal.show(
+                                  context: context,
+                                  session: session,
+                                  targetPlayerId: _uid ?? '',
+                                  currentPlayerId: _uid ?? '',
+                                  playerCache: _playerCache,
+                                ),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 5, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue.shade50,
+                                    borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(
+                                        color: Colors.blue.shade200, width: 0.8),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.layers,
+                                          size: 10, color: Colors.blue.shade900),
+                                      const SizedBox(width: 3),
+                                      Text(
+                                        '$localWonCount ${localWonCount == 1 ? 'lift' : 'lifts'}',
+                                        style: TextStyle(
+                                          fontSize: 9,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.blue.shade900,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                          InkWell(
+                            borderRadius: BorderRadius.circular(4),
+                            onTap: () => GamePointTrackerModal.show(
+                              context: context,
+                              session: session,
+                              currentPlayerId: _uid ?? '',
+                              playerCache: _playerCache,
+                            ),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 5, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: round.gamePointLeaderId == _uid
+                                    ? Colors.amber.shade100
+                                    : Colors.amber.shade50,
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(
+                                  color: round.gamePointLeaderId == _uid
+                                      ? Colors.amber.shade600
+                                      : Colors.amber.shade200,
+                                  width: 0.8,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (round.gamePointLeaderId == _uid) ...[
+                                    const Text('👑', style: TextStyle(fontSize: 9)),
+                                    const SizedBox(width: 2),
+                                  ],
+                                  Text(
+                                    'Game: ${localState.gameValue}',
+                                    style: TextStyle(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.amber.shade900,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                     Text('Total: ${localState.totalScore}',
                         style: const TextStyle(
                             fontSize: 11, fontWeight: FontWeight.bold)),

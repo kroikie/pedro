@@ -42,11 +42,28 @@ The goal of Pedro is to be the first player (or team) to reach the target winnin
 - Players play one card per turn. You must follow the lead suit if you hold it, or you may play a trump card. Playing an off-suit card while holding the lead suit is an illegal move and will be rejected.
 - The highest trump card played wins the lift. If no trump is played, the highest card of the lead suit wins.
 - **Lift Review & Board Clearing:** At the end of each lift, all played cards remain on the board with a prominent **WINNER** badge on the winning card, allowing all players a review window to inspect the final card and outcome. The cards stay on the board until the player who won the trick plays their lead card for the next lift, at which point the table clears automatically.
-- **Previous Trick History:** Players can tap "View Previous Trick" at any time during gameplay to review the cards played and the winner of the previous trick.
+- **Previous Trick History & Won Lifts Inspection:**
+  - Players can tap "View Previous Trick" at any time during gameplay to review the cards played and the winner of the previous trick.
+  - **Won Lifts Counter:** Each player seat displays an active won lifts counter (e.g., `2 lifts`). Tapping the counter opens the **Won Lifts Modal**.
+  - **Physical Pedro Etiquette (Face-Down Play):** A player may freely review the cards in their own won tricks at any time. In accordance with authentic Pedro card etiquette, opponent captured tricks remain face down during active play to preserve hidden information. Once the round finishes, all cards and completed lifts are unlocked for full table review.
+- **Live Game Point Race Tracking:**
+  - Game points are accumulated by capturing value cards (**10=10, Ace=4, King=3, Queen=2, Jack=1**) across lifts. There are 80 total card value points in the deck.
+  - Each player's seat and the local interaction bar feature an active Game point badge (e.g. `Game: 14`).
+  - The current leader holding the highest score is marked with a **👑 Crown** indicator.
+  - Tapping any Game badge opens the **Game Point Race** modal, which shows the deck progress bar, live rankings, and captured value cards.
+  - **Tie Handling:** If two or more players tie for the highest card points at the end of the round, no Game point is awarded to anyone.
+- **Final Lift (Trick 6) Rapid Auto-Play:**
+  - In Pedro, players hold only a single solitary card for the 6th trick and make no strategic decisions.
+  - To match fast-paced in-person play and eliminate needless waiting, the player who won Trick 5 retains agency to lead their final card to begin Trick 6.
+  - Upon that lead, the server instantly resolves all remaining players' final cards in strict anti-clockwise table seating order, cleanly finalizing the lift and completing the round.
 - **Bid Winner & Point Contract Tracking:** 
   - The top-right game header displays the winning bid value, who is responsible for achieving it, and their live point progress (e.g. `Bid: 10 by Alice • 4 / 10 pts`).
   - When the bid winner accumulates enough points to satisfy the contract (`currentRoundPoints >= bidValue`), the indicator highlights in green with a checkmark (`10 / 10 pts ✓`).
   - On the table, the bidder's seat displays a distinct `BIDDER` badge and round progress tracker (`Pts: 4 / 10`), allowing all players to monitor whether the bidder will achieve their contract or suffer a set penalty.
+- **Round Summary & Persistent Round Recap:**
+  - When a round finishes, a comprehensive **Round Summary** modal appears detailing the bidder contract outcome (Made or Set), High and Low trumps, the Game point winner (or tie), and a complete scoreboard with total scores.
+  - Players can dismiss the summary at their own pace using the "Continue" button.
+  - A persistent **Round Recap** icon (`receipt_long`) in the top AppBar allows players to re-open and review the previous round summary at any point during subsequent rounds.
 - The winner of the lift leads the next trick.
 
 ---

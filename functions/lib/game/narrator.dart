@@ -115,6 +115,7 @@ String formatPointEventContext({
   required bool isStolen,
   Rank? cardRank,
   bool isSafe = false,
+  int? scoreValue,
 }) {
   if (pointType == 'Jack') {
     return isStolen
@@ -140,6 +141,12 @@ String formatPointEventContext({
     return rankName.isNotEmpty
         ? '$playerName drop low with $rankName. Low till lower comes!'
         : '$playerName drop low. Low till lower comes!';
+  } else if (pointType == 'Game') {
+    if (isStolen) {
+      return 'Game point tied! Nobody get de Game point dis round!';
+    }
+    final scoreStr = scoreValue != null ? ' with $scoreValue card points' : '';
+    return '$playerName win de Game point$scoreStr! Look value in de bag!';
   }
   return '';
 }
@@ -151,6 +158,7 @@ Future<void> narratePointEvent(
   bool isStolen, {
   Rank? cardRank,
   bool isSafe = false,
+  int? scoreValue,
 }) async {
   final context = formatPointEventContext(
     playerName: playerName,
@@ -158,6 +166,7 @@ Future<void> narratePointEvent(
     isStolen: isStolen,
     cardRank: cardRank,
     isSafe: isSafe,
+    scoreValue: scoreValue,
   );
 
   String text = context;
