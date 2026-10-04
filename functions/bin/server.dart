@@ -279,6 +279,7 @@ void main(List<String> args) {
                       'currentRoundPoints': 0,
                       'totalScore': 0,
                       'capturedValueCards': [],
+                      'gameValue': 0,
                       'earnedPoints': [],
                       'cardsDiscarded': null,
                     },
@@ -290,6 +291,9 @@ void main(List<String> args) {
           'consecutivePasses': 0,
           'passedPlayerIds': [],
           'playedCards': [],
+          'completedLifts': [],
+          'gamePointLeaderId': null,
+          'gamePointLeaderValue': 0,
           'highTrumpPlayerId': null,
           'highTrumpPlayedCard': null,
           'lowTrumpPlayerId': null,
@@ -510,6 +514,9 @@ void main(List<String> args) {
         'currentRound.deck': deck.map((c) => c.toJson()).toList(),
         'currentRound.turnIndex': bidWinnerIndex,
         'currentRound.currentLift': {'leadPlayerId': auth.uid, 'plays': {}, 'winnerId': null},
+        'currentRound.completedLifts': [],
+        'currentRound.gamePointLeaderId': null,
+        'currentRound.gamePointLeaderValue': 0,
         'currentRound.highTrumpPlayerId': null,
         'currentRound.highTrumpPlayedCard': null,
         'currentRound.lowTrumpPlayerId': null,
@@ -635,8 +642,9 @@ void main(List<String> args) {
       final playedCards = List<dynamic>.from(round['playedCards'] ?? []);
       playedCards.add(card.toJson());
 
-      // Track High/Low Trumps dynamically across lifts
-      if (card.suit == trumpSuit) {
+      // Helper to evaluate High/Low trumps for any card played by pId
+      void processCardHighLow(Card c, String pId) {
+        if (c.suit != trumpSuit) return;
         final highTrumpPlayedCardData = round['highTrumpPlayedCard'] as Map<String, dynamic>?;
         final highTrumpPlayedCard =
             highTrumpPlayedCardData != null ? Card.fromJson(highTrumpPlayedCardData) : null;
@@ -648,69 +656,96 @@ void main(List<String> args) {
         final currentLowPlayerId = round['lowTrumpPlayerId'] as String?;
 
         final hlResult = evaluateHighLowTrump(
-          playedCard: card,
+          playedCard: c,
           trumpSuit: trumpSuit,
-          playerId: auth.uid,
+          playerId: pId,
           currentHighCard: highTrumpPlayedCard,
           currentHighPlayerId: currentHighPlayerId,
           currentLowCard: lowTrumpPlayedCard,
           currentLowPlayerId: currentLowPlayerId,
         );
 
+        final pState = playerStates.firstWhere((p) => p['uid'] == pId);
+
         if (hlResult.highChanged) {
-          if (hlResult.oldHighPlayerId != null && hlResult.oldHighPlayerId != auth.uid) {
+          if (hlResult.oldHighPlayerId != null && hlResult.oldHighPlayerId != pId) {
             final oldHolder = playerStates.firstWhere((p) => p['uid'] == hlResult.oldHighPlayerId);
             oldHolder['currentRoundPoints'] = ((oldHolder['currentRoundPoints'] as num?)?.toInt() ?? 0) - 1;
             final ep = List<String>.from(oldHolder['earnedPoints'] as Iterable? ?? []);
             ep.remove('High');
             oldHolder['earnedPoints'] = ep;
           }
-          if (hlResult.oldHighPlayerId != auth.uid) {
-            playerState['currentRoundPoints'] = ((playerState['currentRoundPoints'] as num?)?.toInt() ?? 0) + 1;
-            final ep = List<String>.from(playerState['earnedPoints'] as Iterable? ?? []);
+          if (hlResult.oldHighPlayerId != pId) {
+            pState['currentRoundPoints'] = ((pState['currentRoundPoints'] as num?)?.toInt() ?? 0) + 1;
+            final ep = List<String>.from(pState['earnedPoints'] as Iterable? ?? []);
             if (!ep.contains('High')) ep.add('High');
-            playerState['earnedPoints'] = ep;
+            pState['earnedPoints'] = ep;
           }
           round['highTrumpPlayerId'] = hlResult.newHighPlayerId;
           round['highTrumpPlayedCard'] = hlResult.newHighCard!.toJson();
-          _getPlayerName(firestore, auth.uid).then((name) {
+          _getPlayerName(firestore, pId).then((name) {
             narratePointEvent(
               gameId,
               name,
               "High",
               false,
-              cardRank: card.rank,
+              cardRank: c.rank,
               isSafe: hlResult.isHighSafe,
             ).catchError((e) => print('Narration error: $e'));
           });
         }
 
         if (hlResult.lowChanged) {
-          if (hlResult.oldLowPlayerId != null && hlResult.oldLowPlayerId != auth.uid) {
+          if (hlResult.oldLowPlayerId != null && hlResult.oldLowPlayerId != pId) {
             final oldHolder = playerStates.firstWhere((p) => p['uid'] == hlResult.oldLowPlayerId);
             oldHolder['currentRoundPoints'] = ((oldHolder['currentRoundPoints'] as num?)?.toInt() ?? 0) - 1;
             final ep = List<String>.from(oldHolder['earnedPoints'] as Iterable? ?? []);
             ep.remove('Low');
             oldHolder['earnedPoints'] = ep;
           }
-          if (hlResult.oldLowPlayerId != auth.uid) {
-            playerState['currentRoundPoints'] = ((playerState['currentRoundPoints'] as num?)?.toInt() ?? 0) + 1;
-            final ep = List<String>.from(playerState['earnedPoints'] as Iterable? ?? []);
+          if (hlResult.oldLowPlayerId != pId) {
+            pState['currentRoundPoints'] = ((pState['currentRoundPoints'] as num?)?.toInt() ?? 0) + 1;
+            final ep = List<String>.from(pState['earnedPoints'] as Iterable? ?? []);
             if (!ep.contains('Low')) ep.add('Low');
-            playerState['earnedPoints'] = ep;
+            pState['earnedPoints'] = ep;
           }
           round['lowTrumpPlayerId'] = hlResult.newLowPlayerId;
           round['lowTrumpPlayedCard'] = hlResult.newLowCard!.toJson();
-          _getPlayerName(firestore, auth.uid).then((name) {
+          _getPlayerName(firestore, pId).then((name) {
             narratePointEvent(
               gameId,
               name,
               "Low",
               false,
-              cardRank: card.rank,
+              cardRank: c.rank,
               isSafe: hlResult.isLowSafe,
             ).catchError((e) => print('Narration error: $e'));
           });
+        }
+      }
+
+      // Track High/Low Trumps dynamically for the leader's card
+      processCardHighLow(card, auth.uid);
+
+      // Leader-Triggered Final Lift Auto-Resolution:
+      // If the leader is playing into the final lift (where every player has only 1 card left),
+      // play all remaining players' solitary cards at once in exact anti-clockwise table order.
+      final leaderIndex = playerIds.indexOf(auth.uid);
+      final isFinalLift = isLeader && playerStates.every((p) => p['uid'] == auth.uid ? hand.isEmpty : (p['hand'] as Iterable).length == 1);
+      if (isFinalLift) {
+        for (int i = 1; i < playerIds.length; i++) {
+          final pid = playerIds[(leaderIndex + i) % playerIds.length];
+          final ps = playerStates.firstWhere((p) => p['uid'] == pid);
+          final pHand = (ps['hand'] as Iterable)
+              .map((c) => Card.fromJson(c as Map<String, dynamic>))
+              .toList();
+          if (pHand.isNotEmpty) {
+            final pCard = pHand.removeAt(0);
+            ps['hand'] = pHand.map((c) => c.toJson()).toList();
+            plays[pid] = pCard.toJson();
+            playedCards.add(pCard.toJson());
+            processCardHighLow(pCard, pid);
+          }
         }
       }
 
@@ -779,22 +814,38 @@ void main(List<String> args) {
             }
           }
 
-          final valueMap = {Rank.ten: 10, Rank.jack: 1, Rank.queen: 2, Rank.king: 3, Rank.ace: 4};
-          if (valueMap.containsKey(playedCard.rank)) {
+          final val = getCardGameValue(playedCard);
+          if (val > 0) {
             final cvc = List<Map<String, dynamic>>.from(
               winnerState['capturedValueCards'] as Iterable? ?? [],
             );
             cvc.add(playedCard.toJson());
             winnerState['capturedValueCards'] = cvc;
+            winnerState['gameValue'] = ((winnerState['gameValue'] as num?)?.toInt() ?? 0) + val;
           }
         }
         winnerState['currentRoundPoints'] = ((winnerState['currentRoundPoints'] as num?)?.toInt() ?? 0) + liftPoints;
+
+        // Evaluate live Game point leader
+        final leaderRes = evaluateGamePointLeader(playerStates);
+        round['gamePointLeaderId'] = leaderRes.leaderUid;
+        round['gamePointLeaderValue'] = leaderRes.highestValue;
+
+        // Append to completedLifts history
+        final completedLifts = List<Map<String, dynamic>>.from(
+          round['completedLifts'] as Iterable? ?? [],
+        );
+        completedLifts.add(Map<String, dynamic>.from(currentLift));
+        round['completedLifts'] = completedLifts;
 
         final allHandsEmpty = playerStates.every((p) => (p['hand'] as Iterable).isEmpty);
         if (allHandsEmpty) {
           await gameRef.update({
             'currentRound.playerStates': playerStates,
             'currentRound.currentLift': currentLift,
+            'currentRound.completedLifts': completedLifts,
+            'currentRound.gamePointLeaderId': leaderRes.leaderUid,
+            'currentRound.gamePointLeaderValue': leaderRes.highestValue,
             'currentRound.turnIndex': playerIds.indexOf(winnerId!),
             'currentRound.highTrumpPlayerId': round['highTrumpPlayerId'],
             'currentRound.highTrumpPlayedCard': round['highTrumpPlayedCard'],
@@ -820,6 +871,9 @@ void main(List<String> args) {
       final updateData = <String, dynamic>{
         'currentRound.playerStates': playerStates,
         'currentRound.currentLift': currentLift,
+        'currentRound.completedLifts': round['completedLifts'] ?? [],
+        'currentRound.gamePointLeaderId': round['gamePointLeaderId'],
+        'currentRound.gamePointLeaderValue': round['gamePointLeaderValue'] ?? 0,
         'currentRound.turnIndex': nextTurnIndex,
         'currentRound.highTrumpPlayerId': round['highTrumpPlayerId'],
         'currentRound.highTrumpPlayedCard': round['highTrumpPlayedCard'],
@@ -955,23 +1009,11 @@ Future<void> finalizeRound(
   List<Map<String, dynamic>> playerStates,
   Map<String, dynamic> round,
 ) async {
-  final valueMap = {'ten': 10, 'jack': 1, 'queen': 2, 'king': 3, 'ace': 4};
-  int bestValue = -1;
-  Map<String, dynamic>? gamePointWinner;
-
+  final gamePointWinner = evaluateGamePointWinner(playerStates);
+  int bestValue = 0;
   for (final ps in playerStates) {
-    int totalValue = 0;
-    final cvc = List<dynamic>.from(ps['capturedValueCards'] as Iterable? ?? []);
-    for (final c in cvc) {
-      final rank = c['rank'] as String;
-      if (valueMap.containsKey(rank)) totalValue += valueMap[rank]!;
-    }
-    if (totalValue > bestValue) {
-      bestValue = totalValue;
-      gamePointWinner = ps;
-    } else if (totalValue == bestValue) {
-      gamePointWinner = null;
-    }
+    final v = (ps['gameValue'] as num?)?.toInt() ?? 0;
+    if (v > bestValue) bestValue = v;
   }
 
   if (gamePointWinner != null) {
@@ -979,6 +1021,22 @@ Future<void> finalizeRound(
     gamePointWinner['earnedPoints'] = List<String>.from(
       gamePointWinner['earnedPoints'] as Iterable? ?? [],
     )..add('Game');
+    final winnerName = await _getPlayerName(firestore, gamePointWinner['uid'] as String);
+    narratePointEvent(
+      gameRef.id,
+      winnerName,
+      'Game',
+      false,
+      scoreValue: bestValue,
+    ).catchError((e) => print('Narration error: $e'));
+  } else if (bestValue > 0) {
+    narratePointEvent(
+      gameRef.id,
+      'Players',
+      'Game',
+      true,
+      scoreValue: bestValue,
+    ).catchError((e) => print('Narration error: $e'));
   }
 
   final bidWinnerId = round['bidWinnerId'] as String;
@@ -997,6 +1055,36 @@ Future<void> finalizeRound(
     }
   }
 
+  final roundNum = (gameData['roundNumber'] as num?)?.toInt() ?? 1;
+  final bidWinnerState = playerStates.firstWhere((p) => p['uid'] == bidWinnerId);
+  final bidSuccess = ((bidWinnerState['currentRoundPoints'] as num?)?.toInt() ?? 0) >= bidValue;
+  final completedLifts = List<Map<String, dynamic>>.from(round['completedLifts'] as Iterable? ?? []);
+
+  final lastRoundSummary = {
+    'roundNumber': roundNum,
+    'trumpSuit': round['trumpSuit'],
+    'bidWinnerId': bidWinnerId,
+    'bidValue': bidValue,
+    'bidSuccess': bidSuccess,
+    'highTrumpPlayerId': round['highTrumpPlayerId'],
+    'highTrumpPlayedCard': round['highTrumpPlayedCard'],
+    'lowTrumpPlayerId': round['lowTrumpPlayerId'],
+    'lowTrumpPlayedCard': round['lowTrumpPlayedCard'],
+    'gameWinnerId': gamePointWinner?['uid'],
+    'gameWinningScore': bestValue > 0 ? bestValue : 0,
+    'isGameTied': gamePointWinner == null && bestValue > 0,
+    'playerSummaries': playerStates.map((ps) => {
+      'uid': ps['uid'],
+      'roundPoints': ps['currentRoundPoints'],
+      'earnedPoints': ps['earnedPoints'],
+      'totalScore': ps['totalScore'],
+      'gameValue': ps['gameValue'] ?? 0,
+      'capturedValueCards': ps['capturedValueCards'] ?? [],
+      'wonLiftsCount': completedLifts.where((l) => l['winnerId'] == ps['uid']).length,
+    }).toList(),
+    'completedLifts': completedLifts,
+  };
+
   final targetScore = (gameData['targetScore'] as num?)?.toInt() ?? 35;
   final winner = playerStates.firstWhere(
     (ps) => ((ps['totalScore'] as num?)?.toInt() ?? 0) >= targetScore,
@@ -1009,6 +1097,7 @@ Future<void> finalizeRound(
       'currentRound.playerStates': playerStates,
       'currentRound.phase': 'finished',
       'winnerId': winner['uid'],
+      'lastRoundSummary': lastRoundSummary,
     });
 
     final winnerUid = winner['uid'] as String;
@@ -1025,6 +1114,16 @@ Future<void> finalizeRound(
       data: {'gameId': gameRef.id, 'type': 'game_over'},
     ).catchError((e) => print('FCM error: $e'));
   } else {
+    // Publish completed round summary state so clients display Round Summary modal
+    await gameRef.update({
+      'currentRound.playerStates': playerStates,
+      'currentRound.phase': 'finished',
+      'lastRoundSummary': lastRoundSummary,
+    });
+
+    // Intermission window for players to review final trick and round outcome
+    await Future.delayed(const Duration(seconds: 6));
+
     final playerIds = List<String>.from(gameData['playerIds'] as Iterable);
     final oldDealerId = round['dealerId'] as String;
     final oldDealerIndex = playerIds.indexOf(oldDealerId);
@@ -1071,6 +1170,7 @@ Future<void> finalizeRound(
               'currentRoundPoints': 0,
               'totalScore': (prev['totalScore'] as num?)?.toInt() ?? 0,
               'capturedValueCards': [],
+              'gameValue': 0,
               'earnedPoints': [],
               'cardsDiscarded': null,
             };
@@ -1081,12 +1181,19 @@ Future<void> finalizeRound(
       'consecutivePasses': 0,
       'passedPlayerIds': [],
       'playedCards': [],
+      'completedLifts': [],
+      'gamePointLeaderId': null,
+      'gamePointLeaderValue': 0,
       'highTrumpPlayerId': null,
       'highTrumpPlayedCard': null,
       'lowTrumpPlayerId': null,
       'lowTrumpPlayedCard': null,
     };
-    await gameRef.update({'currentRound': nextRound});
+    await gameRef.update({
+      'roundNumber': roundNum + 1,
+      'currentRound': nextRound,
+      'lastRoundSummary': lastRoundSummary,
+    });
 
     final firstBidderId = playerIds[(playerIds.indexOf(newDealerId) + 1) % playerIds.length];
     final roomName = (gameData['name'] ?? 'Pedro') as String;

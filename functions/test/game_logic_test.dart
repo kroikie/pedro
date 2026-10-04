@@ -384,5 +384,79 @@ void main() {
       expect(roundLowPlayerId, 'p1');
     });
   });
+
+  group('Game Point & Value Cards Logic', () {
+    test('getCardGameValue correctly values Pedro game cards', () {
+      expect(getCardGameValue(Card(suit: Suit.hearts, rank: Rank.ten)), 10);
+      expect(getCardGameValue(Card(suit: Suit.spades, rank: Rank.ace)), 4);
+      expect(getCardGameValue(Card(suit: Suit.diamonds, rank: Rank.king)), 3);
+      expect(getCardGameValue(Card(suit: Suit.clubs, rank: Rank.queen)), 2);
+      expect(getCardGameValue(Card(suit: Suit.hearts, rank: Rank.jack)), 1);
+
+      // Non-value cards must yield 0
+      expect(getCardGameValue(Card(suit: Suit.hearts, rank: Rank.nine)), 0);
+      expect(getCardGameValue(Card(suit: Suit.hearts, rank: Rank.five)), 0);
+      expect(getCardGameValue(Card(suit: Suit.hearts, rank: Rank.two)), 0);
+      expect(getCardGameValue(Card(suit: Suit.clubs, rank: Rank.seven)), 0);
+    });
+
+    test('calculateGameTotal sums total card value in hand or captured lifts', () {
+      final cards = [
+        Card(suit: Suit.hearts, rank: Rank.ten), // 10
+        Card(suit: Suit.spades, rank: Rank.ace), // 4
+        Card(suit: Suit.clubs, rank: Rank.king), // 3
+        Card(suit: Suit.diamonds, rank: Rank.nine), // 0
+        Card(suit: Suit.hearts, rank: Rank.five), // 0
+      ];
+      expect(calculateGameTotal(cards), 17);
+    });
+
+    test('evaluateGamePointLeader returns unique highest player', () {
+      final playerStates = [
+        {'uid': 'p1', 'gameValue': 14},
+        {'uid': 'p2', 'gameValue': 11},
+        {'uid': 'p3', 'gameValue': 0},
+        {'uid': 'p4', 'gameValue': 4},
+      ];
+      final leader = evaluateGamePointLeader(playerStates);
+      expect(leader.leaderUid, 'p1');
+      expect(leader.highestValue, 14);
+      expect(leader.isTied, isFalse);
+    });
+
+    test('evaluateGamePointLeader returns null leaderUid when tied', () {
+      final playerStates = [
+        {'uid': 'p1', 'gameValue': 14},
+        {'uid': 'p2', 'gameValue': 14},
+        {'uid': 'p3', 'gameValue': 4},
+      ];
+      final leader = evaluateGamePointLeader(playerStates);
+      expect(leader.leaderUid, isNull);
+      expect(leader.highestValue, 14);
+      expect(leader.isTied, isTrue);
+    });
+
+    test('evaluateGamePointWinner awards game point to unique highest player', () {
+      final playerStates = [
+        {'uid': 'p1', 'gameValue': 18},
+        {'uid': 'p2', 'gameValue': 14},
+        {'uid': 'p3', 'gameValue': 8},
+      ];
+      final winner = evaluateGamePointWinner(playerStates);
+      expect(winner, isNotNull);
+      expect(winner!['uid'], 'p1');
+    });
+
+    test('evaluateGamePointWinner returns null when highest game points are tied', () {
+      final playerStates = [
+        {'uid': 'p1', 'gameValue': 14},
+        {'uid': 'p2', 'gameValue': 14},
+        {'uid': 'p3', 'gameValue': 8},
+      ];
+      final winner = evaluateGamePointWinner(playerStates);
+      expect(winner, isNull);
+    });
+  });
 }
+
 

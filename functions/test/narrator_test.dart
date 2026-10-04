@@ -103,8 +103,34 @@ void main() {
         expect(lowSafe, 'arthur thompson drop de 2! Low safe, nobody could beat dat!');
       });
 
+      test('winning Game point includes player name and card score value', () {
+        final context = formatPointEventContext(
+          playerName: testPlayer,
+          pointType: 'Game',
+          isStolen: false,
+          scoreValue: 18,
+        );
+        expect(
+          context,
+          'arthur thompson win de Game point with 18 card points! Look value in de bag!',
+        );
+      });
+
+      test('tied Game point indicates tie without winner', () {
+        final context = formatPointEventContext(
+          playerName: 'Players',
+          pointType: 'Game',
+          isStolen: true,
+          scoreValue: 14,
+        );
+        expect(
+          context,
+          'Game point tied! Nobody get de Game point dis round!',
+        );
+      });
+
       test('never contains generic "A player" in any point event', () {
-        for (final pointType in ['9', 'Jack', '5', 'High', 'Low']) {
+        for (final pointType in ['9', 'Jack', '5', 'High', 'Low', 'Game']) {
           final contextStolen = formatPointEventContext(
             playerName: testPlayer,
             pointType: pointType,
