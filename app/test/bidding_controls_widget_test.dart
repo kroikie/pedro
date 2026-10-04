@@ -53,6 +53,15 @@ class MockGameRepo implements GameRepository {
 
   @override
   Future<void> deleteGame(String gameId) async {}
+
+  @override
+  Future<void> joinGameAsViewer(String gameId) async {}
+
+  @override
+  Future<void> heartbeatViewer(String gameId) async {}
+
+  @override
+  Future<void> leaveGameViewer(String gameId) async {}
 }
 
 class MockPlayerRepo implements PlayerRepository {

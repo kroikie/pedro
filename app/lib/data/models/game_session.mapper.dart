@@ -1493,6 +1493,40 @@ class GameSessionMapper extends ClassMapperBase<GameSession> {
     _$lastRoundSummary,
     opt: true,
   );
+  static List<String> _$viewerIds(GameSession v) => v.viewerIds;
+  static const Field<GameSession, List<String>> _f$viewerIds = Field(
+    'viewerIds',
+    _$viewerIds,
+    opt: true,
+    def: const [],
+  );
+  static Map<String, int> _$viewerHeartbeats(GameSession v) =>
+      v.viewerHeartbeats;
+  static const Field<GameSession, Map<String, int>> _f$viewerHeartbeats = Field(
+    'viewerHeartbeats',
+    _$viewerHeartbeats,
+    opt: true,
+    def: const {},
+  );
+  static bool _$isOpen(GameSession v) => v.isOpen;
+  static const Field<GameSession, bool> _f$isOpen = Field(
+    'isOpen',
+    _$isOpen,
+    opt: true,
+    def: false,
+  );
+  static DateTime? _$updatedAt(GameSession v) => v.updatedAt;
+  static const Field<GameSession, DateTime> _f$updatedAt = Field(
+    'updatedAt',
+    _$updatedAt,
+    opt: true,
+  );
+  static DateTime? _$createdAt(GameSession v) => v.createdAt;
+  static const Field<GameSession, DateTime> _f$createdAt = Field(
+    'createdAt',
+    _$createdAt,
+    opt: true,
+  );
 
   @override
   final MappableFields<GameSession> fields = const {
@@ -1503,6 +1537,11 @@ class GameSessionMapper extends ClassMapperBase<GameSession> {
     #playerStates: _f$playerStates,
     #currentRound: _f$currentRound,
     #lastRoundSummary: _f$lastRoundSummary,
+    #viewerIds: _f$viewerIds,
+    #viewerHeartbeats: _f$viewerHeartbeats,
+    #isOpen: _f$isOpen,
+    #updatedAt: _f$updatedAt,
+    #createdAt: _f$createdAt,
   };
 
   static GameSession _instantiate(DecodingData data) {
@@ -1514,6 +1553,11 @@ class GameSessionMapper extends ClassMapperBase<GameSession> {
       playerStates: data.dec(_f$playerStates),
       currentRound: data.dec(_f$currentRound),
       lastRoundSummary: data.dec(_f$lastRoundSummary),
+      viewerIds: data.dec(_f$viewerIds),
+      viewerHeartbeats: data.dec(_f$viewerHeartbeats),
+      isOpen: data.dec(_f$isOpen),
+      updatedAt: data.dec(_f$updatedAt),
+      createdAt: data.dec(_f$createdAt),
     );
   }
 
@@ -1585,6 +1629,9 @@ abstract class GameSessionCopyWith<$R, $In extends GameSession, $Out>
   get playerStates;
   RoundStateCopyWith<$R, RoundState, RoundState> get currentRound;
   RoundSummaryCopyWith<$R, RoundSummary, RoundSummary>? get lastRoundSummary;
+  ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>> get viewerIds;
+  MapCopyWith<$R, String, int, ObjectCopyWith<$R, int, int>>
+  get viewerHeartbeats;
   $R call({
     String? gameId,
     String? hostId,
@@ -1593,6 +1640,11 @@ abstract class GameSessionCopyWith<$R, $In extends GameSession, $Out>
     List<PlayerGameState>? playerStates,
     RoundState? currentRound,
     RoundSummary? lastRoundSummary,
+    List<String>? viewerIds,
+    Map<String, int>? viewerHeartbeats,
+    bool? isOpen,
+    DateTime? updatedAt,
+    DateTime? createdAt,
   });
   GameSessionCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
 }
@@ -1625,6 +1677,20 @@ class _GameSessionCopyWithImpl<$R, $Out>
         (v) => call(lastRoundSummary: v),
       );
   @override
+  ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>> get viewerIds =>
+      ListCopyWith(
+        $value.viewerIds,
+        (v, t) => ObjectCopyWith(v, $identity, t),
+        (v) => call(viewerIds: v),
+      );
+  @override
+  MapCopyWith<$R, String, int, ObjectCopyWith<$R, int, int>>
+  get viewerHeartbeats => MapCopyWith(
+    $value.viewerHeartbeats,
+    (v, t) => ObjectCopyWith(v, $identity, t),
+    (v) => call(viewerHeartbeats: v),
+  );
+  @override
   $R call({
     String? gameId,
     Object? hostId = $none,
@@ -1633,6 +1699,11 @@ class _GameSessionCopyWithImpl<$R, $Out>
     List<PlayerGameState>? playerStates,
     RoundState? currentRound,
     Object? lastRoundSummary = $none,
+    List<String>? viewerIds,
+    Map<String, int>? viewerHeartbeats,
+    bool? isOpen,
+    Object? updatedAt = $none,
+    Object? createdAt = $none,
   }) => $apply(
     FieldCopyWithData({
       if (gameId != null) #gameId: gameId,
@@ -1642,6 +1713,11 @@ class _GameSessionCopyWithImpl<$R, $Out>
       if (playerStates != null) #playerStates: playerStates,
       if (currentRound != null) #currentRound: currentRound,
       if (lastRoundSummary != $none) #lastRoundSummary: lastRoundSummary,
+      if (viewerIds != null) #viewerIds: viewerIds,
+      if (viewerHeartbeats != null) #viewerHeartbeats: viewerHeartbeats,
+      if (isOpen != null) #isOpen: isOpen,
+      if (updatedAt != $none) #updatedAt: updatedAt,
+      if (createdAt != $none) #createdAt: createdAt,
     }),
   );
   @override
@@ -1653,6 +1729,11 @@ class _GameSessionCopyWithImpl<$R, $Out>
     playerStates: data.get(#playerStates, or: $value.playerStates),
     currentRound: data.get(#currentRound, or: $value.currentRound),
     lastRoundSummary: data.get(#lastRoundSummary, or: $value.lastRoundSummary),
+    viewerIds: data.get(#viewerIds, or: $value.viewerIds),
+    viewerHeartbeats: data.get(#viewerHeartbeats, or: $value.viewerHeartbeats),
+    isOpen: data.get(#isOpen, or: $value.isOpen),
+    updatedAt: data.get(#updatedAt, or: $value.updatedAt),
+    createdAt: data.get(#createdAt, or: $value.createdAt),
   );
 
   @override

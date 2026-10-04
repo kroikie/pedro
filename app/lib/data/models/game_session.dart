@@ -167,6 +167,11 @@ class GameSession with GameSessionMappable {
   final List<PlayerGameState> playerStates;
   final RoundState currentRound;
   final RoundSummary? lastRoundSummary;
+  final List<String> viewerIds;
+  final Map<String, int> viewerHeartbeats;
+  final bool isOpen;
+  final DateTime? updatedAt;
+  final DateTime? createdAt;
 
   const GameSession({
     required this.gameId,
@@ -176,7 +181,23 @@ class GameSession with GameSessionMappable {
     required this.playerStates,
     required this.currentRound,
     this.lastRoundSummary,
+    this.viewerIds = const [],
+    this.viewerHeartbeats = const {},
+    this.isOpen = false,
+    this.updatedAt,
+    this.createdAt,
   });
+
+  List<String> get activeViewerIds {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    return viewerIds.where((uid) {
+      final hb = viewerHeartbeats[uid];
+      if (hb == null) return true;
+      return (now - hb) <= 60000;
+    }).toList();
+  }
+
+  int get viewerCount => activeViewerIds.length;
 
   static const fromMap = GameSessionMapper.fromMap;
 }

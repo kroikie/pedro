@@ -23,7 +23,11 @@ service cloud.firestore {
     //   - playerIds: list (required) - UIDs of players currently seated in the game
     //   - invitedPlayerIds: list (optional) - UIDs of invited players
     //   - status: string (required) - Room status ('waiting', 'starting', 'playing', 'finished')
+    //   - isOpen: bool (optional) - True if the game is open for spectators once active
+    //   - viewerIds: list (optional) - UIDs of users currently spectating
+    //   - viewerHeartbeats: map (optional) - UID to epoch timestamp heartbeat leases
     //   - createdAt: timestamp (required) - Room creation timestamp
+    //   - updatedAt: timestamp (optional) - Timestamp of last gameplay activity
     //   - currentRound: map (optional) - Active round and gameplay state
     //   (All mutations to games are strictly restricted to Cloud Functions via Admin SDK)
     //
@@ -74,12 +78,19 @@ service cloud.firestore {
              (resource.data.invitedPlayerIds != null && request.auth.uid in resource.data.invitedPlayerIds);
     }
 
-    // Check if user is a participant or invited to the game by fetching parent game document
-    function isGameParticipantById(gameId) {
+    // Check if user is a participant or if the game is open and playing or finished
+    function canViewGame() {
+      return isGameParticipant() || 
+             (resource.data.isOpen == true && (resource.data.status == 'playing' || resource.data.status == 'finished'));
+    }
+
+    // Check if user is a participant or if the game is open and playing or finished by fetching parent game document
+    function canViewGameById(gameId) {
       let game = get(/databases/$(database)/documents/games/$(gameId)).data;
       return request.auth.uid == game.hostId ||
              request.auth.uid in game.playerIds ||
-             (game.invitedPlayerIds != null && request.auth.uid in game.invitedPlayerIds);
+             (game.invitedPlayerIds != null && request.auth.uid in game.invitedPlayerIds) ||
+             (game.isOpen == true && (game.status == 'playing' || game.status == 'finished'));
     }
 
     // ===============================================================
@@ -161,29 +172,29 @@ service cloud.firestore {
 
     // Games Collection
     match /games/{gameId} {
-      // Game participants (host, seated players, or invitees) can read game room state
-      allow read: if isAuthenticated() && isGameParticipant();
+      // Game participants or spectators (if open and playing or finished) can read game room state
+      allow read: if isAuthenticated() && canViewGame();
 
       // All game modifications are orchestrated via secure Cloud Functions
       allow write: if false;
 
       // In-game Messages Subcollection
       match /messages/{messageId} {
-        // Authenticated participants in the game can read game chat
-        allow read: if isAuthenticated() && isGameParticipantById(gameId);
+        // Authenticated participants or spectators can read game chat
+        allow read: if isAuthenticated() && canViewGameById(gameId);
 
-        // Authenticated participants can send messages matching their UID with validated content
-        allow create: if isAuthenticated() && isGameParticipantById(gameId) && isValidMessage(request.resource.data);
+        // Authenticated participants or spectators can send messages matching their UID with validated content
+        allow create: if isAuthenticated() && canViewGameById(gameId) && isValidMessage(request.resource.data);
         allow update, delete: if false;
       }
 
       // In-game Floating Reactions Subcollection
       match /reactions/{reactionId} {
-        // Authenticated participants can view reactions
-        allow read: if isAuthenticated() && isGameParticipantById(gameId);
+        // Authenticated participants or spectators can view reactions
+        allow read: if isAuthenticated() && canViewGameById(gameId);
 
-        // Authenticated participants can send emoji reactions matching their UID with length limits
-        allow create: if isAuthenticated() && isGameParticipantById(gameId) && isValidReaction(request.resource.data);
+        // Authenticated participants or spectators can send emoji reactions matching their UID with length limits
+        allow create: if isAuthenticated() && canViewGameById(gameId) && isValidReaction(request.resource.data);
         allow update, delete: if false;
       }
     }

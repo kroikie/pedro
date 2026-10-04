@@ -1,0 +1,26 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": [
+          "TAVJ883DRP.com.ool.pedro"
+        ],
+        "components": [
+          {
+            "/": "/game/*",
+            "comment": "Direct game board link for players & spectators"
+          },
+          {
+            "/": "/"
+          }
+        ]
+      }
+    ]
+  },
+  "webcredentials": {
+    "apps": [
+      "TAVJ883DRP.com.ool.pedro"
+    ]
+  }
+}
+

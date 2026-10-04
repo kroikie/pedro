@@ -20,6 +20,9 @@ import '../../data/logic/card_play_validator.dart';
 import '../../data/logic/card_sorting.dart';
 import '../../data/repositories/reaction_repository.dart';
 import '../../data/repositories/chat_repository.dart';
+import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:share_plus/share_plus.dart';
 import '../widgets/won_lifts_modal.dart';
 import '../widgets/game_point_tracker_modal.dart';
 import '../widgets/round_summary_dialog.dart';
@@ -86,6 +89,10 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
   int? _lastSeenSummaryRound;
   bool _isSummaryDialogVisible = false;
 
+  bool _isSpectatorPresenceRegistered = false;
+  Timer? _viewerHeartbeatTimer;
+  AppLifecycleListener? _lifecycleListener;
+
   late Stream<GameSession?> _gameSessionStream;
 
   @override
@@ -93,6 +100,36 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
     super.initState();
     _gameSessionStream = _gameRepo.watchGameSession(widget.gameId);
     NotificationService.instance.setActiveGame(widget.gameId);
+  }
+
+  void _checkSpectatorPresence(GameSession session) {
+    if (_uid == null) return;
+    final isPlayer = session.playerStates.any((p) => p.uid == _uid);
+    if (!isPlayer && !_isSpectatorPresenceRegistered) {
+      _isSpectatorPresenceRegistered = true;
+      _registerViewerPresence();
+    }
+  }
+
+  void _registerViewerPresence() {
+    _gameRepo.joinGameAsViewer(widget.gameId).catchError((_) {});
+    _viewerHeartbeatTimer?.cancel();
+    _viewerHeartbeatTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      _gameRepo.heartbeatViewer(widget.gameId).catchError((_) {});
+    });
+
+    _lifecycleListener?.dispose();
+    _lifecycleListener = AppLifecycleListener(
+      onStateChange: (state) {
+        if (state == AppLifecycleState.paused ||
+            state == AppLifecycleState.inactive ||
+            state == AppLifecycleState.detached) {
+          _gameRepo.leaveGameViewer(widget.gameId).catchError((_) {});
+        } else if (state == AppLifecycleState.resumed) {
+          _gameRepo.joinGameAsViewer(widget.gameId).catchError((_) {});
+        }
+      },
+    );
   }
 
   @override
@@ -109,6 +146,11 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
     NotificationService.instance.setActiveGame(null);
     _reviewCooldownTimer?.cancel();
     _cardSubmissionSafetyTimer?.cancel();
+    if (_isSpectatorPresenceRegistered) {
+      _gameRepo.leaveGameViewer(widget.gameId).catchError((_) {});
+      _viewerHeartbeatTimer?.cancel();
+      _lifecycleListener?.dispose();
+    }
     super.dispose();
   }
 
@@ -153,6 +195,107 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
           );
         }
       }
+    }
+  }
+
+  void _showViewersSheet(BuildContext context, GameSession session) {
+    final activeViewerIds = session.activeViewerIds;
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Live Spectators (${activeViewerIds.length})',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, size: 20),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                if (activeViewerIds.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 24),
+                    child: Center(
+                      child: Text(
+                        'No spectators watching right now.',
+                        style: GoogleFonts.beVietnamPro(
+                          color: Colors.grey.shade600,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  )
+                else
+                  Flexible(
+                    child: ListView.separated(
+                      shrinkWrap: true,
+                      itemCount: activeViewerIds.length,
+                      separatorBuilder: (context, index) => const Divider(height: 1),
+                      itemBuilder: (context, index) {
+                        final viewerUid = activeViewerIds[index];
+                        return FutureBuilder<Player?>(
+                          future: _getPlayer(viewerUid),
+                          builder: (context, snap) {
+                            final player = snap.data;
+                            return ListTile(
+                              leading: AvatarWidget(
+                                avatarUrl: player?.avatarUrl,
+                                radius: 16,
+                              ),
+                              title: Text(
+                                player?.screenName ?? 'Spectator',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              dense: true,
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _shareGame(GameSession session) async {
+    final shareUrl = 'https://pedro-f65a6.web.app/game/${widget.gameId}';
+    final shareText = 'Watch Pedro live: $shareUrl';
+    try {
+      await Share.share(shareText, subject: 'Watch Pedro: ${widget.gameName ?? "Live Match"}');
+    } catch (_) {}
+    await Clipboard.setData(ClipboardData(text: shareUrl));
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Game link copied to clipboard!'),
+          duration: Duration(seconds: 2),
+        ),
+      );
     }
   }
 
@@ -309,6 +452,7 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
         _checkLiftCompletion(session.currentRound.currentLift);
         _checkSubmissionCompletion(session);
         _checkRoundSummary(session);
+        _checkSpectatorPresence(session);
 
         final isHost = session.hostId != null && session.hostId == _uid;
         final gameTitle =
@@ -346,30 +490,88 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                     : null;
                 final bidWinnerPoints = bidWinnerState?.currentRoundPoints;
 
+                Widget wrapBidStatus(Widget widget) {
+                  return ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: mediaQuery.size.width < 360
+                          ? 165.0
+                          : (mediaQuery.size.width < 400 ? 210.0 : 280.0),
+                    ),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerRight,
+                      child: widget,
+                    ),
+                  );
+                }
+
                 if (bidWinnerId != null && !isLocalBidWinner) {
                   return FutureBuilder<Player?>(
                     future: _getPlayer(bidWinnerId),
                     initialData: _playerCache[bidWinnerId],
                     builder: (context, snap) {
-                      return BidStatusWidget(
-                        round: round,
-                        targetScore: session.targetScore,
-                        bidWinnerName: snap.data?.screenName,
-                        bidWinnerPoints: bidWinnerPoints,
-                        isLocalBidWinner: false,
+                      return wrapBidStatus(
+                        BidStatusWidget(
+                          round: round,
+                          targetScore: session.targetScore,
+                          bidWinnerName: snap.data?.screenName,
+                          bidWinnerPoints: bidWinnerPoints,
+                          isLocalBidWinner: false,
+                        ),
                       );
                     },
                   );
                 }
 
-                return BidStatusWidget(
-                  round: round,
-                  targetScore: session.targetScore,
-                  bidWinnerName: isLocalBidWinner ? 'You' : null,
-                  bidWinnerPoints: bidWinnerPoints,
-                  isLocalBidWinner: isLocalBidWinner,
+                return wrapBidStatus(
+                  BidStatusWidget(
+                    round: round,
+                    targetScore: session.targetScore,
+                    bidWinnerName: isLocalBidWinner ? 'You' : null,
+                    bidWinnerPoints: bidWinnerPoints,
+                    isLocalBidWinner: isLocalBidWinner,
+                  ),
                 );
               }),
+              // Active spectators badge
+              if (session.viewerCount > 0)
+                GestureDetector(
+                  onTap: () => _showViewersSheet(context, session),
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: 0.7),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.visibility,
+                          size: 14,
+                          color: Theme.of(context).colorScheme.onSecondaryContainer,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${session.viewerCount}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.onSecondaryContainer,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              // Share live game button
+              IconButton(
+                icon: const Icon(Icons.share_outlined),
+                tooltip: 'Share Live Game',
+                visualDensity: VisualDensity.compact,
+                onPressed: () => _shareGame(session),
+              ),
               if (session.lastRoundSummary != null)
                 IconButton(
                   icon: const Icon(Icons.receipt_long),
@@ -912,7 +1114,6 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
     final states = session.playerStates;
     final round = session.currentRound;
     final localIndex = states.indexWhere((p) => p.uid == _uid);
-    if (localIndex == -1) return [];
 
     final otherPlayers = <Widget>[];
     final numPlayers = states.length;
@@ -955,7 +1156,53 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
       ],
     };
 
-    final playerPositions = layouts[numPlayers] ?? layouts[4]!;
+    final Map<int, List<Alignment>> spectatorLayouts = {
+      4: [
+        const Alignment(0.0, 0.90),
+        const Alignment(0.92, 0.0),
+        const Alignment(0.0, -0.92),
+        const Alignment(-0.92, 0.0),
+      ],
+      5: [
+        const Alignment(0.0, 0.90),
+        const Alignment(0.92, 0.1),
+        const Alignment(0.65, -0.88),
+        const Alignment(-0.65, -0.88),
+        const Alignment(-0.92, 0.1),
+      ],
+      6: [
+        const Alignment(0.5, 0.90),
+        const Alignment(0.92, 0.0),
+        const Alignment(0.5, -0.92),
+        const Alignment(-0.5, -0.92),
+        const Alignment(-0.92, 0.0),
+        const Alignment(-0.5, 0.90),
+      ],
+      7: [
+        const Alignment(0.0, 0.90),
+        const Alignment(0.85, 0.45),
+        const Alignment(0.85, -0.45),
+        const Alignment(0.35, -0.92),
+        const Alignment(-0.35, -0.92),
+        const Alignment(-0.85, -0.45),
+        const Alignment(-0.85, 0.45),
+      ],
+      8: [
+        const Alignment(0.4, 0.90),
+        const Alignment(0.92, 0.35),
+        const Alignment(0.92, -0.35),
+        const Alignment(0.4, -0.92),
+        const Alignment(-0.4, -0.92),
+        const Alignment(-0.92, -0.35),
+        const Alignment(-0.92, 0.35),
+        const Alignment(-0.4, 0.90),
+      ],
+    };
+
+    final isSpectator = localIndex == -1;
+    final playerPositions = isSpectator
+        ? (spectatorLayouts[numPlayers] ?? spectatorLayouts[4]!)
+        : (layouts[numPlayers] ?? layouts[4]!);
     final isCompact = numPlayers >= 7;
     final badgeMaxWidth = isCompact ? 72.0 : 82.0;
     final avatarRadius = isCompact ? 16.0 : 18.0;
@@ -968,13 +1215,16 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
       vertical: isCompact ? 6.0 : 8.0,
     );
 
-    for (int i = 1; i < numPlayers; i++) {
-      final index = (localIndex + i) % numPlayers;
+    final startIndex = isSpectator ? 0 : 1;
+    final count = numPlayers;
+
+    for (int i = startIndex; i < count; i++) {
+      final index = isSpectator ? i : ((localIndex + i) % numPlayers);
       final playerState = states[index];
       final isHisTurn = round.turnIndex == index;
       final isBidder = round.bidWinnerId == playerState.uid &&
           round.phase != RoundPhase.wadger;
-      final alignment = playerPositions[i - 1];
+      final alignment = isSpectator ? playerPositions[i % playerPositions.length] : playerPositions[i - 1];
 
       otherPlayers.add(
         Align(
@@ -1256,9 +1506,127 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
     );
   }
 
-  Widget _buildInteractionArea(GameSession session) {
+  Widget _buildSpectatorInteractionArea(GameSession session) {
     final round = session.currentRound;
+    final currentTurnIndex = round.turnIndex;
+    final currentPlayerUid = (currentTurnIndex >= 0 && currentTurnIndex < session.playerStates.length)
+        ? session.playerStates[currentTurnIndex].uid
+        : null;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(
+          top: BorderSide(
+            color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.3),
+            width: 1.5,
+          ),
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.secondaryContainer,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.visibility,
+                      size: 13,
+                      color: Theme.of(context).colorScheme.onSecondaryContainer,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'SPECTATOR MODE',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.5,
+                        color: Theme.of(context).colorScheme.onSecondaryContainer,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (currentPlayerUid != null)
+                FutureBuilder<Player?>(
+                  future: _getPlayer(currentPlayerUid),
+                  builder: (context, snap) {
+                    final name = snap.data?.screenName ?? 'Player';
+                    return Text(
+                      round.phase == RoundPhase.wadger
+                          ? "$name's turn to bid"
+                          : "$name's turn to play",
+                      style: GoogleFonts.beVietnamPro(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    );
+                  },
+                ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: ReactionBar(
+                  gameId: widget.gameId,
+                  reactionRepository: widget.reactionRepository,
+                ),
+              ),
+              const SizedBox(width: 8),
+              IconButton.filledTonal(
+                icon: const Icon(Icons.chat_bubble_outline, size: 20),
+                tooltip: 'Chat',
+                onPressed: () {
+                  showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    backgroundColor: Colors.transparent,
+                    builder: (context) => DraggableScrollableSheet(
+                      initialChildSize: 0.6,
+                      minChildSize: 0.4,
+                      maxChildSize: 0.9,
+                      builder: (context, scrollController) => Container(
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                        ),
+                        child: ChatOverlay(
+                          gameId: widget.gameId,
+                          chatRepository: widget.chatRepository,
+                          playerRepository: _playerRepo,
+                          currentUserId: _uid,
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInteractionArea(GameSession session) {
     final localIndex = session.playerStates.indexWhere((p) => p.uid == _uid);
+    if (localIndex == -1) {
+      return _buildSpectatorInteractionArea(session);
+    }
+    final round = session.currentRound;
     final localState = session.playerStates[localIndex];
     final isMyTurn = round.turnIndex == localIndex;
     final isLocalBidder =

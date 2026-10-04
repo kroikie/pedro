@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.ool.pedro",
+      "sha256_cert_fingerprints": [
+        "89:57:FB:C4:A5:66:29:FF:C2:48:E9:28:E7:B1:EF:CE:0E:9F:99:25:56:6C:B2:8B:D8:4C:62:73:04:BB:CF:23"
+      ]
+    }
+  }
+]

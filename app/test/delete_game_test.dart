@@ -172,6 +172,18 @@ class MockLobbyRepository implements LobbyRepository {
   Future<void> deleteGame(String gameId) async {
     deletedGameId = gameId;
   }
+
+  @override
+  Stream<List<GameRoom>> watchLiveGames() => const Stream.empty();
+
+  @override
+  Future<void> joinGameAsViewer(String gameId) async {}
+
+  @override
+  Future<void> heartbeatViewer(String gameId) async {}
+
+  @override
+  Future<void> leaveGameViewer(String gameId) async {}
 }
 
 class MockPlayerRepository implements PlayerRepository {
@@ -239,6 +251,15 @@ class MockGameRepository implements GameRepository {
   Future<void> deleteGame(String gameId) async {
     deletedGameId = gameId;
   }
+
+  @override
+  Future<void> joinGameAsViewer(String gameId) async {}
+
+  @override
+  Future<void> heartbeatViewer(String gameId) async {}
+
+  @override
+  Future<void> leaveGameViewer(String gameId) async {}
 }
 
 class MockReactionRepository implements ReactionRepository {

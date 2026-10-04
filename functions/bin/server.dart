@@ -53,8 +53,12 @@ void main(List<String> args) {
         'targetScore': targetScore,
         'playerIds': [uid],
         'invitedPlayerIds': [],
+        'viewerIds': [],
+        'viewerHeartbeats': {},
+        'isOpen': false,
         'status': 'waiting',
         'createdAt': FieldValue.serverTimestamp,
+        'updatedAt': FieldValue.serverTimestamp,
       };
 
       await gameRef.set(gameData);
@@ -127,6 +131,7 @@ void main(List<String> args) {
 
       await gameRef.update({
         'invitedPlayerIds': FieldValue.arrayUnion([targetPlayerId]),
+        'updatedAt': FieldValue.serverTimestamp,
       });
 
       final hostName = await _getPlayerName(firestore, auth.uid);
@@ -165,6 +170,7 @@ void main(List<String> args) {
 
       await gameRef.update({
         'invitedPlayerIds': FieldValue.arrayRemove([targetPlayerId]),
+        'updatedAt': FieldValue.serverTimestamp,
       });
 
       return CallableResult({'success': true});
@@ -206,6 +212,7 @@ void main(List<String> args) {
       await gameRef.update({
         'playerIds': FieldValue.arrayUnion([auth.uid]),
         'invitedPlayerIds': FieldValue.arrayRemove([auth.uid]),
+        'updatedAt': FieldValue.serverTimestamp,
       });
 
       return CallableResult({'success': true});
@@ -266,6 +273,8 @@ void main(List<String> args) {
 
       final sessionData = {
         'status': 'playing',
+        'isOpen': true,
+        'updatedAt': FieldValue.serverTimestamp,
         'currentRound': {
           'dealerId': auth.uid,
           'phase': 'wadger',
@@ -410,6 +419,7 @@ void main(List<String> args) {
       }
 
       await gameRef.update({
+        'updatedAt': FieldValue.serverTimestamp,
         'currentRound.bidValue': newBidValue,
         'currentRound.bidWinnerId': newBidWinnerId,
         'currentRound.consecutivePasses': newConsecutivePasses,
@@ -508,6 +518,7 @@ void main(List<String> args) {
       }
 
       await gameRef.update({
+        'updatedAt': FieldValue.serverTimestamp,
         'currentRound.trumpSuit': suit.name,
         'currentRound.phase': 'playing',
         'currentRound.playerStates': playerStates,
@@ -841,6 +852,7 @@ void main(List<String> args) {
         final allHandsEmpty = playerStates.every((p) => (p['hand'] as Iterable).isEmpty);
         if (allHandsEmpty) {
           await gameRef.update({
+            'updatedAt': FieldValue.serverTimestamp,
             'currentRound.playerStates': playerStates,
             'currentRound.currentLift': currentLift,
             'currentRound.completedLifts': completedLifts,
@@ -869,6 +881,7 @@ void main(List<String> args) {
       }
 
       final updateData = <String, dynamic>{
+        'updatedAt': FieldValue.serverTimestamp,
         'currentRound.playerStates': playerStates,
         'currentRound.currentLift': currentLift,
         'currentRound.completedLifts': round['completedLifts'] ?? [],
@@ -970,6 +983,7 @@ void main(List<String> args) {
       }
 
       await gameRef.update({
+        'updatedAt': FieldValue.serverTimestamp,
         'currentRound.lastCalledAt': FieldValue.serverTimestamp,
       });
 
@@ -997,6 +1011,92 @@ void main(List<String> args) {
       );
 
       return CallableResult({'success': true, 'banter': banter});
+    });
+
+    // joinGameAsViewer
+    firebase.https.onCall(name: 'joinGameAsViewer', (request, response) async {
+      final auth = request.auth;
+      if (auth == null) throw UnauthenticatedError('User must be logged in.');
+
+      final data = request.data as Map<String, dynamic>;
+      final gameId = data['gameId'] as String?;
+      if (gameId == null || gameId.isEmpty) {
+        throw InvalidArgumentError('gameId is required.');
+      }
+
+      final firestore = firebase.adminApp.firestore();
+      final gameRef = firestore.collection('games').doc(gameId);
+      final gameDoc = await gameRef.get();
+
+      if (!gameDoc.exists) throw NotFoundError('Game not found.');
+
+      final gameData = gameDoc.data()!;
+      if (gameData['status'] != 'playing' && gameData['status'] != 'finished') {
+        throw FailedPreconditionError('Game is not active.');
+      }
+      if (gameData['isOpen'] != true && gameData['status'] == 'playing') {
+        throw PermissionDeniedError('Game is not open to spectators.');
+      }
+
+      final uid = auth.uid;
+      final playerIds = List<String>.from((gameData['playerIds'] ?? []) as Iterable);
+      if (playerIds.contains(uid)) {
+        return CallableResult({'success': true, 'isPlayer': true});
+      }
+
+      final nowMillis = DateTime.now().millisecondsSinceEpoch;
+      await gameRef.update({
+        'viewerIds': FieldValue.arrayUnion([uid]),
+        'viewerHeartbeats.$uid': nowMillis,
+      });
+
+      return CallableResult({'success': true, 'isPlayer': false});
+    });
+
+    // heartbeatViewer
+    firebase.https.onCall(name: 'heartbeatViewer', (request, response) async {
+      final auth = request.auth;
+      if (auth == null) throw UnauthenticatedError('User must be logged in.');
+
+      final data = request.data as Map<String, dynamic>;
+      final gameId = data['gameId'] as String?;
+      if (gameId == null || gameId.isEmpty) {
+        throw InvalidArgumentError('gameId is required.');
+      }
+
+      final uid = auth.uid;
+      final firestore = firebase.adminApp.firestore();
+      final gameRef = firestore.collection('games').doc(gameId);
+
+      final nowMillis = DateTime.now().millisecondsSinceEpoch;
+      await gameRef.update({
+        'viewerHeartbeats.$uid': nowMillis,
+      });
+
+      return CallableResult({'success': true});
+    });
+
+    // leaveGameViewer
+    firebase.https.onCall(name: 'leaveGameViewer', (request, response) async {
+      final auth = request.auth;
+      if (auth == null) throw UnauthenticatedError('User must be logged in.');
+
+      final data = request.data as Map<String, dynamic>;
+      final gameId = data['gameId'] as String?;
+      if (gameId == null || gameId.isEmpty) {
+        throw InvalidArgumentError('gameId is required.');
+      }
+
+      final uid = auth.uid;
+      final firestore = firebase.adminApp.firestore();
+      final gameRef = firestore.collection('games').doc(gameId);
+
+      await gameRef.update({
+        'viewerIds': FieldValue.arrayRemove([uid]),
+        'viewerHeartbeats.$uid': FieldValue.delete,
+      });
+
+      return CallableResult({'success': true});
     });
   });
 }
@@ -1093,6 +1193,7 @@ Future<void> finalizeRound(
 
   if (winner.isNotEmpty) {
     await gameRef.update({
+      'updatedAt': FieldValue.serverTimestamp,
       'status': 'finished',
       'currentRound.playerStates': playerStates,
       'currentRound.phase': 'finished',
@@ -1116,6 +1217,7 @@ Future<void> finalizeRound(
   } else {
     // Publish completed round summary state so clients display Round Summary modal
     await gameRef.update({
+      'updatedAt': FieldValue.serverTimestamp,
       'currentRound.playerStates': playerStates,
       'currentRound.phase': 'finished',
       'lastRoundSummary': lastRoundSummary,
@@ -1190,6 +1292,7 @@ Future<void> finalizeRound(
       'lowTrumpPlayedCard': null,
     };
     await gameRef.update({
+      'updatedAt': FieldValue.serverTimestamp,
       'roundNumber': roundNum + 1,
       'currentRound': nextRound,
       'lastRoundSummary': lastRoundSummary,
