@@ -30,7 +30,7 @@ class AvatarGenerationService {
   PlayerRepository get _playerRepository => _customPlayerRepository ?? PlayerRepository();
 
   GenerativeModel get _imageModel => _firebaseAI.generativeModel(
-        model: 'gemini-3.1-flash-image',
+        model: 'gemini-3.1-flash-lite-image',
         generationConfig: GenerationConfig(
           responseModalities: [ResponseModalities.image],
         ),
