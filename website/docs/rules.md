@@ -42,10 +42,22 @@ The goal of Pedro is to be the first player (or team) to reach the target winnin
 - Players play one card per turn. You must follow the lead suit if you hold it, or you may play a trump card. Playing an off-suit card while holding the lead suit is an illegal move and will be rejected.
 - The highest trump card played wins the lift. If no trump is played, the highest card of the lead suit wins.
 - **Lift Review & Board Clearing:** At the end of each lift, all played cards remain on the board with a prominent **WINNER** badge on the winning card, allowing all players a review window to inspect the final card and outcome. The cards stay on the board until the player who won the trick plays their lead card for the next lift, at which point the table clears automatically.
-- **Previous Trick History & Won Lifts Inspection:**
-  - Players can tap "View Previous Trick" at any time during gameplay to review the cards played and the winner of the previous trick.
-  - **Won Lifts Counter:** Each player seat displays an active won lifts counter (e.g., `2 lifts`). Tapping the counter opens the **Won Lifts Modal**.
+- **Previous Trick History, Won Lifts & Active Trick Inspection:**
+  - **Modal-able Trick Board:** Tapping the center trick table area (indicated by a zoom icon) opens the **Active Trick Modal**, displaying an enlarged, clear view of all plays in the current trick, the lead suit, and current winner.
+  - **Previous Trick History:** Players can tap "View Previous Trick" at any time during gameplay to review the cards played and the winner of the previous trick.
+  - **Won Lifts Inspection:** Players can review won tricks through the Player Details modal or Won Lifts button.
   - **Physical Pedro Etiquette (Face-Down Play):** A player may freely review the cards in their own won tricks at any time. In accordance with authentic Pedro card etiquette, opponent captured tricks remain face down during active play to preserve hidden information. Once the round finishes, all cards and completed lifts are unlocked for full table review.
+- **Compact Player Cards & Round Details Modal:**
+  - Player cards around the table feature a streamlined, bounded height budget to ensure trick cards are never obscured.
+  - Earned points are displayed as a horizontal row of distinct, color-coded circular pips:
+    - 🔵 **High Trump** (1 pt): Sky Blue
+    - ⚫ **Low Trump** (1 pt): Deep Indigo
+    - 🟠 **Jack** (1 pt): Orange
+    - 🔴 **Hang Jack** (3 pts): Red
+    - 🟢 **5 of Trump** (5 pts): Green
+    - 🟣 **9 of Trump** (9 pts): Purple
+    - 🟡 **Game Point** (1 pt): Amber
+  - **Player Round Details Modal:** Tapping any player card (or the local player bar) opens a rich bottom sheet displaying the player's full point breakdown with matching color chips and descriptions, discard history, and quick links to won tricks and the Game Point Race.
 - **Live Game Point Race Tracking:**
   - Game points are accumulated by capturing value cards (**10=10, Ace=4, King=3, Queen=2, Jack=1**) across lifts. There are 80 total card value points in the deck.
   - Each player's seat and the local interaction bar feature an active Game point badge (e.g. `Game: 14`).
@@ -74,12 +86,13 @@ Points are scored by playing or capturing specific high-value cards during the r
 
 | Point Card | Points | Description |
 | :--- | :--- | :--- |
-| **High Trump** | **1 Point** | Awarded to the player who played the highest trump card in the round ("High till higher comes"). Ace of Trumps locks this permanently. |
-| **Low Trump** | **1 Point** | Awarded to the player who played the lowest trump card in the round ("Low till lower comes"). 2 of Trumps locks this permanently. |
-| **Jack of Trumps** | **1 to 3 Points** | 1 point if saved/won by the player who played it; 3 bonus points ("Hang Jack") if captured by an opponent! |
-| **5 of Trumps (Pedro)** | **5 Points** | The famous Pedro card—worth a massive 5 points! Captured in the winning lift. |
-| **9 of Trumps** | **9 Points** | The highest single point value card in the game! Captured in the winning lift. |
-| **Game Point** | **1 Point** | Awarded to the player with the highest total face card values in captured lifts across the round (10=10, Jack=1, Queen=2, King=3, Ace=4). |
+| 🔵 **High Trump** | **1 Point** | Awarded to the player who played the highest trump card in the round ("High till higher comes"). Ace of Trumps locks this permanently. |
+| ⚫ **Low Trump** | **1 Point** | Awarded to the player who played the lowest trump card in the round ("Low till lower comes"). 2 of Trumps locks this permanently. |
+| 🟠 **Jack of Trumps** | **1 Point** | 1 point if saved/won by the player who played it. |
+| 🔴 **Hang Jack** | **3 Points** | 3 bonus points if captured by an opponent! |
+| 🟢 **5 of Trumps (Pedro)** | **5 Points** | The famous Pedro card—worth a massive 5 points! Captured in the winning lift. |
+| 🟣 **9 of Trumps** | **9 Points** | The highest single point value card in the game! Captured in the winning lift. |
+| 🟡 **Game Point** | **1 Point** | Awarded to the player with the highest total face card values in captured lifts across the round (10=10, Jack=1, Queen=2, King=3, Ace=4). |
 
 ### Dynamic High & Low Mechanics ("Low Till Lower Comes")
 In Pedro, **High** and **Low** are dynamic points assessed across all lifts in the round:

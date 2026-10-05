@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../data/logic/game_point_helper.dart';
 import '../../data/models/card.dart' as pedro;
 import '../../data/models/game_session.dart';
 import '../../data/models/player.dart';
 import 'avatar_widget.dart';
-import 'card_widget.dart';
+import 'point_color_helper.dart';
 
 class RoundSummaryDialog extends StatelessWidget {
   const RoundSummaryDialog({
@@ -359,20 +358,13 @@ class RoundSummaryDialog extends StatelessWidget {
                                   Wrap(
                                     spacing: 3,
                                     children: ps.earnedPoints.map((ep) {
-                                      Color color = Colors.blue.shade100;
-                                      Color text = Colors.blue.shade900;
-                                      if (ep == 'Game') {
-                                        color = Colors.amber.shade200;
-                                        text = Colors.amber.shade900;
-                                      } else if (ep == 'Hang Jack') {
-                                        color = Colors.red.shade100;
-                                        text = Colors.red.shade900;
-                                      }
+                                      final badgeColors =
+                                          PointColorHelper.getBadgeColors(ep);
                                       return Container(
                                         padding: const EdgeInsets.symmetric(
                                             horizontal: 4, vertical: 1),
                                         decoration: BoxDecoration(
-                                          color: color,
+                                          color: badgeColors.backgroundColor,
                                           borderRadius:
                                               BorderRadius.circular(4),
                                         ),
@@ -381,7 +373,7 @@ class RoundSummaryDialog extends StatelessWidget {
                                           style: TextStyle(
                                             fontSize: 8,
                                             fontWeight: FontWeight.bold,
-                                            color: text,
+                                            color: badgeColors.textColor,
                                           ),
                                         ),
                                       );
