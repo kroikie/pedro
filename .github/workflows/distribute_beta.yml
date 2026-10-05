@@ -149,6 +149,12 @@ jobs:
           chmod +x deploy_functions.sh
           ./deploy_functions.sh pedro-f65a6
 
+      - name: Deploy Firestore Rules and Indexes
+        env:
+          XDG_CONFIG_HOME: ${{ runner.temp }}
+        run: |
+          firebase deploy --only firestore:rules,firestore:indexes --project pedro-f65a6
+
       - name: Build Website Documentation & Deep Linking Assets
         run: |
           npm --prefix website ci || npm --prefix website install
