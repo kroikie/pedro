@@ -48,7 +48,36 @@ platform :ios do
       end
     end
 
-    # 3. Always fetch latest devices and regenerate the Ad-Hoc Provisioning Profile
+    # 3. Ensure required capabilities (Associated Domains) are enabled on the App ID before regenerating profile
+    if api_key
+      begin
+        require "spaceship"
+        UI.message("Checking capabilities for App ID #{app_id} on Apple Developer Portal...")
+        bundle_id = Spaceship::ConnectAPI::BundleId.find(app_id)
+        if bundle_id
+          existing_caps = bundle_id.get_capabilities || []
+          has_assoc = existing_caps.any? do |c|
+            c.capability_type == "ASSOCIATED_DOMAINS" || (c.respond_to?(:is_type?) && c.is_type?("ASSOCIATED_DOMAINS"))
+          end
+          if !has_assoc
+            UI.message("Enabling Associated Domains capability on Apple Developer Portal for #{app_id}...")
+            capability_type = (defined?(Spaceship::ConnectAPI::BundleIdCapability::Type::ASSOCIATED_DOMAINS) ?
+                                Spaceship::ConnectAPI::BundleIdCapability::Type::ASSOCIATED_DOMAINS :
+                                "ASSOCIATED_DOMAINS")
+            bundle_id.create_capability(capability_type)
+            UI.success("✅ Successfully enabled Associated Domains capability for #{app_id}!")
+          else
+            UI.message("Associated Domains capability is already enabled for #{app_id}.")
+          end
+        else
+          UI.important("Notice: Bundle ID #{app_id} not found via Spaceship::ConnectAPI.")
+        end
+      rescue => e
+        UI.important("Notice: Could not automatically ensure Associated Domains capability for #{app_id}: #{e.message}. If code signing fails with entitlement errors, please ensure Associated Domains is enabled for #{app_id} in the Apple Developer Portal (https://developer.apple.com/account/resources/identifiers/list).")
+      end
+    end
+
+    # 4. Always fetch latest devices and regenerate the Ad-Hoc Provisioning Profile
     if api_key
       UI.message("Fetching latest devices and regenerating Ad-Hoc Profile for #{app_id}...")
       sigh(
@@ -60,7 +89,7 @@ platform :ios do
       )
     end
 
-    # 4. Build the Flutter iOS App and create the signed Ad-Hoc IPA
+    # 5. Build the Flutter iOS App and create the signed Ad-Hoc IPA
     UI.message("Building iOS IPA via Flutter...")
     build_args = []
     build_args << "--build-name=#{ENV['VERSION_NAME']}" if ENV['VERSION_NAME']
@@ -76,7 +105,7 @@ platform :ios do
 
     UI.user_error!("No IPA file found after build") unless ipa_path && File.exist?(ipa_path)
 
-    # 5. Upload dSYMs to Firebase Crashlytics
+    # 6. Upload dSYMs to Firebase Crashlytics
     UI.message("Uploading dSYMs to Firebase Crashlytics...")
     dsyms_dir = Dir.glob("#{flutter_app_dir}/build/ios/archive/*/dSYMs").first ||
                 "#{flutter_app_dir}/build/ios/archive/Runner.xcarchive/dSYMs"
@@ -103,7 +132,7 @@ platform :ios do
       end
     end
 
-    # 6. Distribute to Firebase App Distribution
+    # 7. Distribute to Firebase App Distribution
     UI.message("Distributing #{ipa_path} to Firebase App Distribution...")
     xdg_env = ENV["RUNNER_TEMP"] ? "XDG_CONFIG_HOME='#{ENV['RUNNER_TEMP']}' " : ""
     if ENV["GOOGLE_APPLICATION_CREDENTIALS"] && File.exist?(ENV["GOOGLE_APPLICATION_CREDENTIALS"])
