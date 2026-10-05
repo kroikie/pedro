@@ -431,13 +431,25 @@ void main(List<String> args) {
 
       final playerName = await _getPlayerName(firestore, auth.uid);
 
-      final shouldNarrate = bid != null || (newConsecutivePasses == 1 || nextPhase != 'wadger');
-      if (shouldNarrate) {
+      final isBidWon = nextPhase == 'discarding' && newBidWinnerId != null;
+      final prevBid = (round['bidValue'] as num).toInt();
+      final isAllIn = bid == 20;
+      final isJumpBid = bid != null && ((bid - prevBid) >= 4 || bid >= 16);
+
+      if (isBidWon) {
+        _getPlayerName(firestore, newBidWinnerId).then((winnerName) {
+          narrateBidWon(
+            gameId,
+            winnerName,
+            newBidValue,
+          ).catchError((e) => print('Narration error: $e'));
+        });
+      } else if (isAllIn || isJumpBid) {
         narrateBid(
           gameId,
           playerName,
           bid,
-          (round['bidValue'] as num).toInt(),
+          prevBid,
         ).catchError((e) => print('Narration error: $e'));
       }
 
@@ -694,16 +706,18 @@ void main(List<String> args) {
           }
           round['highTrumpPlayerId'] = hlResult.newHighPlayerId;
           round['highTrumpPlayedCard'] = hlResult.newHighCard!.toJson();
-          _getPlayerName(firestore, pId).then((name) {
-            narratePointEvent(
-              gameId,
-              name,
-              "High",
-              false,
-              cardRank: c.rank,
-              isSafe: hlResult.isHighSafe,
-            ).catchError((e) => print('Narration error: $e'));
-          });
+          if (hlResult.isHighSafe) {
+            _getPlayerName(firestore, pId).then((name) {
+              narratePointEvent(
+                gameId,
+                name,
+                "High",
+                false,
+                cardRank: c.rank,
+                isSafe: true,
+              ).catchError((e) => print('Narration error: $e'));
+            });
+          }
         }
 
         if (hlResult.lowChanged) {
@@ -722,16 +736,18 @@ void main(List<String> args) {
           }
           round['lowTrumpPlayerId'] = hlResult.newLowPlayerId;
           round['lowTrumpPlayedCard'] = hlResult.newLowCard!.toJson();
-          _getPlayerName(firestore, pId).then((name) {
-            narratePointEvent(
-              gameId,
-              name,
-              "Low",
-              false,
-              cardRank: c.rank,
-              isSafe: hlResult.isLowSafe,
-            ).catchError((e) => print('Narration error: $e'));
-          });
+          if (hlResult.isLowSafe) {
+            _getPlayerName(firestore, pId).then((name) {
+              narratePointEvent(
+                gameId,
+                name,
+                "Low",
+                false,
+                cardRank: c.rank,
+                isSafe: true,
+              ).catchError((e) => print('Narration error: $e'));
+            });
+          }
         }
       }
 
@@ -778,6 +794,10 @@ void main(List<String> args) {
 
         final winnerState = playerStates.firstWhere((p) => p['uid'] == winnerId);
         int liftPoints = 0;
+        bool stoleJack = false;
+        bool savedJack = false;
+        bool wonNine = false;
+        bool wonFive = false;
 
         final winnerName = await _getPlayerName(firestore, winnerId);
 
@@ -788,40 +808,29 @@ void main(List<String> args) {
           if (playedCard.suit == trumpSuit) {
             if (playedCard.rank == Rank.five) {
               liftPoints += 5;
+              wonFive = true;
               winnerState['earnedPoints'] = List<String>.from(
                 winnerState['earnedPoints'] as Iterable? ?? [],
               )..add('5');
-              narratePointEvent(
-                gameId,
-                winnerName,
-                "5",
-                false,
-              ).catchError((e) => print('Narration error: $e'));
             }
             if (playedCard.rank == Rank.nine) {
               liftPoints += 9;
+              wonNine = true;
               winnerState['earnedPoints'] = List<String>.from(
                 winnerState['earnedPoints'] as Iterable? ?? [],
               )..add('9');
-              narratePointEvent(
-                gameId,
-                winnerName,
-                "9",
-                false,
-              ).catchError((e) => print('Narration error: $e'));
             }
             if (playedCard.rank == Rank.jack) {
               final isStolen = pId != winnerId;
               liftPoints += isStolen ? 3 : 1;
+              if (isStolen) {
+                stoleJack = true;
+              } else {
+                savedJack = true;
+              }
               winnerState['earnedPoints'] = List<String>.from(
                 winnerState['earnedPoints'] as Iterable? ?? [],
               )..add(isStolen ? 'Hang Jack' : 'Jack');
-              narratePointEvent(
-                gameId,
-                winnerName,
-                "Jack",
-                isStolen,
-              ).catchError((e) => print('Narration error: $e'));
             }
           }
 
@@ -836,6 +845,18 @@ void main(List<String> args) {
           }
         }
         winnerState['currentRoundPoints'] = ((winnerState['currentRoundPoints'] as num?)?.toInt() ?? 0) + liftPoints;
+
+        if (stoleJack || wonNine || wonFive || savedJack) {
+          narrateLiftResolution(
+            gameId: gameId,
+            winnerName: winnerName,
+            stoleJack: stoleJack,
+            savedJack: savedJack,
+            wonNine: wonNine,
+            wonFive: wonFive,
+            cardPoints: liftPoints,
+          ).catchError((e) => print('Narration error: $e'));
+        }
 
         // Evaluate live Game point leader
         final leaderRes = evaluateGamePointLeader(playerStates);
@@ -1116,27 +1137,13 @@ Future<void> finalizeRound(
     if (v > bestValue) bestValue = v;
   }
 
+  String? gamePointWinnerName;
   if (gamePointWinner != null) {
     gamePointWinner['currentRoundPoints'] = ((gamePointWinner['currentRoundPoints'] as num?)?.toInt() ?? 0) + 1;
     gamePointWinner['earnedPoints'] = List<String>.from(
       gamePointWinner['earnedPoints'] as Iterable? ?? [],
     )..add('Game');
-    final winnerName = await _getPlayerName(firestore, gamePointWinner['uid'] as String);
-    narratePointEvent(
-      gameRef.id,
-      winnerName,
-      'Game',
-      false,
-      scoreValue: bestValue,
-    ).catchError((e) => print('Narration error: $e'));
-  } else if (bestValue > 0) {
-    narratePointEvent(
-      gameRef.id,
-      'Players',
-      'Game',
-      true,
-      scoreValue: bestValue,
-    ).catchError((e) => print('Narration error: $e'));
+    gamePointWinnerName = await _getPlayerName(firestore, gamePointWinner['uid'] as String);
   }
 
   final bidWinnerId = round['bidWinnerId'] as String;
@@ -1191,6 +1198,25 @@ Future<void> finalizeRound(
     orElse: () => <String, dynamic>{},
   );
 
+  final bidWinnerName = await _getPlayerName(firestore, bidWinnerId);
+  final pointsWon = (bidWinnerState['currentRoundPoints'] as num?)?.toInt() ?? 0;
+  String? matchWinnerName;
+  if (winner.isNotEmpty) {
+    matchWinnerName = await _getPlayerName(firestore, winner['uid'] as String);
+  }
+
+  narrateRoundEnd(
+    gameId: gameRef.id,
+    bidWinnerName: bidWinnerName,
+    bidValue: bidValue,
+    pointsWon: pointsWon,
+    bidSuccess: bidSuccess,
+    gamePointWinnerName: gamePointWinnerName,
+    gamePointScore: bestValue > 0 ? bestValue : null,
+    isGameTied: gamePointWinner == null && bestValue > 0,
+    matchWinnerName: matchWinnerName,
+  ).catchError((e) => print('Narration error: $e'));
+
   if (winner.isNotEmpty) {
     await gameRef.update({
       'updatedAt': FieldValue.serverTimestamp,
@@ -1202,7 +1228,7 @@ Future<void> finalizeRound(
     });
 
     final winnerUid = winner['uid'] as String;
-    final winnerName = await _getPlayerName(firestore, winnerUid);
+    final winnerName = matchWinnerName ?? await _getPlayerName(firestore, winnerUid);
     final winnerScore = winner['totalScore'];
     final roomName = (gameData['name'] ?? 'Pedro') as String;
     final playerIds = List<String>.from(gameData['playerIds'] as Iterable);
