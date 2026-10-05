@@ -15,7 +15,7 @@ void main() {
         );
         expect(
           context,
-          'Lardits! arthur thompson just snatch de 9! arthur thompson does play card for gramoxone!',
+          'Lardits! arthur thompson just snatch de 9! 9 big points in de bag!',
         );
       });
 
@@ -27,7 +27,7 @@ void main() {
         );
         expect(
           stolenJackContext,
-          'Oh gosh! arthur thompson just hang de man Jack! Massive robbery on de table... arthur thompson does play card for gramoxone!',
+          'Oh gosh! arthur thompson just hang de man Jack! Daylight robbery on de table!',
         );
 
         final savedJackContext = formatPointEventContext(
@@ -197,12 +197,24 @@ void main() {
         );
       });
 
+      test('winning contract includes player name and winning bid value', () {
+        final context = formatBidWonContext(
+          playerName: testPlayer,
+          bid: 15,
+        );
+        expect(
+          context,
+          'arthur thompson win de bid with 15! Contract set, leh we see what trump dey calling!',
+        );
+      });
+
       test('never contains generic "A player" in any bid event', () {
         final contexts = [
           formatBidContext(playerName: testPlayer, bid: null, previousBid: 14),
           formatBidContext(playerName: testPlayer, bid: 20, previousBid: 14),
           formatBidContext(playerName: testPlayer, bid: 19, previousBid: 10),
           formatBidContext(playerName: testPlayer, bid: 15, previousBid: 14),
+          formatBidWonContext(playerName: testPlayer, bid: 14),
         ];
 
         for (final ctx in contexts) {
@@ -211,10 +223,158 @@ void main() {
       });
     });
 
+    group('Lift Resolution Events', () {
+      test('stolen Jack is formatted as daylight robbery', () {
+        final context = formatLiftResolutionContext(
+          winnerName: testPlayer,
+          stoleJack: true,
+        );
+        expect(
+          context,
+          'Oh gosh! arthur thompson just hang de man Jack! Daylight robbery on de table!',
+        );
+      });
+
+      test('stolen Jack and 9 is formatted as combined heist', () {
+        final context = formatLiftResolutionContext(
+          winnerName: testPlayer,
+          stoleJack: true,
+          wonNine: true,
+        );
+        expect(
+          context,
+          'Oh gosh! arthur thompson hang de man Jack and snatch de 9! Daylight robbery on de table!',
+        );
+      });
+
+      test('stolen Jack with 9 and 5 is formatted as monster robbery', () {
+        final context = formatLiftResolutionContext(
+          winnerName: testPlayer,
+          stoleJack: true,
+          wonNine: true,
+          wonFive: true,
+        );
+        expect(
+          context,
+          'Oh gosh! arthur thompson hang de man Jack AND scoop de 9 and 5! Monster robbery on de table!',
+        );
+      });
+
+      test('capturing both 9 and 5 is formatted as clean 14-point sweep', () {
+        final context = formatLiftResolutionContext(
+          winnerName: testPlayer,
+          wonNine: true,
+          wonFive: true,
+        );
+        expect(
+          context,
+          'Lardits! arthur thompson scoop both de 9 and de 5! 14 big points in one sweep!',
+        );
+      });
+
+      test('capturing 9 alone is formatted with Pedro points', () {
+        final context = formatLiftResolutionContext(
+          winnerName: testPlayer,
+          wonNine: true,
+        );
+        expect(
+          context,
+          'Lardits! arthur thompson snatch de 9! 9 big points in de bag!',
+        );
+      });
+
+      test('capturing 5 alone is formatted with Pedro points', () {
+        final context = formatLiftResolutionContext(
+          winnerName: testPlayer,
+          wonFive: true,
+        );
+        expect(
+          context,
+          'arthur thompson grab de 5! 5 big points in de bag!',
+        );
+      });
+
+      test('saving own Jack alone is formatted as safe play', () {
+        final context = formatLiftResolutionContext(
+          winnerName: testPlayer,
+          savedJack: true,
+        );
+        expect(
+          context,
+          'arthur thompson play and save dey own Jack for 1 point. Safe play.',
+        );
+      });
+
+      test('empty when no point cards were involved', () {
+        final context = formatLiftResolutionContext(
+          winnerName: testPlayer,
+        );
+        expect(context, isEmpty);
+      });
+    });
+
+    group('Round End & Match Climax Events', () {
+      test('made contract formatted with praise', () {
+        final context = formatRoundEndContext(
+          bidWinnerName: testPlayer,
+          bidValue: 14,
+          pointsWon: 16,
+          bidSuccess: true,
+        );
+        expect(
+          context,
+          'arthur thompson make de 14 bid with 16 points! Safe home!',
+        );
+      });
+
+      test('set contract formatted with picong', () {
+        final context = formatRoundEndContext(
+          bidWinnerName: testPlayer,
+          bidValue: 14,
+          pointsWon: 8,
+          bidSuccess: false,
+        );
+        expect(
+          context,
+          'Lardits! arthur thompson get set! Bid 14 but only take 8 points... minus 14 on dey head!',
+        );
+      });
+
+      test('includes game point winner details', () {
+        final context = formatRoundEndContext(
+          bidWinnerName: testPlayer,
+          bidValue: 14,
+          pointsWon: 16,
+          bidSuccess: true,
+          gamePointWinnerName: 'Bob',
+          gamePointScore: 24,
+        );
+        expect(
+          context,
+          'arthur thompson make de 14 bid with 16 points! Safe home! And Bob take de Game point with 24 card points!',
+        );
+      });
+
+      test('match winner crowns final champion', () {
+        final context = formatRoundEndContext(
+          bidWinnerName: testPlayer,
+          bidValue: 14,
+          pointsWon: 16,
+          bidSuccess: true,
+          matchWinnerName: 'Alice',
+        );
+        expect(
+          context,
+          'Game over! Alice reach de target score and take de crown! Total champion on de table!',
+        );
+      });
+    });
+
     group('Call Player Events', () {
       test('fallbacks include both callerName and slowPlayerName with authentic Trini banter', () {
         final fallbacks = getCallPlayerFallbacks('Alice', 'Bob');
         expect(fallbacks, isNotEmpty);
+        expect(fallbacks.length, greaterThanOrEqualTo(6));
         for (final text in fallbacks) {
           expect(text, contains('Alice'));
           expect(text, contains('Bob'));
@@ -222,6 +382,10 @@ void main() {
         expect(
           fallbacks,
           contains('Aye Bob, yuh could stop eating for 2 seconds to play yuh know! Alice waiting on yuh!'),
+        );
+        expect(
+          fallbacks,
+          contains('Aye Bob, yuh studying de cards or writing ah CXC exam? Alice waiting on yuh!'),
         );
       });
     });
