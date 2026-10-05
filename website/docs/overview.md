@@ -9,7 +9,7 @@
 ### 1. Seamless Multiplayer & Lobbies
 - **Instant Synchronization:** Play in real-time with friends or opponents across devices.
 - **Custom Game Rooms:** Easily create private game rooms or browse open lobbies. Game rooms feature fun, AI-generated room names.
-- **Direct Player Invites:** Send game invitations straight to your friends' in-app inbox.
+- **Direct Player Invites & Persistent Lobby Modal:** Hosts can invite and uninvite friends from their player directory in a single session. The invitation dialog remains open for batch actions, streams player statuses in real time, debounces requests with in-flight indicators, and dynamically scales table capacity indicators (from 4 up to 8 players) without requiring repeated modal reopenings.
 - **Game Management & Deletion:** Game creators maintain full administrative control over their games, with the option to permanently delete games they created directly from the lobby waiting room, the Home feed's recent games list, or the active game board. Deletion includes a confirmation safeguard and thoroughly removes the game document along with all associated chat messages and reactions across all players.
 
 ### 2. Interactive AI Companions
