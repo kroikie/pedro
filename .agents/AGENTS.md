@@ -126,7 +126,7 @@ Releases to beta testers for Android and iOS are fully automated via Firebase Ap
    - **Runner State Isolation:** Persistent self-hosted runners isolate Dart credentials between jobs by scrubbing stale pub tokens (`rm -f ~/.config/dart/pub-tokens.json ~/.pub-cache/tokens.json`) so subsequent Flutter/Dart dependency updates resolve cleanly without requiring unexported `PUB_TOKEN` secrets.
    - **Backend Functions Pipeline:** Runs on self-hosted Linux runner; verifies `functions.yaml` code generation, runs unit tests (`dart test`), and deploys Cloud Functions to Firebase (`./deploy_functions.sh`).
    - **Android Pipeline:** Runs sequentially on the self-hosted Linux runner once functions deployment succeeds; decodes release keystore, signs APK, and uploads directly to Firebase App Distribution for `beta-testers`.
-   - **iOS Pipeline:** Gated on successful functions deployment; Fastlane pulls registered device UDIDs from Firebase (`firebase_app_distribution_get_udids`), registers new devices with Apple Developer Portal (`register_devices`), re-bakes the `com.ool.pedro AdHoc` profile (`sigh`), builds the IPA, and distributes it to `beta-testers`.
+   - **iOS Pipeline:** Gated on successful functions deployment; Fastlane pulls registered device UDIDs from Firebase (`firebase_app_distribution_get_udids`), registers new devices with Apple Developer Portal (`register_devices`), ensures required capabilities (Associated Domains) are enabled on the App ID, re-bakes the `com.ool.pedro AdHoc` profile (`sigh`), builds the IPA, and distributes it to `beta-testers`.
 3. **Local Distribution:**
    - For ad-hoc local testing or offline distribution:
      ```bash
