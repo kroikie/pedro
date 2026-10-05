@@ -25,15 +25,15 @@ class AvatarGenerationService {
   final FirebaseStorage? _customStorage;
   final PlayerRepository? _customPlayerRepository;
 
-  FirebaseAI get _firebaseAI =>
-      _customFirebaseAI ??
-      FirebaseAI.googleAI();
+  FirebaseAI get _firebaseAI => _customFirebaseAI ?? FirebaseAI.googleAI();
   FirebaseStorage get _storage => _customStorage ?? FirebaseStorage.instance;
-  PlayerRepository get _playerRepository =>
-      _customPlayerRepository ?? PlayerRepository();
+  PlayerRepository get _playerRepository => _customPlayerRepository ?? PlayerRepository();
 
   GenerativeModel get _imageModel => _firebaseAI.generativeModel(
         model: 'gemini-3.1-flash-image',
+        generationConfig: GenerationConfig(
+          responseModalities: [ResponseModalities.image],
+        ),
       );
 
   String buildPrompt(AvatarCategory category, String description) {
@@ -78,7 +78,8 @@ class AvatarGenerationService {
         return inlineParts.first.bytes;
       }
 
-      throw Exception('The AI model did not return any image data. Please try another description.');
+      throw Exception(
+          'The AI model did not return any image data. Please try another description.');
     } catch (e, stack) {
       print('AvatarGenerationService.generateAvatar error: $e');
       if (!kIsWeb) {
