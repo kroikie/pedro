@@ -222,7 +222,10 @@ class _GameRoomScreenState extends State<GameRoomScreen> {
                     children: [
                       Text('Status: ${room.status.name}', style: Theme.of(context).textTheme.titleLarge),
                       const SizedBox(height: 20),
-                      Text('Players (${room.playerIds.length}/4 joined)', style: Theme.of(context).textTheme.titleMedium),
+                      Text(
+                        'Players (${room.playerIds.length}/${room.playerIds.length > 4 ? room.playerIds.length : 4} joined)',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
                       const SizedBox(height: 10),
                       Expanded(
                         child: ListView.builder(
@@ -291,7 +294,7 @@ class _GameRoomScreenState extends State<GameRoomScreen> {
   }
 }
 
-class InviteDialog extends StatelessWidget {
+class InviteDialog extends StatefulWidget {
   const InviteDialog({
     super.key,
     required this.room,
@@ -306,72 +309,151 @@ class InviteDialog extends StatelessWidget {
   final String? currentUserId;
 
   @override
+  State<InviteDialog> createState() => _InviteDialogState();
+}
+
+class _InviteDialogState extends State<InviteDialog> {
+  final Set<String> _pendingPlayerIds = {};
+
+  @override
   Widget build(BuildContext context) {
-    final playerRepo = playerRepository ?? PlayerRepository();
-    final lobbyRepo = lobbyRepository ?? LobbyRepository();
+    final playerRepo = widget.playerRepository ?? PlayerRepository();
+    final lobbyRepo = widget.lobbyRepository ?? LobbyRepository();
     final currentUid =
-        currentUserId ?? FirebaseAuth.instance.currentUser?.uid;
+        widget.currentUserId ?? FirebaseAuth.instance.currentUser?.uid;
 
-    return AlertDialog(
-      title: const Text('Invite Player'),
-      content: SizedBox(
-        width: double.maxFinite,
-        height: 300,
-        child: StreamBuilder<List<Player>>(
-          stream: playerRepo.watchAllPlayers(),
-          builder: (context, snapshot) {
-            if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
-            final players = snapshot.data!.where((p) => p.id != currentUid).toList();
-            if (players.isEmpty) return const Center(child: Text('No other players found.'));
+    return StreamBuilder<GameRoom?>(
+      stream: lobbyRepo.watchGame(widget.room.id),
+      initialData: widget.room,
+      builder: (context, roomSnapshot) {
+        final currentRoom = roomSnapshot.data ?? widget.room;
+        final capacity = currentRoom.playerIds.length > 4 ? currentRoom.playerIds.length : 4;
 
-            return ListView.builder(
-              itemCount: players.length,
-              itemBuilder: (context, index) {
-                final player = players[index];
-                final isJoined = room.playerIds.contains(player.id);
-                final isInvited = room.invitedPlayerIds.contains(player.id);
-                final canInvite = !isJoined && !isInvited;
+        return AlertDialog(
+          title: Text('Invite Players (${currentRoom.playerIds.length}/$capacity joined)'),
+          content: SizedBox(
+            width: double.maxFinite,
+            height: 300,
+            child: StreamBuilder<List<Player>>(
+              stream: playerRepo.watchAllPlayers(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+                final players = snapshot.data!.where((p) => p.id != currentUid).toList();
+                if (players.isEmpty) return const Center(child: Text('No other players found.'));
 
-                return ListTile(
-                  leading: AvatarWidget(avatarUrl: player.avatarUrl, radius: 15),
-                  title: Text(player.screenName),
-                  subtitle: isJoined ? const Text('In Game') : (isInvited ? const Text('Already Invited') : null),
-                  trailing: canInvite 
-                    ? IconButton(
+                return ListView.builder(
+                  itemCount: players.length,
+                  itemBuilder: (context, index) {
+                    final player = players[index];
+                    final isJoined = currentRoom.playerIds.contains(player.id);
+                    final isInvited = currentRoom.invitedPlayerIds.contains(player.id);
+                    final canInvite = !isJoined && !isInvited;
+                    final isPending = _pendingPlayerIds.contains(player.id);
+
+                    Widget trailing;
+                    if (isPending) {
+                      trailing = const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      );
+                    } else if (canInvite) {
+                      trailing = IconButton(
                         icon: const Icon(Icons.add),
+                        tooltip: 'Invite Player',
                         onPressed: () async {
-                          await lobbyRepo.invitePlayer(room.id, player.id);
-                          if (context.mounted) {
-                            Navigator.of(context).pop();
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Invited ${player.screenName}')),
-                            );
+                          setState(() => _pendingPlayerIds.add(player.id));
+                          try {
+                            await lobbyRepo.invitePlayer(currentRoom.id, player.id);
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context)
+                                ..hideCurrentSnackBar()
+                                ..showSnackBar(
+                                  SnackBar(
+                                    content: Text('Invited ${player.screenName}'),
+                                    duration: const Duration(seconds: 2),
+                                  ),
+                                );
+                            }
+                          } catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context)
+                                ..hideCurrentSnackBar()
+                                ..showSnackBar(
+                                  SnackBar(
+                                    content: Text('Failed to invite ${player.screenName}: $e'),
+                                    backgroundColor: Theme.of(context).colorScheme.error,
+                                    duration: const Duration(seconds: 3),
+                                  ),
+                                );
+                            }
+                          } finally {
+                            if (mounted) {
+                              setState(() => _pendingPlayerIds.remove(player.id));
+                            }
                           }
                         },
-                      )
-                    : (isInvited 
-                        ? IconButton(
-                            icon: const Icon(Icons.person_remove, color: Colors.red),
-                            onPressed: () async {
-                              await lobbyRepo.uninvitePlayer(room.id, player.id);
-                              if (context.mounted) {
-                                Navigator.of(context).pop();
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Removed invitation for ${player.screenName}')),
+                      );
+                    } else if (isInvited) {
+                      trailing = IconButton(
+                        icon: const Icon(Icons.person_remove, color: Colors.red),
+                        tooltip: 'Remove Invitation',
+                        onPressed: () async {
+                          setState(() => _pendingPlayerIds.add(player.id));
+                          try {
+                            await lobbyRepo.uninvitePlayer(currentRoom.id, player.id);
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context)
+                                ..hideCurrentSnackBar()
+                                ..showSnackBar(
+                                  SnackBar(
+                                    content: Text('Removed invitation for ${player.screenName}'),
+                                    duration: const Duration(seconds: 2),
+                                  ),
                                 );
-                              }
-                            },
-                          )
-                        : const Icon(Icons.check, color: Colors.green)),
+                            }
+                          } catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context)
+                                ..hideCurrentSnackBar()
+                                ..showSnackBar(
+                                  SnackBar(
+                                    content: Text('Failed to remove invitation for ${player.screenName}: $e'),
+                                    backgroundColor: Theme.of(context).colorScheme.error,
+                                    duration: const Duration(seconds: 3),
+                                  ),
+                                );
+                            }
+                          } finally {
+                            if (mounted) {
+                              setState(() => _pendingPlayerIds.remove(player.id));
+                            }
+                          }
+                        },
+                      );
+                    } else {
+                      trailing = const Icon(Icons.check, color: Colors.green);
+                    }
+
+                    return ListTile(
+                      leading: AvatarWidget(avatarUrl: player.avatarUrl, radius: 15),
+                      title: Text(player.screenName),
+                      subtitle: isJoined ? const Text('In Game') : (isInvited ? const Text('Already Invited') : null),
+                      trailing: trailing,
+                    );
+                  },
                 );
               },
-            );
-          },
-        ),
-      ),
-      actions: [
-        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Close')),
-      ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
     );
   }
 }
