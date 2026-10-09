@@ -484,5 +484,159 @@ void main() {
       expect(mockGameRepo.submitBidCalled, isTrue);
       expect(mockGameRepo.lastSubmittedBid, isNull);
     });
+
+    testWidgets(
+        'Center board shows BIDDING PHASE and Waiting for opening bid when bidValue == 0',
+        (tester) async {
+      tester.view.physicalSize = const Size(800, 1200);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      final session = GameSession(
+        gameId: 'game1',
+        targetScore: 35,
+        playerStates: [
+          const PlayerGameState(
+            uid: 'p1',
+            hand: [pedro.Card(suit: pedro.Suit.hearts, rank: pedro.Rank.ace)],
+          ),
+          const PlayerGameState(uid: 'p2', hand: []),
+          const PlayerGameState(uid: 'p3', hand: []),
+          const PlayerGameState(uid: 'p4', hand: []),
+        ],
+        currentRound: const RoundState(
+          dealerId: 'p4',
+          phase: RoundPhase.wadger,
+          turnIndex: 1, // p2's turn to open bidding
+          bidValue: 0,
+        ),
+      );
+
+      await tester.pumpWidget(buildTestScreen(session));
+      await tester.pumpAndSettle();
+
+      expect(find.text('BIDDING PHASE'), findsOneWidget);
+      expect(find.text('Waiting for opening bid...'), findsOneWidget);
+      expect(find.text('Up next: Bob'), findsOneWidget);
+      expect(find.text('Waiting for plays...'), findsNothing);
+    });
+
+    testWidgets(
+        'Player cards display each player bid and Pass during Wadger, and center board shows Leading Bid and Bidder',
+        (tester) async {
+      tester.view.physicalSize = const Size(800, 1200);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      final session = GameSession(
+        gameId: 'game1',
+        targetScore: 35,
+        playerStates: [
+          const PlayerGameState(
+            uid: 'p1',
+            hand: [pedro.Card(suit: pedro.Suit.hearts, rank: pedro.Rank.ace)],
+            earnedPoints: ['Bid: 4'],
+          ),
+          const PlayerGameState(
+            uid: 'p2',
+            hand: [],
+            earnedPoints: ['Bid: 5'],
+          ),
+          const PlayerGameState(
+            uid: 'p3',
+            hand: [],
+            earnedPoints: ['Bid: 7'],
+          ),
+          const PlayerGameState(
+            uid: 'p4',
+            hand: [],
+            earnedPoints: ['Pass'],
+          ),
+        ],
+        currentRound: const RoundState(
+          dealerId: 'p4',
+          phase: RoundPhase.wadger,
+          turnIndex: 0,
+          bidValue: 7,
+          bidWinnerId: 'p3',
+          passedPlayerIds: ['p4'],
+        ),
+      );
+
+      await tester.pumpWidget(buildTestScreen(session));
+      await tester.pumpAndSettle();
+
+      // Local player (p1) shows their active bid in the local interaction bar
+      expect(find.text('Bid: 4'), findsOneWidget);
+
+      // Opponent player cards show their respective bids and Passed status
+      expect(find.text('Bid: 5'), findsOneWidget); // p2 (Bob)
+      expect(find.text('Bid: 7'), findsOneWidget); // p3 (Charlie)
+      expect(find.text('Passed'), findsOneWidget); // p4 (Dave)
+
+      // Center board displays the current leading bid and leading bidder
+      expect(find.text('LEADING BID'), findsOneWidget);
+      expect(find.text('Leading Bid: 7'), findsOneWidget);
+      expect(find.text('Bidder: Charlie'), findsOneWidget);
+      expect(find.text('Your turn to bid'), findsOneWidget);
+    });
+
+    testWidgets(
+        'Individual non-winning bids and Passed badges disappear after Wadger phase finishes',
+        (tester) async {
+      tester.view.physicalSize = const Size(800, 1200);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      final session = GameSession(
+        gameId: 'game1',
+        targetScore: 35,
+        playerStates: [
+          const PlayerGameState(
+            uid: 'p1',
+            hand: [pedro.Card(suit: pedro.Suit.hearts, rank: pedro.Rank.ace)],
+          ),
+          const PlayerGameState(
+            uid: 'p2',
+            hand: [],
+          ),
+          const PlayerGameState(
+            uid: 'p3',
+            hand: [],
+          ),
+          const PlayerGameState(
+            uid: 'p4',
+            hand: [],
+          ),
+        ],
+        currentRound: const RoundState(
+          dealerId: 'p4',
+          phase: RoundPhase.playing,
+          trumpSuit: pedro.Suit.hearts,
+          turnIndex: 2,
+          bidValue: 7,
+          bidWinnerId: 'p3',
+          passedPlayerIds: ['p1', 'p2', 'p4'],
+        ),
+      );
+
+      await tester.pumpWidget(buildTestScreen(session));
+      await tester.pumpAndSettle();
+
+      // Only the winning bidder shows BIDDER: 7; Passed and LEADING BID are gone
+      expect(find.text('BIDDER: 7'), findsOneWidget);
+      expect(find.text('Passed'), findsNothing);
+      expect(find.text('LEADING BID'), findsNothing);
+      expect(find.text('Waiting for plays...'), findsOneWidget);
+    });
   });
 }

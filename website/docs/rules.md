@@ -29,6 +29,9 @@ The goal of Pedro is to be the first player (or team) to reach the target winnin
 - **Opening Bidder:** The player to the dealer's right starts the bidding. The opening bid must be at least **1** point; the opening bidder cannot pass ("Pass" is disabled).
 - **Pass Button Ordering:** The **Pass** option is positioned on the far left of the bid controls for quick, scroll-free access.
 - **Auction-Style Pass Elimination:** In turn order, players must either **raise the bid** or **pass**. Once a player passes, they are eliminated from making any further bids in that round. Bidding rotates anti-clockwise exclusively among remaining active bidders until all but the highest bidder have passed.
+- **Live Bid Visibility on Player Cards & Center Board:**
+  - During the Wadger phase, each player's seat card displays their active bid (`Bid: X`) or `Passed` badge so everyone can track what each player has bet. Once the bidding phase concludes, non-winning bids and `Passed` badges automatically clear from the player cards—leaving only the winning bidder's `BIDDER: X` contract indicator to keep player cards minimal during card play.
+  - Because no trick cards are on the board during the Wadger phase, the center of the board displays a dedicated **Leading Bid** card showing the current leading bet (`Leading Bid: X`), the leading bidder's avatar and name, and whose turn it is to bid next.
 - The highest bidder wins the Wadger and names the **Trump Suit** for the round.
 
 ### Phase 2: Discard & Draw

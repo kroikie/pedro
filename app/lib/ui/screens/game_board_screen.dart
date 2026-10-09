@@ -637,6 +637,7 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                                 session.currentRound.currentLift,
                                 session.playerStates,
                                 lastLift: session.currentRound.lastLift,
+                                round: session.currentRound,
                               ),
                             ),
                           );
@@ -665,11 +666,185 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
     );
   }
 
+  Widget _buildWadgerBoardArea(
+    RoundState round,
+    List<PlayerGameState> states,
+  ) {
+    final hasLeadingBid = round.bidValue > 0 && round.bidWinnerId != null;
+    final leaderId = round.bidWinnerId;
+    final isLocalLeader = leaderId != null && leaderId == _uid;
+    final turnUid = (round.turnIndex >= 0 && round.turnIndex < states.length)
+        ? states[round.turnIndex].uid
+        : null;
+    final isLocalTurn = turnUid != null && turnUid == _uid;
+
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: hasLeadingBid
+              ? Colors.amber.shade50.withValues(alpha: 0.92)
+              : Colors.black.withValues(alpha: 0.03),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: hasLeadingBid ? Colors.amber.shade400 : Colors.grey.shade300,
+            width: hasLeadingBid ? 1.5 : 1.0,
+          ),
+          boxShadow: hasLeadingBid
+              ? const [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 6,
+                    offset: Offset(0, 2),
+                  ),
+                ]
+              : null,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.gavel_rounded,
+                  size: 14,
+                  color: hasLeadingBid
+                      ? Colors.amber.shade900
+                      : Colors.blueGrey.shade600,
+                ),
+                const SizedBox(width: 5),
+                Text(
+                  hasLeadingBid ? 'LEADING BID' : 'BIDDING PHASE',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.6,
+                    color: hasLeadingBid
+                        ? Colors.amber.shade900
+                        : Colors.blueGrey.shade700,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            if (hasLeadingBid && leaderId != null) ...[
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                decoration: BoxDecoration(
+                  color: Colors.amber.shade200,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.amber.shade800, width: 0.8),
+                ),
+                child: Text(
+                  'Leading Bid: ${round.bidValue}',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.amber.shade900,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 6),
+              if (isLocalLeader)
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.person, size: 13, color: Colors.blue.shade800),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Bidder: You',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue.shade900,
+                      ),
+                    ),
+                  ],
+                )
+              else
+                FutureBuilder<Player?>(
+                  future: _getPlayer(leaderId),
+                  initialData: _playerCache[leaderId],
+                  builder: (context, snap) {
+                    final leader = snap.data;
+                    final leaderName = leader?.screenName ?? '...';
+                    return Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        AvatarWidget(
+                          avatarUrl: leader?.avatarUrl,
+                          radius: 10,
+                        ),
+                        const SizedBox(width: 5),
+                        Text(
+                          'Bidder: $leaderName',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey.shade900,
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+            ] else ...[
+              const Text(
+                'Waiting for opening bid...',
+                style: TextStyle(
+                  color: Colors.grey,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+            if (turnUid != null) ...[
+              const SizedBox(height: 5),
+              if (isLocalTurn)
+                Text(
+                  'Your turn to bid',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green.shade800,
+                  ),
+                )
+              else
+                FutureBuilder<Player?>(
+                  future: _getPlayer(turnUid),
+                  initialData: _playerCache[turnUid],
+                  builder: (context, snap) {
+                    final turnName = snap.data?.screenName ?? '...';
+                    return Text(
+                      'Up next: $turnName',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Colors.grey.shade700,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    );
+                  },
+                ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildLiftArea(
     Lift? lift,
     List<PlayerGameState> states, {
     Lift? lastLift,
+    RoundState? round,
   }) {
+    if (round != null && round.phase == RoundPhase.wadger) {
+      return _buildWadgerBoardArea(round, states);
+    }
+
     if (lift == null || lift.plays.isEmpty) {
       return FittedBox(
         fit: BoxFit.scaleDown,
@@ -1358,6 +1533,13 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
       final isHisTurn = round.turnIndex == index;
       final isBidder = round.bidWinnerId == playerState.uid &&
           round.phase != RoundPhase.wadger;
+      final isWadgerLeader = round.phase == RoundPhase.wadger &&
+          round.bidWinnerId == playerState.uid &&
+          round.bidValue > 0;
+      final hasPassedInWadger = round.phase == RoundPhase.wadger &&
+          (round.passedPlayerIds.contains(playerState.uid) ||
+              playerState.earnedPoints.contains('Pass'));
+      final wadgerBidText = _getWadgerBidText(playerState, round);
       final alignment = isSpectator ? playerPositions[i % playerPositions.length] : playerPositions[i - 1];
 
       otherPlayers.add(
@@ -1390,13 +1572,13 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                         decoration: BoxDecoration(
                           color: isHisTurn
                               ? Colors.green.withValues(alpha: 0.1)
-                              : (isBidder
+                              : ((isBidder || isWadgerLeader)
                                   ? Colors.amber.shade50.withValues(alpha: 0.9)
                                   : Colors.white.withValues(alpha: 0.8)),
                           borderRadius: BorderRadius.circular(12),
                           border: isHisTurn
                               ? Border.all(color: Colors.green, width: 2)
-                              : (isBidder
+                              : ((isBidder || isWadgerLeader)
                                   ? Border.all(
                                       color: Colors.amber.shade600, width: 1.5)
                                   : Border.all(color: Colors.grey.shade300)),
@@ -1482,9 +1664,7 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                                   ),
                                 ),
                               ),
-                            if (round.phase == RoundPhase.wadger &&
-                                round.passedPlayerIds.contains(playerState.uid) &&
-                                !playerState.earnedPoints.contains('Pass'))
+                            if (hasPassedInWadger)
                               Container(
                                 margin: const EdgeInsets.only(top: 2),
                                 padding: const EdgeInsets.symmetric(
@@ -1501,6 +1681,34 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                                     fontSize: 8,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.grey.shade700,
+                                  ),
+                                ),
+                              )
+                            else if (wadgerBidText != null)
+                              Container(
+                                margin: const EdgeInsets.only(top: 2),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 4, vertical: 1),
+                                decoration: BoxDecoration(
+                                  color: isWadgerLeader
+                                      ? Colors.amber.shade200
+                                      : Colors.orange.shade100,
+                                  borderRadius: BorderRadius.circular(4),
+                                  border: Border.all(
+                                    color: isWadgerLeader
+                                        ? Colors.amber.shade800
+                                        : Colors.orange.shade400,
+                                    width: 0.8,
+                                  ),
+                                ),
+                                child: Text(
+                                  wadgerBidText,
+                                  style: TextStyle(
+                                    fontSize: 8,
+                                    fontWeight: FontWeight.bold,
+                                    color: isWadgerLeader
+                                        ? Colors.amber.shade900
+                                        : Colors.orange.shade900,
                                   ),
                                 ),
                               ),
@@ -1520,6 +1728,23 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
       );
     }
     return otherPlayers;
+  }
+
+  String? _getWadgerBidText(PlayerGameState playerState, RoundState round) {
+    if (round.phase != RoundPhase.wadger) return null;
+    if (round.passedPlayerIds.contains(playerState.uid) ||
+        playerState.earnedPoints.contains('Pass')) {
+      return null;
+    }
+    for (final p in playerState.earnedPoints) {
+      if (p.startsWith('Bid:')) {
+        return p;
+      }
+    }
+    if (round.bidWinnerId == playerState.uid && round.bidValue > 0) {
+      return 'Bid: ${round.bidValue}';
+    }
+    return null;
   }
 
   Widget _buildCompactPointsPips(List<String> points, {bool isCompact = false}) {
@@ -1563,9 +1788,13 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
   }
 
   Widget _buildPointsChips(List<String> points) {
+    final gamePoints = points
+        .where((p) => p != 'Pass' && !p.startsWith('Bid:'))
+        .toList();
+    if (gamePoints.isEmpty) return const SizedBox.shrink();
     return Wrap(
       spacing: 2,
-      children: points.map((p) {
+      children: gamePoints.map((p) {
         final badgeColors = PointColorHelper.getBadgeColors(p);
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
@@ -1819,8 +2048,8 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                         ),
                       ),
                     if (round.phase == RoundPhase.wadger &&
-                        round.passedPlayerIds.contains(_uid) &&
-                        !localState.earnedPoints.contains('Pass'))
+                        (round.passedPlayerIds.contains(_uid) ||
+                            localState.earnedPoints.contains('Pass')))
                       Container(
                         margin: const EdgeInsets.only(top: 2),
                         padding: const EdgeInsets.symmetric(
@@ -1837,6 +2066,34 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                             fontSize: 9,
                             fontWeight: FontWeight.bold,
                             color: Colors.grey.shade700,
+                          ),
+                        ),
+                      )
+                    else if (_getWadgerBidText(localState, round) != null)
+                      Container(
+                        margin: const EdgeInsets.only(top: 2),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 5, vertical: 1),
+                        decoration: BoxDecoration(
+                          color: round.bidWinnerId == _uid
+                              ? Colors.amber.shade200
+                              : Colors.orange.shade100,
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(
+                            color: round.bidWinnerId == _uid
+                                ? Colors.amber.shade800
+                                : Colors.orange.shade400,
+                            width: 0.8,
+                          ),
+                        ),
+                        child: Text(
+                          _getWadgerBidText(localState, round)!,
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                            color: round.bidWinnerId == _uid
+                                ? Colors.amber.shade900
+                                : Colors.orange.shade900,
                           ),
                         ),
                       ),
