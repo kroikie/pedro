@@ -48,6 +48,93 @@ service cloud.firestore {
     //   - emoji: string (required, 1-20 chars) - Reaction emoji character(s)
     //   - timestamp: timestamp (required) - Server timestamp when sent
     //
+    // Subcollection: games/{gameId}/rounds
+    // Document ID: round_{roundNumber}
+    // Fields:
+    //   - gameId: string (required) - Parent game room ID
+    //   - roundNumber: int (required) - Sequential round number (1-indexed)
+    //   - completedAt: timestamp (required) - Timestamp when the round concluded
+    //   - isoWeek: string (required) - ISO week identifier (e.g. '2026-W41')
+    //   - playerCount: int (required) - Number of seated players in the round
+    //   - playerIds: list (required) - UIDs of seated players
+    //   - dealerId: string (required) - UID of the round dealer
+    //   - trumpSuit: string (required) - Selected trump suit
+    //   - bidWinnerId: string (required) - UID of the winning bidder
+    //   - bidValue: int (required) - Winning bid value
+    //   - bidSuccess: bool (required) - True if the bid winner made their bid
+    //   - bidMadeWinnerId: string (optional, nullable) - UID of player who made their bid
+    //   - bidSetLoserId: string (optional, nullable) - UID of player who was set on their bid
+    //   - highTrumpPlayerId: string (optional, nullable) - UID of player who won High Trump
+    //   - highTrumpPlayedCard: map (optional, nullable) - Card details for High Trump
+    //   - lowTrumpPlayerId: string (optional, nullable) - UID of player who won Low Trump
+    //   - lowTrumpPlayedCard: map (optional, nullable) - Card details for Low Trump
+    //   - hangJackWinnerId: string (optional, nullable) - UID of player who captured the Jack of Trump
+    //   - jackHungVictimId: string (optional, nullable) - UID of player whose Jack of Trump was captured
+    //   - savedJackWinnerId: string (optional, nullable) - UID of player who saved their own Jack of Trump
+    //   - fiveTrumpWinnerId: string (optional, nullable) - UID of player who won the Five of Trump
+    //   - fiveTrumpLoserId: string (optional, nullable) - UID of player who lost the Five of Trump
+    //   - nineTrumpWinnerId: string (optional, nullable) - UID of player who won the Nine of Trump
+    //   - nineTrumpLoserId: string (optional, nullable) - UID of player who lost the Nine of Trump
+    //   - gameWinnerId: string (optional, nullable) - UID of player who won the Game point
+    //   - gameWinningScore: int (optional, nullable) - Card point total that won the Game point
+    //   - isGameTied: bool (required) - True if the Game point was tied
+    //   - matchWinnerId: string (optional, nullable) - UID of player who won the match on this round
+    //   - playerSummaries: map (required) - Per-player round breakdown map keyed by UID
+    //   - heists: list (required) - Directed card captures (Jack, Nine, Five of Trump)
+    //   - completedLifts: list (required) - Ordered list of completed lifts in the round
+    //   (All mutations to rounds are strictly restricted to Cloud Functions via Admin SDK)
+    //
+    // Collection: leaderboards
+    // Document ID: periodId (e.g. 'all_time', '2026-W41')
+    //
+    // Subcollection: leaderboards/{periodId}/players
+    // Document ID: userId (Firebase Auth UID)
+    // Description: Materialized player Triumph & Hall of Shame leaderboard rollup counters
+    // Fields:
+    //   - uid: string (required) - Player's Firebase Auth UID
+    //   - screenName: string (required) - Player's display name
+    //   - avatarUrl: string (optional, nullable) - Player's avatar URL
+    //   - periodId: string (required) - Leaderboard period identifier
+    //   - hangJacks: int (required) - Count of opponent Jacks of Trump captured
+    //   - jacksSaved: int (required) - Count of own Jacks of Trump saved
+    //   - highTrumps: int (required) - Count of High Trump points won
+    //   - lowTrumps: int (required) - Count of Low Trump points won
+    //   - fivesWon: int (required) - Count of Five of Trump captures
+    //   - ninesWon: int (required) - Count of Nine of Trump captures
+    //   - gamePointsWon: int (required) - Count of Game points won
+    //   - bidsWon: int (required) - Count of auctions won
+    //   - bidsMade: int (required) - Count of bids successfully made
+    //   - gamesWon: int (required) - Count of matches won
+    //   - totalPointsEarned: int (required) - Cumulative Pedro points earned
+    //   - jacksHung: int (required) - Count of times player's Jack of Trump was captured
+    //   - ninesLost: int (required) - Count of times player's Nine of Trump was captured
+    //   - fivesLost: int (required) - Count of times player's Five of Trump was captured
+    //   - bidsSet: int (required) - Count of times player was set on their bid
+    //   - roundsPlayed: int (required) - Total rounds played in period
+    //   - gamesPlayed: int (required) - Total matches completed in period
+    //   - updatedAt: timestamp (required) - Last rollup update timestamp
+    //
+    // Subcollection: leaderboards/{periodId}/rivalries
+    // Document ID: rivalryId ({actorUid}_{victimUid})
+    // Description: Materialized directed head-to-head rivalry counters
+    // Fields:
+    //   - id: string (required) - Directed rivalry identifier ({actorUid}_{victimUid})
+    //   - periodId: string (required) - Leaderboard period identifier
+    //   - actorUid: string (required) - UID of the capturing/winning player
+    //   - actorName: string (required) - Display name of the actor
+    //   - actorAvatarUrl: string (optional, nullable) - Avatar URL of the actor
+    //   - victimUid: string (required) - UID of the victim player
+    //   - victimName: string (required) - Display name of the victim
+    //   - victimAvatarUrl: string (optional, nullable) - Avatar URL of the victim
+    //   - jacksHung: int (required) - Count of times actor hung victim's Jack of Trump
+    //   - ninesStolen: int (required) - Count of times actor stole victim's Nine of Trump
+    //   - fivesStolen: int (required) - Count of times actor stole victim's Five of Trump
+    //   - heistCount: int (required) - Total high-value trump thefts by actor against victim
+    //   - heistPoints: int (required) - Total points stolen by actor from victim via heists
+    //   - matchesWonAgainst: int (required) - Count of matches won by actor against victim
+    //   - updatedAt: timestamp (required) - Last rivalry update timestamp
+    //   (All mutations to leaderboards and its subcollections are strictly restricted to Cloud Functions / Admin CLI via Admin SDK)
+    //
     // ===============================================================
 
     // ===============================================================
@@ -196,6 +283,34 @@ service cloud.firestore {
         // Authenticated participants or spectators can send emoji reactions matching their UID with length limits
         allow create: if isAuthenticated() && canViewGameById(gameId) && isValidReaction(request.resource.data);
         allow update, delete: if false;
+      }
+
+      // Completed Round Archives Subcollection
+      match /rounds/{roundId} {
+        // Authenticated participants or spectators of the game can read archived round summaries
+        allow read: if isAuthenticated() && canViewGameById(gameId);
+
+        // All round archives are written exclusively by Cloud Functions via Admin SDK
+        allow write: if false;
+      }
+    }
+
+    // Leaderboards Collection & Materialized Rollup Subcollections
+    match /leaderboards/{periodId} {
+      // Authenticated users can read leaderboard period metadata
+      allow read: if isAuthenticated();
+      allow write: if false;
+
+      // Materialized Player Triumph & Hall of Shame Rollups
+      match /players/{userId} {
+        allow read: if isAuthenticated();
+        allow write: if false;
+      }
+
+      // Materialized Directed Head-to-Head Rivalry Rollups
+      match /rivalries/{rivalryId} {
+        allow read: if isAuthenticated();
+        allow write: if false;
       }
     }
   }

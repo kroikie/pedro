@@ -13,7 +13,7 @@ dependencies:
   firebase_admin_sdk: ^0.5.1
   shelf: ^1.4.2
   shelf_router: ^1.1.2
-  google_cloud_firestore: ^0.5.1
+  google_cloud_firestore: ^0.5.5
 
 dev_dependencies:
   lints: ^6.0.0

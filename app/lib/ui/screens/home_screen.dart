@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:app_links/app_links.dart';
 import '../../data/repositories/lobby_repository.dart';
 import '../../data/repositories/player_repository.dart';
+import '../../data/repositories/leaderboard_repository.dart';
 import '../../data/models/player.dart';
 import '../../data/models/game_room.dart';
 import '../../data/services/game_name_service.dart';
@@ -13,6 +14,7 @@ import 'game_room_screen.dart';
 import 'game_board_screen.dart';
 import 'all_games_screen.dart';
 import 'home_feed_view.dart';
+import 'leaderboard_view.dart';
 import 'profile_screen.dart';
 import '../widgets/app_version_footer.dart';
 
@@ -26,6 +28,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final _lobbyRepository = LobbyRepository();
   final _playerRepository = PlayerRepository();
+  final _leaderboardRepository = LeaderboardRepository();
   final _gameNameService = GameNameService();
   late final AppLinks _appLinks;
   StreamSubscription<Uri>? _linkSubscription;
@@ -215,6 +218,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               );
             },
+            onViewRankingsTap: () {
+              setState(() {
+                _currentIndex = 2;
+              });
+            },
+            leaderboardRepository: _leaderboardRepository,
           ),
           _buildInboxView(),
           _buildRankingsView(),
@@ -408,34 +417,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildRankingsView() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.leaderboard,
-            size: 48,
-            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Rankings Leaderboard',
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Check back soon for active tournament placements!',
-            style: GoogleFonts.beVietnamPro(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-              fontSize: 12,
-            ),
-          ),
-        ],
-      ),
+    return LeaderboardView(
+      leaderboardRepository: _leaderboardRepository,
     );
   }
 }

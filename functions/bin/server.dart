@@ -4,6 +4,7 @@ import 'package:firebase_functions/firebase_functions.dart';
 import 'package:google_cloud_firestore/google_cloud_firestore.dart';
 import 'package:firebase_admin_sdk/firebase_admin_sdk.dart';
 import 'package:functions/game/deck.dart';
+import 'package:functions/game/leaderboard.dart';
 import 'package:functions/game/logic.dart';
 import 'package:functions/game/narrator.dart';
 import 'package:functions/game/messaging_helper.dart';
@@ -88,6 +89,15 @@ void main(List<String> args) {
       final gameData = gameDoc.data()!;
       if (gameData['hostId'] != auth.uid) {
         throw PermissionDeniedError('Only the game creator can delete this game.');
+      }
+
+      try {
+        await rollbackGameLeaderboardStats(
+          firestore: firestore,
+          gameRef: gameRef,
+        );
+      } catch (e) {
+        print('Error rolling back leaderboard stats for game $gameId: $e');
       }
 
       try {
@@ -1134,7 +1144,7 @@ void main(List<String> args) {
 Future<void> finalizeRound(
   FirebaseApp adminApp,
   Firestore firestore,
-  DocumentReference gameRef,
+  DocumentReference<DocumentData> gameRef,
   Map<String, dynamic> gameData,
   List<Map<String, dynamic>> playerStates,
   Map<String, dynamic> round,
@@ -1158,6 +1168,11 @@ Future<void> finalizeRound(
   final bidWinnerId = round['bidWinnerId'] as String;
   final bidValue = (round['bidValue'] as num).toInt();
 
+  final previousTotalScores = <String, int>{
+    for (final ps in playerStates)
+      ps['uid'] as String: (ps['totalScore'] as num?)?.toInt() ?? 0,
+  };
+
   for (final ps in playerStates) {
     final crp = (ps['currentRoundPoints'] as num?)?.toInt() ?? 0;
     if (ps['uid'] == bidWinnerId) {
@@ -1175,6 +1190,68 @@ Future<void> finalizeRound(
   final bidWinnerState = playerStates.firstWhere((p) => p['uid'] == bidWinnerId);
   final bidSuccess = ((bidWinnerState['currentRoundPoints'] as num?)?.toInt() ?? 0) >= bidValue;
   final completedLifts = List<Map<String, dynamic>>.from(round['completedLifts'] as Iterable? ?? []);
+
+  final targetScore = (gameData['targetScore'] as num?)?.toInt() ?? 35;
+  final winner = playerStates.firstWhere(
+    (ps) => ((ps['totalScore'] as num?)?.toInt() ?? 0) >= targetScore,
+    orElse: () => <String, dynamic>{},
+  );
+
+  final playerIds = List<String>.from(gameData['playerIds'] as Iterable);
+  final playerProfiles = await fetchPlayerProfiles(firestore, playerIds);
+  final trumpSuitStr = (round['trumpSuit'] as String?) ?? '';
+  final liftAnalysis = analyzeRoundLifts(
+    completedLifts: completedLifts,
+    trumpSuit: trumpSuitStr,
+  );
+  final matchWinnerUid = winner.isNotEmpty ? (winner['uid'] as String?) : null;
+  final enrichedPlayerSummaries = extractPlayerRoundStatDeltas(
+    playerStates: playerStates,
+    previousTotalScores: previousTotalScores,
+    playerProfiles: playerProfiles,
+    completedLifts: completedLifts,
+    liftAnalysis: liftAnalysis,
+    bidWinnerId: bidWinnerId,
+    bidSuccess: bidSuccess,
+    highTrumpPlayerId: round['highTrumpPlayerId'] as String?,
+    lowTrumpPlayerId: round['lowTrumpPlayerId'] as String?,
+    gameWinnerId: gamePointWinner?['uid'] as String?,
+    matchWinnerId: matchWinnerUid,
+  );
+  final roundHeists = extractRivalryDeltas(
+    playerIds: playerIds,
+    playerProfiles: playerProfiles,
+    liftAnalysis: liftAnalysis,
+    matchWinnerId: matchWinnerUid,
+  );
+  final archivedRoundDoc = buildArchivedRoundDocument(
+    gameId: gameRef.id,
+    roundNumber: roundNum,
+    completedAtUtc: DateTime.now().toUtc(),
+    playerIds: playerIds,
+    dealerId: (round['dealerId'] as String?) ?? playerIds.first,
+    trumpSuit: trumpSuitStr,
+    bidWinnerId: bidWinnerId,
+    bidValue: bidValue,
+    bidSuccess: bidSuccess,
+    highTrumpPlayerId: round['highTrumpPlayerId'] as String?,
+    highTrumpPlayedCard: round['highTrumpPlayedCard'] != null
+        ? Map<String, dynamic>.from(round['highTrumpPlayedCard'] as Map)
+        : null,
+    lowTrumpPlayerId: round['lowTrumpPlayerId'] as String?,
+    lowTrumpPlayedCard: round['lowTrumpPlayedCard'] != null
+        ? Map<String, dynamic>.from(round['lowTrumpPlayedCard'] as Map)
+        : null,
+    liftAnalysis: liftAnalysis,
+    gameWinnerId: gamePointWinner?['uid'] as String?,
+    gameWinningScore: bestValue > 0 ? bestValue : 0,
+    isGameTied: gamePointWinner == null && bestValue > 0,
+    matchWinnerId: matchWinnerUid,
+    playerSummaries: enrichedPlayerSummaries,
+    heists: roundHeists,
+    completedLifts: completedLifts,
+    completedAtFieldValue: FieldValue.serverTimestamp,
+  );
 
   final lastRoundSummary = {
     'roundNumber': roundNum,
@@ -1201,17 +1278,13 @@ Future<void> finalizeRound(
     'completedLifts': completedLifts,
   };
 
-  final targetScore = (gameData['targetScore'] as num?)?.toInt() ?? 35;
-  final winner = playerStates.firstWhere(
-    (ps) => ((ps['totalScore'] as num?)?.toInt() ?? 0) >= targetScore,
-    orElse: () => <String, dynamic>{},
-  );
-
-  final bidWinnerName = await _getPlayerName(firestore, bidWinnerId);
+  final bidWinnerName =
+      playerProfiles[bidWinnerId]?.screenName ?? await _getPlayerName(firestore, bidWinnerId);
   final pointsWon = (bidWinnerState['currentRoundPoints'] as num?)?.toInt() ?? 0;
   String? matchWinnerName;
   if (winner.isNotEmpty) {
-    matchWinnerName = await _getPlayerName(firestore, winner['uid'] as String);
+    final wUid = winner['uid'] as String;
+    matchWinnerName = playerProfiles[wUid]?.screenName ?? await _getPlayerName(firestore, wUid);
   }
 
   narrateRoundEnd(
@@ -1227,7 +1300,8 @@ Future<void> finalizeRound(
   ).catchError((e) => print('Narration error: $e'));
 
   if (winner.isNotEmpty) {
-    await gameRef.update({
+    final batch = firestore.batch();
+    batch.update(gameRef, {
       'updatedAt': FieldValue.serverTimestamp,
       'status': 'finished',
       'currentRound.playerStates': playerStates,
@@ -1235,12 +1309,19 @@ Future<void> finalizeRound(
       'winnerId': winner['uid'],
       'lastRoundSummary': lastRoundSummary,
     });
+    addRoundArchiveAndLeaderboardToBatch(
+      firestore: firestore,
+      batch: batch,
+      gameRef: gameRef,
+      roundNumber: roundNum,
+      archivedRoundDoc: archivedRoundDoc,
+    );
+    await batch.commit();
 
     final winnerUid = winner['uid'] as String;
     final winnerName = matchWinnerName ?? await _getPlayerName(firestore, winnerUid);
     final winnerScore = winner['totalScore'];
     final roomName = (gameData['name'] ?? 'Pedro') as String;
-    final playerIds = List<String>.from(gameData['playerIds'] as Iterable);
     sendGameNotification(
       adminApp: adminApp,
       firestore: firestore,
@@ -1250,18 +1331,26 @@ Future<void> finalizeRound(
       data: {'gameId': gameRef.id, 'type': 'game_over'},
     ).catchError((e) => print('FCM error: $e'));
   } else {
-    // Publish completed round summary state so clients display Round Summary modal
-    await gameRef.update({
+    // Publish completed round summary state, archive round, and increment leaderboards atomically
+    final batch = firestore.batch();
+    batch.update(gameRef, {
       'updatedAt': FieldValue.serverTimestamp,
       'currentRound.playerStates': playerStates,
       'currentRound.phase': 'finished',
       'lastRoundSummary': lastRoundSummary,
     });
+    addRoundArchiveAndLeaderboardToBatch(
+      firestore: firestore,
+      batch: batch,
+      gameRef: gameRef,
+      roundNumber: roundNum,
+      archivedRoundDoc: archivedRoundDoc,
+    );
+    await batch.commit();
 
     // Intermission window for players to review final trick and round outcome
     await Future.delayed(const Duration(seconds: 6));
 
-    final playerIds = List<String>.from(gameData['playerIds'] as Iterable);
     final oldDealerId = round['dealerId'] as String;
     final oldDealerIndex = playerIds.indexOf(oldDealerId);
     final newDealerId = playerIds[(oldDealerIndex + 1) % playerIds.length];
