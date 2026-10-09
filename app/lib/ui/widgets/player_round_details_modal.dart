@@ -60,6 +60,23 @@ class PlayerRoundDetailsModal extends StatelessWidget {
 
     final isBidder = round.bidWinnerId == targetPlayerId &&
         round.phase != RoundPhase.wadger;
+    final hasPassedInWadger = round.phase == RoundPhase.wadger &&
+        (round.passedPlayerIds.contains(targetPlayerId) ||
+            playerState.earnedPoints.contains('Pass'));
+    String? wadgerBidLabel;
+    if (round.phase == RoundPhase.wadger && !hasPassedInWadger) {
+      for (final p in playerState.earnedPoints) {
+        if (p.startsWith('Bid:')) {
+          wadgerBidLabel = p.toUpperCase();
+          break;
+        }
+      }
+      if (wadgerBidLabel == null &&
+          round.bidWinnerId == targetPlayerId &&
+          round.bidValue > 0) {
+        wadgerBidLabel = 'BID: ${round.bidValue}';
+      }
+    }
 
     final earnedPoints = playerState.earnedPoints
         .where((p) => p != 'Pass' && !p.startsWith('Bid:'))
@@ -147,6 +164,56 @@ class PlayerRoundDetailsModal extends StatelessWidget {
                                       fontSize: 10,
                                       fontWeight: FontWeight.bold,
                                       color: Colors.amber.shade900,
+                                    ),
+                                  ),
+                                ),
+                              ] else if (hasPassedInWadger) ...[
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 6, vertical: 1.5),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.shade200,
+                                    borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(
+                                      color: Colors.grey.shade400,
+                                      width: 0.8,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    'PASSED',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.grey.shade700,
+                                    ),
+                                  ),
+                                ),
+                              ] else if (wadgerBidLabel != null) ...[
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 6, vertical: 1.5),
+                                  decoration: BoxDecoration(
+                                    color: round.bidWinnerId == targetPlayerId
+                                        ? Colors.amber.shade200
+                                        : Colors.orange.shade100,
+                                    borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(
+                                      color: round.bidWinnerId == targetPlayerId
+                                          ? Colors.amber.shade800
+                                          : Colors.orange.shade400,
+                                      width: 0.8,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    wadgerBidLabel,
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: round.bidWinnerId == targetPlayerId
+                                          ? Colors.amber.shade900
+                                          : Colors.orange.shade900,
                                     ),
                                   ),
                                 ),
