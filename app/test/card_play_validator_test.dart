@@ -168,6 +168,159 @@ void main() {
       expect(result.isLegal, isTrue);
       expect(result.reason, isNull);
     });
+
+    group('Under Trump validation', () {
+      const cardClubsTen = Card(suit: Suit.clubs, rank: Rank.ten);
+      const cardClubsThree = Card(suit: Suit.clubs, rank: Rank.three);
+      const cardClubsSeven = Card(suit: Suit.clubs, rank: Rank.seven);
+      const cardDiamondsFive = Card(suit: Suit.diamonds, rank: Rank.five);
+      const cardDiamondsTwo = Card(suit: Suit.diamonds, rank: Rank.two);
+      const cardDiamondsSeven = Card(suit: Suit.diamonds, rank: Rank.seven);
+      const cardDiamondsKing = Card(suit: Suit.diamonds, rank: Rank.king);
+
+      const nonTrumpLedLiftWithTrump5 = Lift(
+        leadPlayerId: 'p1',
+        plays: {
+          'p1': cardClubsTen,
+          'p2': cardClubsThree,
+          'p3': cardDiamondsFive, // 5 of trump (diamonds)
+        },
+      );
+
+      test(
+          'rejects under-trumping when player holds non-trump card (off-suit)',
+          () {
+        final hand = [
+          cardDiamondsTwo, // 2 of trump
+          cardSpadesFive, // Non-trump off-suit
+        ];
+        final result = validateCardPlay(
+          card: cardDiamondsTwo,
+          hand: hand,
+          currentLift: nonTrumpLedLiftWithTrump5,
+          trumpSuit: trumpSuit,
+          phase: RoundPhase.playing,
+          isMyTurn: true,
+        );
+        expect(result.isLegal, isFalse);
+        expect(
+          result.reason,
+          'Cannot under-trump (five of diamonds) while holding non-trump cards.',
+        );
+      });
+
+      test(
+          'rejects under-trumping when player holds non-trump card (lead suit)',
+          () {
+        final hand = [
+          cardDiamondsTwo, // 2 of trump
+          cardClubsSeven, // Lead suit (clubs)
+        ];
+        final result = validateCardPlay(
+          card: cardDiamondsTwo,
+          hand: hand,
+          currentLift: nonTrumpLedLiftWithTrump5,
+          trumpSuit: trumpSuit,
+          phase: RoundPhase.playing,
+          isMyTurn: true,
+        );
+        expect(result.isLegal, isFalse);
+        expect(
+          result.reason,
+          'Cannot under-trump (five of diamonds) while holding non-trump cards.',
+        );
+      });
+
+      test('allows under-trumping when player holds ONLY trump cards', () {
+        final handOnlyTrumps = [
+          cardDiamondsTwo,
+          cardDiamondsKing, // Even with a higher trump in hand, only trumps remain
+        ];
+        final result = validateCardPlay(
+          card: cardDiamondsTwo,
+          hand: handOnlyTrumps,
+          currentLift: nonTrumpLedLiftWithTrump5,
+          trumpSuit: trumpSuit,
+          phase: RoundPhase.playing,
+          isMyTurn: true,
+        );
+        expect(result.isLegal, isTrue);
+        expect(result.reason, isNull);
+      });
+
+      test('allows over-trumping when player holds non-trump cards', () {
+        final hand = [
+          cardDiamondsNine, // 9 of trump > 5 of trump
+          cardSpadesFive,
+          cardClubsSeven,
+        ];
+        final result = validateCardPlay(
+          card: cardDiamondsNine,
+          hand: hand,
+          currentLift: nonTrumpLedLiftWithTrump5,
+          trumpSuit: trumpSuit,
+          phase: RoundPhase.playing,
+          isMyTurn: true,
+        );
+        expect(result.isLegal, isTrue);
+        expect(result.reason, isNull);
+      });
+
+      test(
+          'requires beating the highest trump when multiple trumps are in the lift',
+          () {
+        const liftWithTwoTrumps = Lift(
+          leadPlayerId: 'p1',
+          plays: {
+            'p1': cardClubsTen,
+            'p2': cardDiamondsFive, // 5 of trump
+            'p3': cardDiamondsNine, // 9 of trump (highest trump on board)
+          },
+        );
+        final hand = [
+          cardDiamondsSeven, // Beat 5, but lower than 9
+          cardSpadesFive, // Has non-trump
+        ];
+        final result = validateCardPlay(
+          card: cardDiamondsSeven,
+          hand: hand,
+          currentLift: liftWithTwoTrumps,
+          trumpSuit: trumpSuit,
+          phase: RoundPhase.playing,
+          isMyTurn: true,
+        );
+        expect(result.isLegal, isFalse);
+        expect(
+          result.reason,
+          'Cannot under-trump (nine of diamonds) while holding non-trump cards.',
+        );
+      });
+
+      test(
+          'allows playing lower trump when trump suit IS the lead suit, even if holding non-trumps',
+          () {
+        const trumpLedLift = Lift(
+          leadPlayerId: 'p1',
+          plays: {
+            'p1': cardDiamondsNine, // Trump led
+          },
+        );
+        final hand = [
+          cardDiamondsTwo, // Following trump lead with a lower trump
+          cardSpadesFive, // Holding non-trump
+        ];
+        final result = validateCardPlay(
+          card: cardDiamondsTwo,
+          hand: hand,
+          currentLift: trumpLedLift,
+          trumpSuit: trumpSuit,
+          phase: RoundPhase.playing,
+          isMyTurn: true,
+        );
+        expect(result.isLegal, isTrue);
+        expect(result.reason, isNull);
+      });
+    });
   });
 
   group('getOrderedLiftPlays', () {

@@ -55,6 +55,7 @@ POINT CARDS (in Trump Suit):
 FORBIDDEN MOVES:
 - NEVER recommend playing a 5, 9, or jack of trumps if a HIGHER trump card is already "ON THE TABLE".
 - Example: If an Ace of trumps is on the table, playing your 5 of trumps is a guaranteed loss of 5 points. Recommend your lowest legal non-point card instead.
+- NEVER recommend "Under Trumping": if the lead suit is not trump and a trump card is already "ON THE TABLE", playing a lower trump card than the highest trump on the table is an ILLEGAL move unless your hand contains ONLY trump cards.
 
 STRATEGIC LOGIC:
 1. Is there a card "ON THE TABLE" that beats your best card? If yes, DUCK by playing your lowest legal card.

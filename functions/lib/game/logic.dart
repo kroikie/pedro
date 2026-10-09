@@ -154,6 +154,52 @@ String? evaluateLiftWinner({
   return winnerId;
 }
 
+/// Validates whether playing [card] from [hand] into an in-progress lift is legal.
+///
+/// Enforces:
+/// 1. Following the [leadSuit] (or playing [trumpSuit]) if the player holds any card of [leadSuit].
+/// 2. No Under-Trumping: when [leadSuit] is not [trumpSuit] and a trump card has already been played
+///    in [currentPlays], any subsequent trump card must beat the highest trump card currently in [currentPlays],
+///    unless the player holds only trump cards in [hand].
+///
+/// Returns `null` if the move is legal, or a human-readable error message if illegal.
+String? validateLiftCardPlay({
+  required Card card,
+  required List<Card> hand,
+  required Map<String, Card> currentPlays,
+  required Suit leadSuit,
+  required Suit trumpSuit,
+}) {
+  if (card.suit != trumpSuit && card.suit != leadSuit) {
+    final hasLeadSuit = hand.any((c) => c.suit == leadSuit);
+    if (hasLeadSuit) {
+      return 'Must follow suit (${leadSuit.name}) or play Trump.';
+    }
+  }
+
+  if (card.suit == trumpSuit && leadSuit != trumpSuit) {
+    Card? highestTrump;
+    for (final played in currentPlays.values) {
+      if (played.suit == trumpSuit) {
+        if (highestTrump == null ||
+            rankValues[played.rank]! > rankValues[highestTrump.rank]!) {
+          highestTrump = played;
+        }
+      }
+    }
+
+    if (highestTrump != null &&
+        rankValues[card.rank]! < rankValues[highestTrump.rank]!) {
+      final hasNonTrump = hand.any((c) => c.suit != trumpSuit);
+      if (hasNonTrump) {
+        return 'Cannot under-trump (${highestTrump.rank.name} of ${trumpSuit.name}) while holding non-trump cards.';
+      }
+    }
+  }
+
+  return null;
+}
+
 /// Finds the index of the next player in anti-clockwise order who has not passed.
 ///
 /// Throws [StateError] if all players in [playerIds] have passed.
