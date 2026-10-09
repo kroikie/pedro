@@ -52,6 +52,30 @@ MoveValidationResult validateCardPlay({
           );
         }
       }
+
+      if (trumpSuit != null &&
+          card.suit == trumpSuit &&
+          leadSuit != trumpSuit) {
+        Card? highestTrump;
+        for (final played in currentLift.plays.values) {
+          if (played.suit == trumpSuit) {
+            if (highestTrump == null ||
+                played.rank.index > highestTrump.rank.index) {
+              highestTrump = played;
+            }
+          }
+        }
+
+        if (highestTrump != null &&
+            card.rank.index < highestTrump.rank.index) {
+          final hasNonTrump = hand.any((c) => c.suit != trumpSuit);
+          if (hasNonTrump) {
+            return MoveValidationResult.illegal(
+              'Cannot under-trump (${highestTrump.rank.name} of ${trumpSuit.name}) while holding non-trump cards.',
+            );
+          }
+        }
+      }
     }
   }
 

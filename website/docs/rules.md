@@ -40,6 +40,7 @@ The goal of Pedro is to be the first player (or team) to reach the target winnin
 - The bid winner leads the first card (lift).
 - The first card played in each lift defines the **Lead Suit** for that trick. The game board displays cards in the exact order they are played, with a prominent **LEAD** badge and a header indicating the called lead suit.
 - Players play one card per turn. You must follow the lead suit if you hold it, or you may play a trump card. Playing an off-suit card while holding the lead suit is an illegal move and will be rejected.
+- **No Under-Trumping:** When the lead suit is **not** trump and another player has already played a trump card in the lift, any subsequent trump card played must be **higher** than the highest trump card currently on the board. A player may only play a lower trump card ("under-trump") if their hand contains **only trump cards** (no non-trump cards left). If they hold any non-trump cards, those must be played instead of under-trumping.
 - The highest trump card played wins the lift. If no trump is played, the highest card of the lead suit wins.
 - **Lift Review & Board Clearing:** At the end of each lift, all played cards remain on the board with a prominent **WINNER** badge on the winning card, allowing all players a review window to inspect the final card and outcome. The cards stay on the board until the player who won the trick plays their lead card for the next lift, at which point the table clears automatically.
 - **Previous Trick History, Won Lifts & Active Trick Inspection:**

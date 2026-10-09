@@ -104,6 +104,146 @@ void main() {
     });
   });
 
+  group('Lift Card Play Validation (Follow Suit & Under Trump)', () {
+    const trumpSuit = Suit.spades;
+
+    test('rejects off-suit non-trump when player holds lead suit', () {
+      final error = validateLiftCardPlay(
+        card: Card(suit: Suit.hearts, rank: Rank.four),
+        hand: [
+          Card(suit: Suit.hearts, rank: Rank.four),
+          Card(suit: Suit.clubs, rank: Rank.seven),
+        ],
+        currentPlays: {
+          'p1': Card(suit: Suit.clubs, rank: Rank.ten),
+        },
+        leadSuit: Suit.clubs,
+        trumpSuit: trumpSuit,
+      );
+      expect(error, 'Must follow suit (clubs) or play Trump.');
+    });
+
+    test('rejects under-trump when non-trump suit was led and player holds non-trump cards', () {
+      // P1 leads 10 of clubs, P2 plays 3 of clubs, P3 plays 5 of trump (spades), P4 plays 2 of trump
+      final currentPlays = {
+        'p1': Card(suit: Suit.clubs, rank: Rank.ten),
+        'p2': Card(suit: Suit.clubs, rank: Rank.three),
+        'p3': Card(suit: Suit.spades, rank: Rank.five),
+      };
+
+      final errorWithOffSuit = validateLiftCardPlay(
+        card: Card(suit: Suit.spades, rank: Rank.two),
+        hand: [
+          Card(suit: Suit.spades, rank: Rank.two),
+          Card(suit: Suit.hearts, rank: Rank.eight),
+        ],
+        currentPlays: currentPlays,
+        leadSuit: Suit.clubs,
+        trumpSuit: trumpSuit,
+      );
+      expect(
+        errorWithOffSuit,
+        'Cannot under-trump (five of spades) while holding non-trump cards.',
+      );
+
+      final errorWithLeadSuit = validateLiftCardPlay(
+        card: Card(suit: Suit.spades, rank: Rank.two),
+        hand: [
+          Card(suit: Suit.spades, rank: Rank.two),
+          Card(suit: Suit.clubs, rank: Rank.eight),
+        ],
+        currentPlays: currentPlays,
+        leadSuit: Suit.clubs,
+        trumpSuit: trumpSuit,
+      );
+      expect(
+        errorWithLeadSuit,
+        'Cannot under-trump (five of spades) while holding non-trump cards.',
+      );
+    });
+
+    test('allows under-trump when player only has trump cards left in hand', () {
+      final currentPlays = {
+        'p1': Card(suit: Suit.clubs, rank: Rank.ten),
+        'p2': Card(suit: Suit.clubs, rank: Rank.three),
+        'p3': Card(suit: Suit.spades, rank: Rank.five),
+      };
+
+      final error = validateLiftCardPlay(
+        card: Card(suit: Suit.spades, rank: Rank.two),
+        hand: [
+          Card(suit: Suit.spades, rank: Rank.two),
+          Card(suit: Suit.spades, rank: Rank.king),
+        ],
+        currentPlays: currentPlays,
+        leadSuit: Suit.clubs,
+        trumpSuit: trumpSuit,
+      );
+      expect(error, isNull);
+    });
+
+    test('allows over-trumping when holding non-trump cards', () {
+      final currentPlays = {
+        'p1': Card(suit: Suit.clubs, rank: Rank.ten),
+        'p2': Card(suit: Suit.clubs, rank: Rank.three),
+        'p3': Card(suit: Suit.spades, rank: Rank.five),
+      };
+
+      final error = validateLiftCardPlay(
+        card: Card(suit: Suit.spades, rank: Rank.nine),
+        hand: [
+          Card(suit: Suit.spades, rank: Rank.nine),
+          Card(suit: Suit.clubs, rank: Rank.seven),
+        ],
+        currentPlays: currentPlays,
+        leadSuit: Suit.clubs,
+        trumpSuit: trumpSuit,
+      );
+      expect(error, isNull);
+    });
+
+    test('requires beating the highest trump when multiple trumps are played in a lift', () {
+      final currentPlays = {
+        'p1': Card(suit: Suit.clubs, rank: Rank.ten),
+        'p2': Card(suit: Suit.spades, rank: Rank.five),
+        'p3': Card(suit: Suit.spades, rank: Rank.nine),
+      };
+
+      final error = validateLiftCardPlay(
+        card: Card(suit: Suit.spades, rank: Rank.seven),
+        hand: [
+          Card(suit: Suit.spades, rank: Rank.seven),
+          Card(suit: Suit.diamonds, rank: Rank.four),
+        ],
+        currentPlays: currentPlays,
+        leadSuit: Suit.clubs,
+        trumpSuit: trumpSuit,
+      );
+      expect(
+        error,
+        'Cannot under-trump (nine of spades) while holding non-trump cards.',
+      );
+    });
+
+    test('allows playing a lower trump when trump is the lead suit', () {
+      final currentPlays = {
+        'p1': Card(suit: Suit.spades, rank: Rank.ten),
+      };
+
+      final error = validateLiftCardPlay(
+        card: Card(suit: Suit.spades, rank: Rank.two),
+        hand: [
+          Card(suit: Suit.spades, rank: Rank.two),
+          Card(suit: Suit.clubs, rank: Rank.ace),
+        ],
+        currentPlays: currentPlays,
+        leadSuit: Suit.spades,
+        trumpSuit: trumpSuit,
+      );
+      expect(error, isNull);
+    });
+  });
+
   group('High & Low Trump Evaluation', () {
     const trump = Suit.hearts;
 

@@ -648,11 +648,20 @@ void main(List<String> args) {
         final leadPlayerId = currentLift['leadPlayerId'] as String;
         final leadCard = Card.fromJson(plays[leadPlayerId] as Map<String, dynamic>);
         final leadSuit = leadCard.suit;
-        if (card.suit != trumpSuit && card.suit != leadSuit) {
-          final hasLeadSuit = hand.any((c) => c.suit == leadSuit);
-          if (hasLeadSuit) {
-            throw InvalidArgumentError('Must follow suit (${leadSuit.name}) or play Trump.');
-          }
+        final typedCurrentPlays = <String, Card>{};
+        plays.forEach(
+          (k, v) => typedCurrentPlays[k] = Card.fromJson(v as Map<String, dynamic>),
+        );
+
+        final validationError = validateLiftCardPlay(
+          card: card,
+          hand: hand,
+          currentPlays: typedCurrentPlays,
+          leadSuit: leadSuit,
+          trumpSuit: trumpSuit,
+        );
+        if (validationError != null) {
+          throw InvalidArgumentError(validationError);
         }
       }
 
