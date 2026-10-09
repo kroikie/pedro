@@ -1302,12 +1302,12 @@ Future<void> finalizeRound(
   if (winner.isNotEmpty) {
     final batch = firestore.batch();
     batch.update(gameRef, {
-      'updatedAt': FieldValue.serverTimestamp,
-      'status': 'finished',
-      'currentRound.playerStates': playerStates,
-      'currentRound.phase': 'finished',
-      'winnerId': winner['uid'],
-      'lastRoundSummary': lastRoundSummary,
+      FieldPath.from('updatedAt'): FieldValue.serverTimestamp,
+      FieldPath.from('status'): 'finished',
+      FieldPath.from('currentRound.playerStates'): playerStates,
+      FieldPath.from('currentRound.phase'): 'finished',
+      FieldPath.from('winnerId'): winner['uid'],
+      FieldPath.from('lastRoundSummary'): lastRoundSummary,
     });
     addRoundArchiveAndLeaderboardToBatch(
       firestore: firestore,
@@ -1334,10 +1334,10 @@ Future<void> finalizeRound(
     // Publish completed round summary state, archive round, and increment leaderboards atomically
     final batch = firestore.batch();
     batch.update(gameRef, {
-      'updatedAt': FieldValue.serverTimestamp,
-      'currentRound.playerStates': playerStates,
-      'currentRound.phase': 'finished',
-      'lastRoundSummary': lastRoundSummary,
+      FieldPath.from('updatedAt'): FieldValue.serverTimestamp,
+      FieldPath.from('currentRound.playerStates'): playerStates,
+      FieldPath.from('currentRound.phase'): 'finished',
+      FieldPath.from('lastRoundSummary'): lastRoundSummary,
     });
     addRoundArchiveAndLeaderboardToBatch(
       firestore: firestore,
