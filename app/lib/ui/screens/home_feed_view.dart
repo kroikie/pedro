@@ -5,8 +5,10 @@ import '../../data/repositories/player_repository.dart';
 import '../../data/repositories/game_repository.dart';
 import '../../data/repositories/chat_repository.dart';
 import '../../data/repositories/reaction_repository.dart';
+import '../../data/repositories/leaderboard_repository.dart';
 import '../../data/models/game_room.dart';
 import '../../data/models/player.dart';
+import '../../data/models/leaderboard_entry.dart';
 import 'game_room_screen.dart';
 import 'game_board_screen.dart';
 import '../widgets/avatar_widget.dart';
@@ -17,21 +19,25 @@ class HomeFeedView extends StatefulWidget {
     super.key,
     required this.onCreateGameTap,
     required this.onViewAllGamesTap,
+    this.onViewRankingsTap,
     this.lobbyRepository,
     this.playerRepository,
     this.gameRepository,
     this.chatRepository,
     this.reactionRepository,
+    this.leaderboardRepository,
     this.currentUserId,
   });
 
   final VoidCallback onCreateGameTap;
   final VoidCallback onViewAllGamesTap;
+  final VoidCallback? onViewRankingsTap;
   final LobbyRepository? lobbyRepository;
   final PlayerRepository? playerRepository;
   final GameRepository? gameRepository;
   final ChatRepository? chatRepository;
   final ReactionRepository? reactionRepository;
+  final LeaderboardRepository? leaderboardRepository;
   final String? currentUserId;
 
   @override
@@ -41,7 +47,26 @@ class HomeFeedView extends StatefulWidget {
 class _HomeFeedViewState extends State<HomeFeedView> {
   late final _lobbyRepository = widget.lobbyRepository ?? LobbyRepository();
   late final _playerRepository = widget.playerRepository ?? PlayerRepository();
-  late final _currentUserId = widget.currentUserId ?? FirebaseAuth.instance.currentUser?.uid;
+  late final _currentUserId = widget.currentUserId ?? _safeCurrentUserId();
+
+  static String? _safeCurrentUserId() {
+    try {
+      return FirebaseAuth.instance.currentUser?.uid;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Stream<LeaderboardEntry?> _watchMyStats() {
+    final uid = _currentUserId;
+    if (uid == null || uid.isEmpty) return Stream.value(null);
+    try {
+      final repo = widget.leaderboardRepository ?? LeaderboardRepository();
+      return repo.watchPlayerStats(uid);
+    } catch (_) {
+      return Stream.value(null);
+    }
+  }
   final Map<String, Player?> _hostCache = {};
   bool _isNavigating = false;
 
@@ -833,99 +858,129 @@ class _HomeFeedViewState extends State<HomeFeedView> {
   }
 
   Widget _buildBentoStatsGrid() {
-    return GridView.count(
-      crossAxisCount: 2,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisSpacing: 16,
-      mainAxisSpacing: 16,
-      childAspectRatio: 1.4,
-      children: [
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.tertiaryContainer.withValues(alpha: 0.25),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Icon(
-                Icons.stars,
-                color: Theme.of(context).colorScheme.tertiary,
-                size: 20,
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'WIN RATE',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 9,
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.7),
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    '68%',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 26,
-                      fontWeight: FontWeight.w900,
+    return StreamBuilder<LeaderboardEntry?>(
+      stream: _watchMyStats(),
+      builder: (context, snapshot) {
+        final stats = snapshot.data;
+        final winRateText = stats != null ? '${stats.winRatePercent}%' : '0%';
+        final pointsText =
+            stats != null ? '${stats.totalPointsEarned}' : '0';
+
+        return GridView.count(
+          crossAxisCount: 2,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+          childAspectRatio: 1.4,
+          children: [
+            GestureDetector(
+              onTap: widget.onViewRankingsTap,
+              behavior: HitTestBehavior.opaque,
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Theme.of(context)
+                      .colorScheme
+                      .tertiaryContainer
+                      .withValues(alpha: 0.25),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Icon(
+                      Icons.stars,
                       color: Theme.of(context).colorScheme.tertiary,
-                      letterSpacing: -1,
+                      size: 20,
                     ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: 0.2),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Icon(
-                Icons.military_tech,
-                color: Theme.of(context).colorScheme.secondary,
-                size: 20,
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'POINTS',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 9,
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.7),
-                      letterSpacing: 0.5,
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'WIN RATE',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .tertiary
+                                .withValues(alpha: 0.7),
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          winRateText,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 26,
+                            fontWeight: FontWeight.w900,
+                            color: Theme.of(context).colorScheme.tertiary,
+                            letterSpacing: -1,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    '1,240',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 26,
-                      fontWeight: FontWeight.w900,
+                  ],
+                ),
+              ),
+            ),
+            GestureDetector(
+              onTap: widget.onViewRankingsTap,
+              behavior: HitTestBehavior.opaque,
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Theme.of(context)
+                      .colorScheme
+                      .secondaryContainer
+                      .withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Icon(
+                      Icons.military_tech,
                       color: Theme.of(context).colorScheme.secondary,
-                      letterSpacing: -1,
+                      size: 20,
                     ),
-                  ),
-                ],
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'POINTS',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .secondary
+                                .withValues(alpha: 0.7),
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          pointsText,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 26,
+                            fontWeight: FontWeight.w900,
+                            color: Theme.of(context).colorScheme.secondary,
+                            letterSpacing: -1,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ],
-          ),
-        ),
-      ],
+            ),
+          ],
+        );
+      },
     );
   }
 }

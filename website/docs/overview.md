@@ -64,7 +64,23 @@
 - **Deep Linking & "Share Live Game":** Players and spectators can tap **Share** on the game board to generate a shareable Universal Link (`https://pedro-f65a6.web.app/game/<gameId>`) via `share_plus` with clipboard fallback. Native Universal Links (iOS) and Android App Links (`assetlinks.json` / `apple-app-site-association`) route players directly to their seat and non-players directly into live spectating.
 - **Chronological "All Games" Activity Feed:** The Home feed and dedicated **All Games** screen list matches chronologically by their most recent gameplay activity (`updatedAt ?? createdAt`), organized into **Live Matches** and **My Games** tabs with relative timestamps (e.g., "Just now", "5m ago").
 
-### 9. Backend Architecture & Cloud Functions Endpoints
+### 9. Leaderboards, Hall of Shame & Head-to-Head Rivalries
+- **Persistent Round Archiving (`games/{gameId}/rounds/round_{N}`):** Every completed round is permanently archived as an immutable document capturing full trick histories (`completedLifts`), per-player round stat deltas (`playerSummaries`), directed card heists (`heists`), and winner/victim scalar identifiers.
+- **Weekly & All-Time Rankings:** Players can switch effortlessly between **This Week**, **Last Week**, and **All-Time** timeframes in the **Rankings** tab, as well as view live personal win-rate and points counters in the Home feed Bento grid.
+- **🏆 Hall of Fame (Triumphs):** Tracks 8 positive accolades across spotlight cards, a Top-3 podium, and full rankings:
+  - *The Jack Hanger* (`hangJacks`), *Higher than High* (`highTrumps`), *Lower than Low* (`lowTrumps`), *Table Boss* (`gamesWon`), *Pedro Catcher* (`fivesWon`), *Nine Hunter* (`ninesWon`), *Contract Boss* (`bidsMade`), and *Point Hoarder* (`gamePointsWon`).
+- **💀 Hall of Shame (Unfortunate Distinctions):** Celebrates table picong by tracking 4 unfortunate distinctions and the exact count of times each player suffered them:
+  - *Neck in the Noose* (`jacksHung` — most Jacks hung by opponents), *Nine Donor* (`ninesLost` — most 9s of trumps lost), *Pedro Donor* (`fivesLost` — most 5s of trumps lost), and *Biggest Buss* (`bidsSet` — most contracts set).
+- **⚔️ Head-to-Head Rivalries ("Nemesis & Prey"):**
+  - Tracks directed player-vs-player card heists (Jacks hung, 9s stolen, 5s stolen, cumulative heist points) and match victories.
+  - Highlights each player's personal **😈 Your Nemesis** and **🎯 Favorite Prey**, plus a ranked **🔥 Hottest Table Feuds** list.
+  - Tapping any player or feud opens the **⚔️ Tale of the Tape** modal comparing `You vs. Opponent` side-by-side.
+- **Atomic Rollups, Game Deletion Reversal & CLI Reconciliation:**
+  - Round archives and `leaderboards/{periodId}` increments commit in a single atomic Firestore `WriteBatch` inside `finalizeRound()`.
+  - Deleting a game (`deleteGame`) automatically reverses its persisted rounds from `leaderboards/*` in the same batch (cleanly ignoring legacy games created before round archiving).
+  - An administrative CLI-only script (`cd functions && dart run bin/rebuild_leaderboards.dart [--dry-run]`) deterministically reconciles all `all_time` and `weekly_*` player and rivalry rollups from `collectionGroup('rounds')` while ignoring legacy games missing the `rounds` subcollection.
+
+### 10. Backend Architecture & Cloud Functions Endpoints
 - **Server-Side Authoritative Game Logic:** All game state transitions (game creation, game deletion, player invitations, bidding, trump selection, card play, scoring, player nudges, and spectator presence) are orchestrated server-side in Cloud Functions to guarantee game state integrity.
 - **Spectator Presence Endpoints:** Dedicated callable endpoints (`join-game-as-viewer`, `heartbeat-viewer`, `leave-game-viewer`) track live spectators and maintain lease heartbeats securely.
 - **Dart Cloud Functions & Cloud Run Deployment:** Cloud functions are authored in Dart using `firebase_functions` and deployed directly as Google Cloud Run services (`https://<function-name>-260654198138.us-central1.run.app`).
@@ -72,5 +88,3 @@
   - In local development and automated testing, functions automatically target the local Firebase Functions Emulator suite (`localhost:5001` or `10.0.2.2:5001`).
   - In production release builds across Android, iOS, and Web, functions target deterministic Cloud Run endpoints (`https://<function-name>-260654198138.us-central1.run.app`).
 - **End-to-End Authentication & Transport Security:** Cloud Run services allow public HTTP transport invocation (`allUsers` with `roles/run.invoker`) so client callable requests reach the Dart container, where request credentials are cryptographically authenticated against Firebase Authentication (`request.auth`). Client repositories proactively verify authentication state (`_auth.currentUser`) and force fresh ID token resolution before dispatching sensitive lifecycle operations like game deletion.
-
-
