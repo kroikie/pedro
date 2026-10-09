@@ -43,6 +43,8 @@ jobs:
           dart pub get
           dart run build_runner build
           git diff --exit-code functions.yaml
+          dart compile exe bin/server.dart --target-os=linux --target-arch=x64 -o /tmp/server
+          rm -f /tmp/server
           dart test
 
   app-check:
