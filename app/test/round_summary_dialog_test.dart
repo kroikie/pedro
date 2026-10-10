@@ -70,10 +70,61 @@ void main() {
     expect(find.text('Game: '), findsOneWidget);
     expect(find.text('Alice (24 pts)'), findsOneWidget);
     expect(find.text('Player Standings'), findsOneWidget);
+    expect(find.text('Sleeping Cards: '), findsNothing);
 
     // Tap Continue
     await tester.tap(find.text('Continue'));
     await tester.pump();
     expect(continued, isTrue);
   });
+
+  testWidgets('RoundSummaryDialog displays sleeping cards when present',
+      (tester) async {
+    final summaryWithSleeping = RoundSummary(
+      roundNumber: 2,
+      trumpSuit: pedro.Suit.hearts,
+      bidWinnerId: 'p1',
+      bidValue: 8,
+      bidSuccess: false,
+      highTrumpPlayerId: 'p1',
+      highTrumpPlayedCard: const pedro.Card(
+        suit: pedro.Suit.hearts,
+        rank: pedro.Rank.ace,
+      ),
+      lowTrumpPlayerId: 'p2',
+      lowTrumpPlayedCard: const pedro.Card(
+        suit: pedro.Suit.hearts,
+        rank: pedro.Rank.two,
+      ),
+      gameWinnerId: 'p1',
+      gameWinningScore: 20,
+      isGameTied: false,
+      playerSummaries: sampleSummary.playerSummaries,
+      sleepingCards: const [
+        pedro.Card(suit: pedro.Suit.hearts, rank: pedro.Rank.jack),
+        pedro.Card(suit: pedro.Suit.hearts, rank: pedro.Rank.nine),
+      ],
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: RoundSummaryDialog(
+            summary: summaryWithSleeping,
+            currentPlayerId: 'p1',
+            playerCache: playerCache,
+            onContinue: () {},
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('Round 2 Recap'), findsOneWidget);
+    expect(find.text('SET'), findsOneWidget);
+    expect(find.text('Sleeping Cards: '), findsOneWidget);
+    expect(find.text('Jack ♥'), findsOneWidget);
+    expect(find.text('9 ♥'), findsOneWidget);
+    expect(find.text('5 ♥'), findsNothing);
+  });
 }
+

@@ -1209,6 +1209,13 @@ class RoundSummaryMapper extends ClassMapperBase<RoundSummary> {
     opt: true,
     def: const [],
   );
+  static List<Card> _$sleepingCards(RoundSummary v) => v.sleepingCards;
+  static const Field<RoundSummary, List<Card>> _f$sleepingCards = Field(
+    'sleepingCards',
+    _$sleepingCards,
+    opt: true,
+    def: const [],
+  );
 
   @override
   final MappableFields<RoundSummary> fields = const {
@@ -1226,6 +1233,7 @@ class RoundSummaryMapper extends ClassMapperBase<RoundSummary> {
     #isGameTied: _f$isGameTied,
     #playerSummaries: _f$playerSummaries,
     #completedLifts: _f$completedLifts,
+    #sleepingCards: _f$sleepingCards,
   };
 
   static RoundSummary _instantiate(DecodingData data) {
@@ -1244,6 +1252,7 @@ class RoundSummaryMapper extends ClassMapperBase<RoundSummary> {
       isGameTied: data.dec(_f$isGameTied),
       playerSummaries: data.dec(_f$playerSummaries),
       completedLifts: data.dec(_f$completedLifts),
+      sleepingCards: data.dec(_f$sleepingCards),
     );
   }
 
@@ -1318,6 +1327,7 @@ abstract class RoundSummaryCopyWith<$R, $In extends RoundSummary, $Out>
   >
   get playerSummaries;
   ListCopyWith<$R, Lift, LiftCopyWith<$R, Lift, Lift>> get completedLifts;
+  ListCopyWith<$R, Card, CardCopyWith<$R, Card, Card>> get sleepingCards;
   $R call({
     int? roundNumber,
     Suit? trumpSuit,
@@ -1333,6 +1343,7 @@ abstract class RoundSummaryCopyWith<$R, $In extends RoundSummary, $Out>
     bool? isGameTied,
     List<PlayerRoundSummary>? playerSummaries,
     List<Lift>? completedLifts,
+    List<Card>? sleepingCards,
   });
   RoundSummaryCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
 }
@@ -1374,6 +1385,13 @@ class _RoundSummaryCopyWithImpl<$R, $Out>
         (v) => call(completedLifts: v),
       );
   @override
+  ListCopyWith<$R, Card, CardCopyWith<$R, Card, Card>> get sleepingCards =>
+      ListCopyWith(
+        $value.sleepingCards,
+        (v, t) => v.copyWith.$chain(t),
+        (v) => call(sleepingCards: v),
+      );
+  @override
   $R call({
     int? roundNumber,
     Object? trumpSuit = $none,
@@ -1389,6 +1407,7 @@ class _RoundSummaryCopyWithImpl<$R, $Out>
     bool? isGameTied,
     List<PlayerRoundSummary>? playerSummaries,
     List<Lift>? completedLifts,
+    List<Card>? sleepingCards,
   }) => $apply(
     FieldCopyWithData({
       if (roundNumber != null) #roundNumber: roundNumber,
@@ -1406,6 +1425,7 @@ class _RoundSummaryCopyWithImpl<$R, $Out>
       if (isGameTied != null) #isGameTied: isGameTied,
       if (playerSummaries != null) #playerSummaries: playerSummaries,
       if (completedLifts != null) #completedLifts: completedLifts,
+      if (sleepingCards != null) #sleepingCards: sleepingCards,
     }),
   );
   @override
@@ -1433,6 +1453,7 @@ class _RoundSummaryCopyWithImpl<$R, $Out>
     isGameTied: data.get(#isGameTied, or: $value.isGameTied),
     playerSummaries: data.get(#playerSummaries, or: $value.playerSummaries),
     completedLifts: data.get(#completedLifts, or: $value.completedLifts),
+    sleepingCards: data.get(#sleepingCards, or: $value.sleepingCards),
   );
 
   @override

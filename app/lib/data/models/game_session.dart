@@ -137,6 +137,7 @@ class RoundSummary with RoundSummaryMappable {
   final bool isGameTied;
   final List<PlayerRoundSummary> playerSummaries;
   final List<Lift> completedLifts;
+  final List<Card> sleepingCards;
 
   const RoundSummary({
     this.roundNumber = 1,
@@ -153,6 +154,7 @@ class RoundSummary with RoundSummaryMappable {
     this.isGameTied = false,
     this.playerSummaries = const [],
     this.completedLifts = const [],
+    this.sleepingCards = const [],
   });
 
   static const fromMap = RoundSummaryMapper.fromMap;

@@ -33,6 +33,14 @@ class Card {
       );
 
   @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Card && other.suit == suit && other.rank == rank;
+
+  @override
+  int get hashCode => Object.hash(suit, rank);
+
+  @override
   String toString() => '${rank.name} of ${suit.name}';
 }
 

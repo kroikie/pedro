@@ -77,7 +77,8 @@ The goal of Pedro is to be the first player (or team) to reach the target winnin
   - When the bid winner accumulates enough points to satisfy the contract (`currentRoundPoints >= bidValue`), the indicator highlights in green with a checkmark (`10 / 10 pts ✓`).
   - On the table, the bidder's seat displays a distinct `BIDDER` badge and round progress tracker (`Pts: 4 / 10`), allowing all players to monitor whether the bidder will achieve their contract or suffer a set penalty.
 - **Round Summary & Persistent Round Recap:**
-  - When a round finishes, a comprehensive **Round Summary** modal appears detailing the bidder contract outcome (Made or Set), High and Low trumps, the Game point winner (or tie), and a complete scoreboard with total scores.
+  - When a round finishes, a comprehensive **Round Summary** modal appears detailing the bidder contract outcome (Made or Set), High and Low trumps, the Game point winner (or tie), any **Sleeping Cards**, and a complete scoreboard with total scores.
+  - **Sleeping Cards:** When one or more of the major point-scoring trump cards (**Jack**, **5**, or **9** of the trump suit) is never dealt to any player and remains undealt in the deck for the entire round, it is said to have "slept" (e.g., *"the Jack slept"*). If any of the Jack, 5, or 9 of trumps slept during the round, the Round Summary highlights them in a dedicated **Sleeping Cards** banner.
   - Players can dismiss the summary at their own pace using the "Continue" button.
   - A persistent **Round Recap** icon (`receipt_long`) in the top AppBar allows players to re-open and review the previous round summary at any point during subsequent rounds.
 - The winner of the lift leads the next trick.
