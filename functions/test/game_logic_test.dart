@@ -599,13 +599,15 @@ void main() {
   });
 
   group('Sleeping Trump Cards Evaluation', () {
-    test('returns empty list when Jack, 5, and 9 of trump were all played', () {
+    test('returns empty list when Jack, 5, 9, Ace, and 2 of trump were all played', () {
       final sleeping = evaluateSleepingCards(
         trumpSuit: Suit.spades,
         playedCards: [
           Card(suit: Suit.spades, rank: Rank.jack),
           Card(suit: Suit.spades, rank: Rank.five),
           Card(suit: Suit.spades, rank: Rank.nine),
+          Card(suit: Suit.spades, rank: Rank.ace),
+          Card(suit: Suit.spades, rank: Rank.two),
           Card(suit: Suit.hearts, rank: Rank.ace),
         ],
       );
@@ -620,6 +622,7 @@ void main() {
           Card(suit: Suit.hearts, rank: Rank.nine),
           Card(suit: Suit.spades, rank: Rank.jack), // off-suit Jack does not count
           Card(suit: Suit.hearts, rank: Rank.ace),
+          Card(suit: Suit.hearts, rank: Rank.two),
         ],
       );
       expect(
@@ -628,16 +631,18 @@ void main() {
       );
     });
 
-    test('identifies all three major trump cards (Jack, 5, 9) when none were played', () {
+    test('identifies all five sure-point trump cards (Jack, 5, 9, Ace, 2) when none were played', () {
       final sleeping = evaluateSleepingCards(
         trumpSuit: Suit.diamonds,
         playedCards: [
-          Card(suit: Suit.diamonds, rank: Rank.ace),
-          Card(suit: Suit.diamonds, rank: Rank.two),
+          Card(suit: Suit.diamonds, rank: Rank.king),
+          Card(suit: Suit.diamonds, rank: Rank.three),
           Card(suit: Suit.diamonds, rank: Rank.ten),
           Card(suit: Suit.clubs, rank: Rank.jack),
           Card(suit: Suit.clubs, rank: Rank.five),
           Card(suit: Suit.clubs, rank: Rank.nine),
+          Card(suit: Suit.clubs, rank: Rank.ace),
+          Card(suit: Suit.clubs, rank: Rank.two),
         ],
       );
       expect(
@@ -646,6 +651,8 @@ void main() {
           Card(suit: Suit.diamonds, rank: Rank.jack),
           Card(suit: Suit.diamonds, rank: Rank.five),
           Card(suit: Suit.diamonds, rank: Rank.nine),
+          Card(suit: Suit.diamonds, rank: Rank.ace),
+          Card(suit: Suit.diamonds, rank: Rank.two),
         ]),
       );
     });

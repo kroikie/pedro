@@ -103,19 +103,25 @@ void main() {
       expect(analysis.nineTrumpLoserId, isNull);
       expect(analysis.fiveTrumpWinnerId, equals('p4'));
       expect(analysis.fiveTrumpLoserId, isNull);
-      expect(analysis.sleepingCards, isEmpty);
+      expect(
+        analysis.sleepingCards,
+        equals([
+          {'suit': 'hearts', 'rank': 'ace'},
+          {'suit': 'hearts', 'rank': 'two'},
+        ]),
+      );
     });
 
-    test('identifies sleeping Jack, 5, and 9 when they remain undealt in the deck', () {
+    test('identifies sleeping Jack, 5, 9, Ace, and 2 when they remain undealt in the deck', () {
       final completedLifts = <Map<String, dynamic>>[
         {
           'leadPlayerId': 'p1',
           'winnerId': 'p1',
           'plays': {
-            'p1': {'suit': 'clubs', 'rank': 'ace'},
+            'p1': {'suit': 'clubs', 'rank': 'ace'}, // Ace of clubs played
             'p2': {'suit': 'clubs', 'rank': 'five'}, // 5 of clubs played
             'p3': {'suit': 'hearts', 'rank': 'jack'}, // non-trump Jack ignored
-            'p4': {'suit': 'spades', 'rank': 'nine'}, // non-trump 9 ignored
+            'p4': {'suit': 'spades', 'rank': 'two'}, // non-trump 2 ignored
           },
         },
       ];
@@ -134,6 +140,7 @@ void main() {
         equals([
           {'suit': 'clubs', 'rank': 'jack'},
           {'suit': 'clubs', 'rank': 'nine'},
+          {'suit': 'clubs', 'rank': 'two'},
         ]),
       );
     });
