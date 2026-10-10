@@ -103,6 +103,8 @@ void main() {
       sleepingCards: const [
         pedro.Card(suit: pedro.Suit.hearts, rank: pedro.Rank.jack),
         pedro.Card(suit: pedro.Suit.hearts, rank: pedro.Rank.nine),
+        pedro.Card(suit: pedro.Suit.hearts, rank: pedro.Rank.ace),
+        pedro.Card(suit: pedro.Suit.hearts, rank: pedro.Rank.two),
       ],
     );
 
@@ -124,6 +126,8 @@ void main() {
     expect(find.text('Sleeping Cards: '), findsOneWidget);
     expect(find.text('Jack ♥'), findsOneWidget);
     expect(find.text('9 ♥'), findsOneWidget);
+    expect(find.text('Ace ♥'), findsOneWidget);
+    expect(find.text('2 ♥'), findsOneWidget);
     expect(find.text('5 ♥'), findsNothing);
   });
 }

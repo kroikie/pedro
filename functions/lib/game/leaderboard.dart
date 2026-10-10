@@ -79,7 +79,7 @@ String getWeeklyPeriodId(DateTime utcTime) =>
 
 /// Inspects [completedLifts] for the [trumpSuit] Jack, 9, and 5 to identify
 /// both the winners and the unfortunate victims who lost those trump cards,
-/// as well as any of Jack, 5, or 9 of [trumpSuit] that slept in the deck.
+/// as well as any of Jack, 5, 9, Ace, or 2 of [trumpSuit] that slept in the deck.
 RoundLiftAnalysis analyzeRoundLifts({
   required List<Map<String, dynamic>> completedLifts,
   required String trumpSuit,
@@ -94,6 +94,8 @@ RoundLiftAnalysis analyzeRoundLifts({
   bool jackPlayed = false;
   bool fivePlayed = false;
   bool ninePlayed = false;
+  bool acePlayed = false;
+  bool twoPlayed = false;
 
   for (final lift in completedLifts) {
     final winnerId = lift['winnerId'] as String?;
@@ -131,6 +133,10 @@ RoundLiftAnalysis analyzeRoundLifts({
         if (playerId != winnerId) {
           fiveTrumpLoserId = playerId;
         }
+      } else if (rank == 'ace') {
+        acePlayed = true;
+      } else if (rank == 'two') {
+        twoPlayed = true;
       }
     }
   }
@@ -145,6 +151,12 @@ RoundLiftAnalysis analyzeRoundLifts({
     }
     if (!ninePlayed) {
       sleepingCards.add({'suit': trumpSuit, 'rank': 'nine'});
+    }
+    if (!acePlayed) {
+      sleepingCards.add({'suit': trumpSuit, 'rank': 'ace'});
+    }
+    if (!twoPlayed) {
+      sleepingCards.add({'suit': trumpSuit, 'rank': 'two'});
     }
   }
 

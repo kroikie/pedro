@@ -315,15 +315,17 @@ Map<String, dynamic>? evaluateGamePointWinner(List<Map<String, dynamic>> playerS
   return tied ? null : winner;
 }
 
-/// Major trump ranks that carry dedicated point values and can "sleep" in the deck.
+/// Major "sure point" trump ranks that can "sleep" in the deck.
 const sleepingTrumpRanks = <Rank>[
   Rank.jack,
   Rank.five,
   Rank.nine,
+  Rank.ace,
+  Rank.two,
 ];
 
-/// Returns the list of major trump cards (Jack, 5, 9 of [trumpSuit]) that were
-/// never played during the round (i.e. remained undealt / "sleeping" in the deck).
+/// Returns the list of sure-point trump cards (Jack, 5, 9, Ace, 2 of [trumpSuit])
+/// that were never played during the round (i.e. remained undealt / "sleeping" in the deck).
 List<Card> evaluateSleepingCards({
   required Suit trumpSuit,
   required Iterable<Card> playedCards,

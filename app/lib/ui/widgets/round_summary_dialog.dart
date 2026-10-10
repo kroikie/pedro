@@ -624,6 +624,10 @@ class RoundSummaryDialog extends StatelessWidget {
         return '5';
       case pedro.Rank.nine:
         return '9';
+      case pedro.Rank.ace:
+        return 'High';
+      case pedro.Rank.two:
+        return 'Low';
       default:
         return rank.name;
     }
@@ -637,6 +641,10 @@ class RoundSummaryDialog extends StatelessWidget {
         return '5';
       case pedro.Rank.nine:
         return '9';
+      case pedro.Rank.ace:
+        return 'Ace';
+      case pedro.Rank.two:
+        return '2';
       default:
         return _rankShort(rank);
     }
