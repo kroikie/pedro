@@ -3,14 +3,42 @@ import 'package:flutter/foundation.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 class AppInfoService {
+  static const String defaultBugFixesNote =
+      'Bug fixes and stability improvements.';
+
+  static const List<String> latestReleaseNotes = [
+    'Sleeping trump cards (A, 2, J, 5, 9) shown in round summaries.',
+    'Hall of Fame, Hall of Shame, and head-to-head rivalries.',
+    'Live Wadger bids on seat cards and color-coded point pips.',
+    'Automatic no under-trumping rule validation.',
+  ];
+
   AppInfoService({
     PackageInfo? packageInfo,
     FirebaseAppCheck? appCheck,
+    List<String>? releaseNotes,
   })  : _packageInfo = packageInfo,
-        _appCheck = appCheck;
+        _appCheck = appCheck,
+        _releaseNotes = releaseNotes;
 
   PackageInfo? _packageInfo;
   final FirebaseAppCheck? _appCheck;
+  final List<String>? _releaseNotes;
+
+  /// Returns the "What's New" items for the latest release.
+  ///
+  /// Falls back to [defaultBugFixesNote] when there are no user-facing changes.
+  List<String> getReleaseNotes({List<String>? overrideNotes}) {
+    final rawNotes = overrideNotes ?? _releaseNotes ?? latestReleaseNotes;
+    final notes = rawNotes
+        .map((note) => note.trim())
+        .where((note) => note.isNotEmpty)
+        .toList(growable: false);
+    if (notes.isEmpty) {
+      return const [defaultBugFixesNote];
+    }
+    return notes;
+  }
 
   Future<PackageInfo> getPackageInfo() async {
     if (_packageInfo != null) return _packageInfo!;

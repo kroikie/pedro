@@ -107,51 +107,130 @@ void main() {
   });
 
   group('showPedroAboutDialog', () {
-    testWidgets('displays about dialog with version and diagnostics button', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: Builder(
-              builder: (context) => ElevatedButton(
-                onPressed: () => showPedroAboutDialog(
-                  context,
-                  gameId: 'game-789',
-                  appInfoService: mockService,
+    testWidgets(
+      'displays about dialog with version, whats new release notes, and diagnostics button',
+      (tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: Builder(
+                builder: (context) => ElevatedButton(
+                  onPressed: () => showPedroAboutDialog(
+                    context,
+                    gameId: 'game-789',
+                    appInfoService: mockService,
+                  ),
+                  child: const Text('Open About'),
                 ),
-                child: const Text('Open About'),
               ),
             ),
           ),
-        ),
-      );
+        );
 
-      await tester.tap(find.text('Open About'));
-      await tester.pumpAndSettle();
+        await tester.tap(find.text('Open About'));
+        await tester.pumpAndSettle();
 
-      expect(find.text('Pedro'), findsOneWidget);
-      expect(find.text('v1.2.3 (Build 42)'), findsOneWidget);
-      expect(find.text('Copy Diagnostics'), findsOneWidget);
-      expect(find.text('Test Attestation (Live)'), findsOneWidget);
+        expect(find.text('Pedro'), findsOneWidget);
+        expect(find.text('v1.2.3 (Build 42)'), findsOneWidget);
+        expect(find.text("What's New"), findsOneWidget);
+        for (final note in AppInfoService.latestReleaseNotes) {
+          expect(find.text(note), findsOneWidget);
+        }
+        expect(find.text('Copy Diagnostics'), findsOneWidget);
+        expect(find.text('Test Attestation (Live)'), findsOneWidget);
 
-      // Tap Copy Diagnostics inside dialog
-      await tester.tap(find.text('Copy Diagnostics'));
-      await tester.pumpAndSettle();
+        // Tap Copy Diagnostics inside dialog
+        await tester.tap(find.text('Copy Diagnostics'));
+        await tester.pumpAndSettle();
 
-      expect(
-        find.text('Diagnostic details copied to clipboard'),
-        findsOneWidget,
-      );
+        expect(
+          find.text('Diagnostic details copied to clipboard'),
+          findsOneWidget,
+        );
 
-      // Tap Test Attestation (Live) inside dialog
-      await tester.tap(find.text('Test Attestation (Live)'));
-      await tester.pumpAndSettle();
+        // Tap Test Attestation (Live) inside dialog
+        await tester.tap(find.text('Test Attestation (Live)'));
+        await tester.pumpAndSettle();
 
-      expect(
-        find.textContaining('App Check attestation'),
-        findsOneWidget,
-      );
-    });
+        expect(
+          find.textContaining('App Check attestation'),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
+      'falls back to stating bug fixes when release notes list is empty',
+      (tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: Builder(
+                builder: (context) => ElevatedButton(
+                  onPressed: () => showPedroAboutDialog(
+                    context,
+                    appInfoService: mockService,
+                    releaseNotes: const [],
+                  ),
+                  child: const Text('Open About Empty'),
+                ),
+              ),
+            ),
+          ),
+        );
+
+        await tester.tap(find.text('Open About Empty'));
+        await tester.pumpAndSettle();
+
+        expect(find.text("What's New"), findsOneWidget);
+        expect(
+          find.text(AppInfoService.defaultBugFixesNote),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
+      'renders custom release notes configured on AppInfoService',
+      (tester) async {
+        final customService = AppInfoService(
+          packageInfo: PackageInfo(
+            appName: 'Pedro',
+            packageName: 'com.ool.pedro',
+            version: '1.2.4',
+            buildNumber: '43',
+            buildSignature: '',
+            installerStore: null,
+          ),
+          releaseNotes: const [
+            'Custom feature A for players.',
+            'Custom feature B on the board.',
+          ],
+        );
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: Builder(
+                builder: (context) => ElevatedButton(
+                  onPressed: () => showPedroAboutDialog(
+                    context,
+                    appInfoService: customService,
+                  ),
+                  child: const Text('Open Custom About'),
+                ),
+              ),
+            ),
+          ),
+        );
+
+        await tester.tap(find.text('Open Custom About'));
+        await tester.pumpAndSettle();
+
+        expect(find.text("What's New"), findsOneWidget);
+        expect(find.text('Custom feature A for players.'), findsOneWidget);
+        expect(find.text('Custom feature B on the board.'), findsOneWidget);
+      },
+    );
   });
 }
