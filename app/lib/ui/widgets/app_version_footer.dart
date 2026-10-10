@@ -115,12 +115,14 @@ class _AppVersionFooterState extends State<AppVersionFooter> {
 }
 
 /// Displays an informative About dialog for Pedro with application version
-/// details and an action to copy full diagnostic info to the clipboard.
+/// details, "What's New" release notes, and an action to copy full diagnostic
+/// info to the clipboard.
 Future<void> showPedroAboutDialog(
   BuildContext context, {
   String? gameId,
   String? userId,
   AppInfoService? appInfoService,
+  List<String>? releaseNotes,
 }) async {
   final service = appInfoService ?? AppInfoService();
   final info = await service.getPackageInfo();
@@ -134,8 +136,10 @@ Future<void> showPedroAboutDialog(
   }
   if (!context.mounted) return;
 
+  final theme = Theme.of(context);
   final version = info.version.isNotEmpty ? info.version : '1.0.0';
   final build = info.buildNumber.isNotEmpty ? info.buildNumber : '1';
+  final whatsNew = service.getReleaseNotes(overrideNotes: releaseNotes);
 
   showAboutDialog(
     context: context,
@@ -145,7 +149,7 @@ Future<void> showPedroAboutDialog(
       width: 48,
       height: 48,
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primary,
+        color: theme.colorScheme.primary,
         borderRadius: BorderRadius.circular(10),
       ),
       child: const Center(
@@ -156,11 +160,74 @@ Future<void> showPedroAboutDialog(
       ),
     ),
     children: [
-      const SizedBox(height: 12),
+      const SizedBox(height: 8),
       const Text(
         'Pedro is a fast-paced multiplayer card game with strategic bidding, real-time banter, and AI companions.',
       ),
-      const SizedBox(height: 16),
+      const SizedBox(height: 12),
+      Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerHighest.withValues(
+            alpha: 0.45,
+          ),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.new_releases_outlined,
+                  size: 16,
+                  color: theme.colorScheme.primary,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  "What's New",
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            ...whatsNew.map(
+              (note) => Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '• ',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        note,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          height: 1.25,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      const SizedBox(height: 12),
       Wrap(
         spacing: 8,
         runSpacing: 8,
