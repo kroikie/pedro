@@ -54,6 +54,7 @@ void main() {
       expect(analysis.fiveTrumpLoserId, equals('p4'));
       expect(analysis.nineTrumpWinnerId, equals('p2'));
       expect(analysis.nineTrumpLoserId, equals('p3'));
+      expect(analysis.sleepingCards, isEmpty);
     });
 
     test('detects saved Jack and self-won 9 and 5 without recording a victim', () {
@@ -102,6 +103,39 @@ void main() {
       expect(analysis.nineTrumpLoserId, isNull);
       expect(analysis.fiveTrumpWinnerId, equals('p4'));
       expect(analysis.fiveTrumpLoserId, isNull);
+      expect(analysis.sleepingCards, isEmpty);
+    });
+
+    test('identifies sleeping Jack, 5, and 9 when they remain undealt in the deck', () {
+      final completedLifts = <Map<String, dynamic>>[
+        {
+          'leadPlayerId': 'p1',
+          'winnerId': 'p1',
+          'plays': {
+            'p1': {'suit': 'clubs', 'rank': 'ace'},
+            'p2': {'suit': 'clubs', 'rank': 'five'}, // 5 of clubs played
+            'p3': {'suit': 'hearts', 'rank': 'jack'}, // non-trump Jack ignored
+            'p4': {'suit': 'spades', 'rank': 'nine'}, // non-trump 9 ignored
+          },
+        },
+      ];
+
+      final analysis = analyzeRoundLifts(
+        completedLifts: completedLifts,
+        trumpSuit: 'clubs',
+      );
+
+      expect(analysis.fiveTrumpWinnerId, equals('p1'));
+      expect(analysis.savedJackWinnerId, isNull);
+      expect(analysis.hangJackWinnerId, isNull);
+      expect(analysis.nineTrumpWinnerId, isNull);
+      expect(
+        analysis.sleepingCards,
+        equals([
+          {'suit': 'clubs', 'rank': 'jack'},
+          {'suit': 'clubs', 'rank': 'nine'},
+        ]),
+      );
     });
   });
 

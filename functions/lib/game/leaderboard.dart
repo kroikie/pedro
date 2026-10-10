@@ -23,6 +23,7 @@ class RoundLiftAnalysis {
   final String? nineTrumpLoserId;
   final String? fiveTrumpWinnerId;
   final String? fiveTrumpLoserId;
+  final List<Map<String, dynamic>> sleepingCards;
 
   const RoundLiftAnalysis({
     this.hangJackWinnerId,
@@ -32,6 +33,7 @@ class RoundLiftAnalysis {
     this.nineTrumpLoserId,
     this.fiveTrumpWinnerId,
     this.fiveTrumpLoserId,
+    this.sleepingCards = const [],
   });
 }
 
@@ -76,7 +78,8 @@ String getWeeklyPeriodId(DateTime utcTime) =>
     'weekly_${getIsoWeekId(utcTime)}';
 
 /// Inspects [completedLifts] for the [trumpSuit] Jack, 9, and 5 to identify
-/// both the winners and the unfortunate victims who lost those trump cards.
+/// both the winners and the unfortunate victims who lost those trump cards,
+/// as well as any of Jack, 5, or 9 of [trumpSuit] that slept in the deck.
 RoundLiftAnalysis analyzeRoundLifts({
   required List<Map<String, dynamic>> completedLifts,
   required String trumpSuit,
@@ -88,6 +91,9 @@ RoundLiftAnalysis analyzeRoundLifts({
   String? nineTrumpLoserId;
   String? fiveTrumpWinnerId;
   String? fiveTrumpLoserId;
+  bool jackPlayed = false;
+  bool fivePlayed = false;
+  bool ninePlayed = false;
 
   for (final lift in completedLifts) {
     final winnerId = lift['winnerId'] as String?;
@@ -106,6 +112,7 @@ RoundLiftAnalysis analyzeRoundLifts({
       if (suit != trumpSuit || rank == null) continue;
 
       if (rank == 'jack') {
+        jackPlayed = true;
         if (playerId == winnerId) {
           savedJackWinnerId = winnerId;
         } else {
@@ -113,16 +120,31 @@ RoundLiftAnalysis analyzeRoundLifts({
           jackHungVictimId = playerId;
         }
       } else if (rank == 'nine') {
+        ninePlayed = true;
         nineTrumpWinnerId = winnerId;
         if (playerId != winnerId) {
           nineTrumpLoserId = playerId;
         }
       } else if (rank == 'five') {
+        fivePlayed = true;
         fiveTrumpWinnerId = winnerId;
         if (playerId != winnerId) {
           fiveTrumpLoserId = playerId;
         }
       }
+    }
+  }
+
+  final sleepingCards = <Map<String, dynamic>>[];
+  if (trumpSuit.isNotEmpty) {
+    if (!jackPlayed) {
+      sleepingCards.add({'suit': trumpSuit, 'rank': 'jack'});
+    }
+    if (!fivePlayed) {
+      sleepingCards.add({'suit': trumpSuit, 'rank': 'five'});
+    }
+    if (!ninePlayed) {
+      sleepingCards.add({'suit': trumpSuit, 'rank': 'nine'});
     }
   }
 
@@ -134,6 +156,7 @@ RoundLiftAnalysis analyzeRoundLifts({
     nineTrumpLoserId: nineTrumpLoserId,
     fiveTrumpWinnerId: fiveTrumpWinnerId,
     fiveTrumpLoserId: fiveTrumpLoserId,
+    sleepingCards: sleepingCards,
   );
 }
 
@@ -345,6 +368,7 @@ Map<String, dynamic> buildArchivedRoundDocument({
     'playerSummaries': playerSummaries,
     'heists': heists,
     'completedLifts': completedLifts,
+    'sleepingCards': liftAnalysis.sleepingCards,
   };
 }
 

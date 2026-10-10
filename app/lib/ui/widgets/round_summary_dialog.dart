@@ -225,6 +225,10 @@ class RoundSummaryDialog extends StatelessWidget {
                         ),
                       ],
                     ),
+                    if (summary.sleepingCards.isNotEmpty) ...[
+                      const SizedBox(height: 10),
+                      _sleepingCardsBanner(summary.sleepingCards),
+                    ],
                     const SizedBox(height: 16),
 
                     // Player Scoreboard
@@ -553,6 +557,104 @@ class RoundSummaryDialog extends StatelessWidget {
     );
   }
 
+  Widget _sleepingCardsBanner(List<pedro.Card> sleepingCards) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.blueGrey.shade50,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.blueGrey.shade200),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.bedtime_outlined,
+            size: 16,
+            color: Colors.blueGrey.shade700,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            'Sleeping Cards: ',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              color: Colors.blueGrey.shade900,
+            ),
+          ),
+          Expanded(
+            child: Wrap(
+              spacing: 6,
+              runSpacing: 4,
+              children: sleepingCards.map(_sleepingCardBadge).toList(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _sleepingCardBadge(pedro.Card card) {
+    final pointKey = _sleepingCardPointKey(card.rank);
+    final badgeColors = PointColorHelper.getBadgeColors(pointKey);
+    final label = '${_sleepingCardLabel(card.rank)} ${_suitSymbol(card.suit)}';
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: badgeColors.backgroundColor,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: badgeColors.dotColor.withValues(alpha: 0.4)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+          color: badgeColors.textColor,
+        ),
+      ),
+    );
+  }
+
+  String _sleepingCardPointKey(pedro.Rank rank) {
+    switch (rank) {
+      case pedro.Rank.jack:
+        return 'Jack';
+      case pedro.Rank.five:
+        return '5';
+      case pedro.Rank.nine:
+        return '9';
+      default:
+        return rank.name;
+    }
+  }
+
+  String _sleepingCardLabel(pedro.Rank rank) {
+    switch (rank) {
+      case pedro.Rank.jack:
+        return 'Jack';
+      case pedro.Rank.five:
+        return '5';
+      case pedro.Rank.nine:
+        return '9';
+      default:
+        return _rankShort(rank);
+    }
+  }
+
+  String _suitSymbol(pedro.Suit suit) {
+    switch (suit) {
+      case pedro.Suit.clubs:
+        return '♣';
+      case pedro.Suit.diamonds:
+        return '♦';
+      case pedro.Suit.hearts:
+        return '♥';
+      case pedro.Suit.spades:
+        return '♠';
+    }
+  }
+
   String _rankShort(pedro.Rank rank) {
     switch (rank) {
       case pedro.Rank.two:
@@ -584,3 +686,4 @@ class RoundSummaryDialog extends StatelessWidget {
     }
   }
 }
+

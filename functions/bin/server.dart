@@ -1276,6 +1276,7 @@ Future<void> finalizeRound(
       'wonLiftsCount': completedLifts.where((l) => l['winnerId'] == ps['uid']).length,
     }).toList(),
     'completedLifts': completedLifts,
+    'sleepingCards': liftAnalysis.sleepingCards,
   };
 
   final bidWinnerName =
